@@ -1,0 +1,33 @@
+<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+  <div><h1 class="font-serif text-2xl font-bold text-dark">Loyalty Program</h1><p class="text-sm text-gray-400 mt-1">Manage tiers, points and rewards</p></div>
+
+  <!-- Tier cards -->
+  <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div *ngFor="let t of tiers" class="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg transition-all">
+      <div class="flex items-center gap-3 mb-3"><div class="w-4 h-4 rounded-full" [ngClass]="t.color"></div><h3 class="font-semibold text-dark">{{ t.name }}</h3></div>
+      <div class="text-2xl font-bold text-dark">{{ t.members }}</div>
+      <p class="text-xs text-gray-400 mt-1">{{ t.min }}+ points required</p>
+      <p class="text-xs text-gray-500 mt-3 bg-gray-50 rounded-lg p-2">{{ t.perks }}</p>
+    </div>
+  </div>
+
+  <!-- Recent Redemptions -->
+  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <div class="p-6 pb-0"><h3 class="font-semibold text-dark">Recent Redemptions</h3><p class="text-xs text-gray-400 mt-0.5">Latest reward redemptions by members</p></div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm mt-4">
+        <thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100">
+          <th class="px-6 py-3 font-medium">Member</th><th class="px-4 py-3 font-medium">Reward</th><th class="px-4 py-3 font-medium">Points Used</th><th class="px-4 py-3 font-medium">Date</th>
+        </tr></thead>
+        <tbody>
+          <tr *ngFor="let r of recentRedemptions" class="border-b border-gray-50 hover:bg-gray-50/50">
+            <td class="px-6 py-4 font-medium text-dark text-xs">{{ r.user }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ r.reward }}</td>
+            <td class="px-4 py-4 text-accent font-semibold text-xs">-{{ r.points }} pts</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ r.date }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

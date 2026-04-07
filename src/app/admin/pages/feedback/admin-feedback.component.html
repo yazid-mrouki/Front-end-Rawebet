@@ -1,0 +1,41 @@
+<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div><h1 class="font-serif text-2xl font-bold text-dark">Feedback & Reviews</h1><p class="text-sm text-gray-400 mt-1">{{ totalFeedback }} total reviews · {{ unreadCount }} unread</p></div>
+  </div>
+
+  <!-- Summary -->
+  <div class="grid sm:grid-cols-3 gap-4">
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+      <div class="text-3xl font-bold text-accent">{{ overallRating }}</div>
+      <div class="text-sm text-gray-400 mt-1">Average Rating</div>
+      <div class="text-lg mt-1">⭐⭐⭐⭐☆</div>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+      <div class="text-3xl font-bold text-dark">{{ totalFeedback }}</div>
+      <div class="text-sm text-gray-400 mt-1">Total Reviews</div>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+      <div class="text-3xl font-bold text-primary">{{ unreadCount }}</div>
+      <div class="text-sm text-gray-400 mt-1">Unread Reviews</div>
+    </div>
+  </div>
+
+  <!-- Feedback List -->
+  <div class="space-y-3">
+    <div *ngFor="let f of feedbacks" class="bg-white rounded-2xl border p-5 transition-all hover:shadow-md" [class.border-primary/30]="!f.read" [class.border-gray-100]="f.read">
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="font-semibold text-dark text-sm">{{ f.user }}</span>
+            <span *ngIf="!f.read" class="w-2 h-2 bg-primary rounded-full"></span>
+            <span class="text-xs text-gray-400">{{ f.date }}</span>
+          </div>
+          <div class="text-xs text-gray-500 mt-1">{{ f.event }}</div>
+          <div class="text-sm mt-1">{{ getStars(f.rating) }}</div>
+          <p class="text-sm text-gray-600 mt-2 leading-relaxed">{{ f.comment }}</p>
+        </div>
+        <button *ngIf="!f.read" (click)="markRead(f.id)" class="px-3 py-1.5 bg-primary/5 text-primary rounded-lg text-xs font-medium hover:bg-primary/10 transition-colors shrink-0">Mark Read</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,1 +1,43 @@
-/* You can add global styles to this file, and also import other style files */
+@use "tailwindcss";
+
+/* ── Google Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Custom Theme ── */
+:root {
+  --color-primary: #7b1f27;
+  --color-primary-light: #a3333d;
+  --color-accent: #d99a2d;
+  --color-accent-light: #f0c060;
+  --color-dark: #1a1a2e;
+  --color-surface: #faf8f5;
+  --color-muted: #6b7280;
+}
+
+@theme {
+  --color-primary: #7b1f27;
+  --color-primary-light: #a3333d;
+  --color-accent: #d99a2d;
+  --color-accent-light: #f0c060;
+  --color-dark: #1a1a2e;
+  --color-surface: #faf8f5;
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Inter', sans-serif;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--color-surface);
+  color: #1a1a2e;
+  margin: 0;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+

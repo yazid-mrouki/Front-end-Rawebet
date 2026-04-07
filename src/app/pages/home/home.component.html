@@ -1,0 +1,277 @@
+<!-- ═══════════════════════════════ HERO SECTION ═══════════════════════════════ -->
+<section class="relative min-h-[92vh] flex items-center overflow-hidden bg-gradient-to-br from-dark via-primary to-primary-light">
+  <!-- Decorative blurs -->
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute -top-40 -right-40 w-[600px] h-[600px] bg-accent/20 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/30 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/2 left-1/3 w-64 h-64 bg-white/5 rounded-full blur-2xl"></div>
+  </div>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
+    <!-- Left text -->
+    <div class="text-white">
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm mb-6 border border-white/10">
+        <span class="w-2 h-2 bg-accent rounded-full animate-pulse"></span>
+        <span>The Future of Cultural Experience</span>
+      </div>
+      <h1 class="font-serif text-5xl lg:text-6xl font-bold leading-tight mb-6">
+        Book Smarter.<br/>
+        <span class="text-accent">Experience More.</span><br/>
+        Join <span class="underline decoration-accent decoration-4 underline-offset-4">Rawebet</span>.
+      </h1>
+      <p class="text-white/80 text-lg leading-relaxed mb-8 max-w-xl">
+        How many apps do you use just to plan a simple night out? One for movies, another for events, a third for payment.
+        <strong class="text-white">What should be simple becomes frustrating.</strong>
+        Rawebet unifies everything — films, events, clubs, tickets — into one seamless cultural platform.
+      </p>
+      <div class="flex flex-wrap gap-4">
+        <a routerLink="/events" class="px-8 py-3.5 bg-accent text-dark font-bold rounded-xl hover:bg-accent-light transition-all shadow-lg shadow-accent/30 text-sm">
+          Discover Events →
+        </a>
+        <a routerLink="/auth/sign-up" class="px-8 py-3.5 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/20 transition-all border border-white/20 text-sm">
+          Join Free
+        </a>
+      </div>
+    </div>
+
+    <!-- Right visual -->
+    <div class="hidden lg:block">
+      <div class="relative">
+        <!-- Floating cards -->
+        <div class="absolute -top-4 -left-4 bg-white rounded-2xl shadow-2xl p-5 w-56 animate-float">
+          <div class="text-3xl mb-2">🎬</div>
+          <div class="font-semibold text-dark text-sm">Indie Film Night</div>
+          <div class="text-gray-500 text-xs mt-1">Tonight at 8:00 PM</div>
+          <div class="mt-3 px-3 py-1.5 bg-primary text-white text-xs rounded-lg inline-block font-medium">Book Now</div>
+        </div>
+        <div class="absolute top-32 -right-6 bg-white rounded-2xl shadow-2xl p-5 w-52 animate-float-delayed">
+          <div class="text-3xl mb-2">⚽</div>
+          <div class="font-semibold text-dark text-sm">UCL Final Watch Party</div>
+          <div class="text-gray-500 text-xs mt-1">May 31 · Free Entry</div>
+          <div class="mt-3 flex items-center gap-1">
+            <div class="w-6 h-6 rounded-full bg-green-100 text-green-600 text-xs flex items-center justify-center font-bold">✓</div>
+            <span class="text-green-600 text-xs font-medium">Reserved</span>
+          </div>
+        </div>
+        <div class="absolute bottom-8 left-8 bg-white rounded-2xl shadow-2xl p-5 w-48 animate-float">
+          <div class="text-3xl mb-2">⭐</div>
+          <div class="font-semibold text-dark text-sm">Gold Member</div>
+          <div class="text-accent text-xs mt-1 font-medium">2,450 Points</div>
+          <div class="mt-2 w-full bg-accent/20 rounded-full h-2">
+            <div class="bg-accent rounded-full h-2 w-3/4"></div>
+          </div>
+        </div>
+        <!-- Central placeholder -->
+        <div class="w-80 h-96 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 mx-auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll indicator -->
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/40 animate-bounce">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ PROBLEM / SOLUTION ═══════════════════════════ -->
+<section class="py-24 bg-white">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <!-- The Problem -->
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 rounded-full text-xs font-semibold mb-4">
+          <span>⚠️</span> THE PROBLEM
+        </div>
+        <h2 class="font-serif text-3xl lg:text-4xl font-bold text-dark mb-6">Cultural Activities Are <span class="text-red-500">Fragmented</span></h2>
+        <p class="text-gray-600 leading-relaxed mb-6">
+          Imagine wanting to watch a movie and attend an event on the same day. You'd need to search multiple platforms, check availability separately, and repeat the booking process several times.
+        </p>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3 text-gray-600">
+            <span class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-red-500 text-sm">✗</span>
+            <span>Users lose up to <strong>30–40% more time</strong> due to fragmentation</span>
+          </div>
+          <div class="flex items-center gap-3 text-gray-600">
+            <span class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-red-500 text-sm">✗</span>
+            <span>Multiple apps for a single night out</span>
+          </div>
+          <div class="flex items-center gap-3 text-gray-600">
+            <span class="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center text-red-500 text-sm">✗</span>
+            <span>No centralized management for cultural centers</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- The Solution -->
+      <div class="bg-gradient-to-br from-primary/5 to-accent/5 rounded-3xl p-8 lg:p-10 border border-primary/10">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-600 rounded-full text-xs font-semibold mb-4">
+          <span>✨</span> THE SOLUTION
+        </div>
+        <h2 class="font-serif text-3xl font-bold text-dark mb-6">Rawebet <span class="text-primary">Unifies Everything</span></h2>
+        <p class="text-gray-600 leading-relaxed mb-6">
+          Instead of switching between multiple apps, everything is centralized. Select what you want, book, pay, and instantly receive a digital ticket. <strong>What was complex becomes simple and fast.</strong>
+        </p>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3 text-gray-600">
+            <span class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center text-green-500 text-sm">✓</span>
+            <span>Reduces booking time by up to <strong>50%</strong></span>
+          </div>
+          <div class="flex items-center gap-3 text-gray-600">
+            <span class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center text-green-500 text-sm">✓</span>
+            <span>Real-time chat during events &amp; screenings</span>
+          </div>
+          <div class="flex items-center gap-3 text-gray-600">
+            <span class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center text-green-500 text-sm">✓</span>
+            <span>One platform for users AND cultural centers</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ STATS BAR ═══════════════════════════ -->
+<section class="bg-dark py-12">
+  <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
+    <div *ngFor="let stat of stats" class="text-center">
+      <div class="text-3xl mb-2">{{ stat.icon }}</div>
+      <div class="text-3xl font-bold text-white font-serif">{{ stat.value }}</div>
+      <div class="text-gray-400 text-sm mt-1">{{ stat.label }}</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ FEATURES GRID ═══════════════════════════ -->
+<section class="py-24 bg-surface">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-16">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-semibold mb-4">PLATFORM FEATURES</div>
+      <h2 class="font-serif text-3xl lg:text-4xl font-bold text-dark mb-4">Everything You Need,<br/><span class="text-primary">All In One Place</span></h2>
+      <p class="text-gray-500 max-w-2xl mx-auto">Rawebet is not just a booking tool — it's a complete cultural ecosystem with real-time interaction, loyalty rewards, and community-driven experiences.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div *ngFor="let feature of features" class="bg-white rounded-2xl p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-gray-100 group cursor-pointer">
+        <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">{{ feature.icon }}</div>
+        <h3 class="font-semibold text-dark text-lg mb-2">{{ feature.title }}</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">{{ feature.desc }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ UPCOMING EVENTS ═══════════════════════════ -->
+<section class="py-24 bg-white">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="flex items-end justify-between mb-12">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-accent/10 text-accent rounded-full text-xs font-semibold mb-4">COMING SOON</div>
+        <h2 class="font-serif text-3xl lg:text-4xl font-bold text-dark">Upcoming Events</h2>
+      </div>
+      <a routerLink="/events" class="hidden sm:inline-flex items-center gap-2 text-primary font-semibold hover:text-primary-light transition-colors text-sm">
+        View all events →
+      </a>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let event of upcomingEvents" class="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300">
+        <div class="h-44 bg-gradient-to-br {{ event.color }} flex items-center justify-center relative">
+          <span class="text-6xl group-hover:scale-110 transition-transform">{{ event.image }}</span>
+          <div class="absolute top-3 right-3 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs font-medium">{{ event.category }}</div>
+        </div>
+        <div class="p-5">
+          <h3 class="font-semibold text-dark text-lg mb-1">{{ event.title }}</h3>
+          <p class="text-gray-500 text-sm mb-4">📅 {{ event.date }}</p>
+          <a routerLink="/events" class="inline-flex items-center gap-1 text-primary text-sm font-semibold hover:text-primary-light transition-colors">
+            Learn More →
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="sm:hidden text-center mt-8">
+      <a routerLink="/events" class="text-primary font-semibold text-sm">View all events →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ VALUE PROPOSITION ═══════════════════════════ -->
+<section class="py-24 bg-gradient-to-br from-primary via-primary-light to-accent relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute top-20 right-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
+  </div>
+  <div class="relative z-10 max-w-4xl mx-auto px-6 text-center text-white">
+    <h2 class="font-serif text-3xl lg:text-5xl font-bold mb-6">Rawebet is Not Just a Platform.</h2>
+    <p class="text-xl lg:text-2xl text-white/80 font-light mb-4">It's a new way to <strong class="text-white">experience culture</strong>.</p>
+    <p class="text-white/70 max-w-2xl mx-auto leading-relaxed mb-10">
+      Users are no longer just spectators — they become active participants.
+      With cinema &amp; theatre clubs, training programs, real-time chat, loyalty rewards, and a complete ecosystem designed for cultural communities.
+    </p>
+    <div class="flex flex-wrap gap-4 justify-center">
+      <a routerLink="/auth/sign-up" class="px-8 py-3.5 bg-white text-primary font-bold rounded-xl hover:bg-gray-50 transition-all shadow-lg text-sm">
+        Get Started Free →
+      </a>
+      <a routerLink="/subscriptions" class="px-8 py-3.5 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/20 transition-all border border-white/20 text-sm">
+        View Subscriptions
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ CLUBS & PARTICIPATION ═══════════════════════════ -->
+<section class="py-24 bg-surface">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-600 rounded-full text-xs font-semibold mb-4">CLUBS & TRAINING</div>
+        <h2 class="font-serif text-3xl lg:text-4xl font-bold text-dark mb-6">From Spectator to <span class="text-primary">Active Participant</span></h2>
+        <p class="text-gray-600 leading-relaxed mb-6">
+          Rawebet introduces cinema and theatre clubs where users can join training programs, choose between online or in-person participation, and develop their creative skills.
+        </p>
+        <div class="space-y-4">
+          <div class="flex items-start gap-4 bg-white rounded-xl p-4 border border-gray-100">
+            <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-2xl shrink-0">🎭</div>
+            <div>
+              <h4 class="font-semibold text-dark">Theatre Workshops</h4>
+              <p class="text-gray-500 text-sm">Weekly acting masterclasses led by professional instructors.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 bg-white rounded-xl p-4 border border-gray-100">
+            <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl shrink-0">🎬</div>
+            <div>
+              <h4 class="font-semibold text-dark">Cinema Club</h4>
+              <p class="text-gray-500 text-sm">Film discussions, screenwriting courses, and indie film screenings.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 bg-white rounded-xl p-4 border border-gray-100">
+            <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-2xl shrink-0">🌐</div>
+            <div>
+              <h4 class="font-semibold text-dark">Online & In-Person</h4>
+              <p class="text-gray-500 text-sm">Flexible participation — join from anywhere or attend at the center.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-gradient-to-br from-purple-100 to-primary/10 rounded-3xl p-8 lg:p-12 text-center">
+        <div class="text-7xl mb-6">🎭</div>
+        <h3 class="font-serif text-2xl font-bold text-dark mb-3">Join a Club Today</h3>
+        <p class="text-gray-600 mb-6">Be part of a community of passionate cultural enthusiasts.</p>
+        <a routerLink="/clubs" class="inline-flex px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors shadow-lg shadow-primary/20 text-sm">
+          Explore Clubs →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ FINAL CTA ═══════════════════════════ -->
+<section class="py-20 bg-white">
+  <div class="max-w-4xl mx-auto px-6 text-center">
+    <h2 class="font-serif text-3xl lg:text-4xl font-bold text-dark mb-4">The Real Question Is Not <em>Whether</em> We Need This</h2>
+    <p class="text-xl text-gray-600 mb-8">But <strong class="text-primary">why are we still using multiple platforms when one is enough?</strong></p>
+    <p class="text-gray-500 max-w-xl mx-auto mb-10">Rawebet doesn't just improve booking. It redefines how we experience culture.</p>
+    <a routerLink="/auth/sign-up" class="inline-flex px-10 py-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all shadow-xl shadow-primary/20">
+      Join Rawebet — It's Free →
+    </a>
+  </div>
+</section>

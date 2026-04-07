@@ -1,0 +1,65 @@
+<div class="min-h-screen bg-surface">
+  <div class="bg-gradient-to-r from-teal-600 to-primary py-16">
+    <div class="max-w-7xl mx-auto px-6">
+      <h1 class="font-serif text-4xl font-bold text-white mb-2">💬 Feedback</h1>
+      <p class="text-white/80">Share your experience and help us improve every event and screening.</p>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 py-10">
+    <div class="grid lg:grid-cols-5 gap-8">
+      <!-- Submit form -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 sticky top-24">
+          <h3 class="font-serif text-xl font-bold text-dark mb-4">Submit Feedback</h3>
+          <form (ngSubmit)="submitFeedback()" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Event</label>
+              <select name="event" [(ngModel)]="feedbackForm.event" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm">
+                <option value="">Select an event...</option>
+                <option>Film Festival Night</option>
+                <option>Champions League Watch Party</option>
+                <option>Theatre Workshop</option>
+                <option>Stand-Up Comedy Night</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Rating</label>
+              <div class="flex gap-1">
+                <button *ngFor="let i of [1,2,3,4,5]" type="button" (click)="feedbackForm.rating = i"
+                  class="text-2xl transition-transform hover:scale-110" [class.grayscale]="i > feedbackForm.rating">⭐</button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Your Comment</label>
+              <textarea name="comment" [(ngModel)]="feedbackForm.comment" rows="4" placeholder="Tell us about your experience..."
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm resize-none"></textarea>
+            </div>
+            <button type="submit" class="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors text-sm">
+              Submit Feedback
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- My feedback list -->
+      <div class="lg:col-span-3 space-y-4">
+        <h3 class="font-serif text-xl font-bold text-dark mb-2">My Feedback</h3>
+        <div *ngFor="let fb of myFeedback" class="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-lg transition-all">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <h4 class="font-semibold text-dark">{{ fb.event }}</h4>
+              <div class="text-gray-400 text-xs mt-0.5">{{ fb.date }}</div>
+            </div>
+            <span [class]="fb.status === 'Published' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'" class="px-2.5 py-1 rounded-full text-xs font-semibold">{{ fb.status }}</span>
+          </div>
+          <div class="flex gap-0.5 mb-2">
+            <span *ngFor="let s of getStars(fb.rating)" class="text-sm">⭐</span>
+            <span *ngFor="let s of getEmptyStars(fb.rating)" class="text-sm grayscale">⭐</span>
+          </div>
+          <p class="text-gray-600 text-sm">{{ fb.comment }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
