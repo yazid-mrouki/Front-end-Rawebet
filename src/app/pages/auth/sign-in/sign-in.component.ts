@@ -49,5 +49,7 @@ export class SignInComponent {
       },
       error: () => (this.error = 'Email ou mot de passe incorrect'),
     });
+
+
   }
 }
