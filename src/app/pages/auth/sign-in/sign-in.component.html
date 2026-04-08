@@ -67,12 +67,13 @@
             <input type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary/20" />
             Remember me
           </label>
-          <a href="#" class="text-primary hover:text-primary-light font-medium">Forgot password?</a>
+          <a routerLink="/auth/forgot-password" class="text-primary hover:text-primary-light font-medium">Forgot password?</a>
         </div>
 
         <button type="submit" class="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors shadow-lg shadow-primary/20">
           Sign In
         </button>
+        <p *ngIf="error" class="text-red-500 text-sm mt-2">{{ error }}</p>
       </form>
 
       <div class="mt-6 text-center">

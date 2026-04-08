@@ -1,34 +1,102 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CarteService } from '../../core/services/carte.service';
+import { CarteFideliteResponse, FidelityHistoryResponse } from '../../core/models/carte.model';
 
 @Component({
   selector: 'app-loyalty',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './loyalty.component.html'
 })
-export class LoyaltyComponent {
-  user = {
-    name: 'Ahmed Ben Ali',
-    tier: 'Gold',
-    points: 2450,
-    nextTier: 'Platinum',
-    pointsToNext: 550,
-    memberSince: 'January 2025'
+export class LoyaltyComponent implements OnInit {
+  carte: CarteFideliteResponse | null = null;
+  history: FidelityHistoryResponse[] = [];
+  rewards: any[] = [];
+  redeemMessage = '';
+  redeemError = '';
+  loading = true;
+  transferForm = { toUserId: null as number | null, points: null as number | null };
+  transferMessage = '';
+  transferError = '';
+
+  // Niveaux backend : SILVER=0-199, GOLD=200-499, VIP=500+
+  tierConfig: Record<string, { label: string; icon: string; min: number; next: string; nextMin: number }> = {
+    'SILVER': { label: 'Silver', icon: '🥈', min: 0,   next: 'GOLD', nextMin: 200 },
+    'GOLD':   { label: 'Gold',   icon: '🥇', min: 200, next: 'VIP',  nextMin: 500 },
+    'VIP':    { label: 'VIP',    icon: '💎', min: 500, next: 'VIP',  nextMin: 500 }
   };
 
-  tiers = [
-    { name: 'Bronze', minPoints: 0, color: 'bg-orange-600', icon: '🥉' },
-    { name: 'Silver', minPoints: 500, color: 'bg-gray-400', icon: '🥈' },
-    { name: 'Gold', minPoints: 1500, color: 'bg-accent', icon: '🥇' },
-    { name: 'Platinum', minPoints: 3000, color: 'bg-purple-600', icon: '💎' }
-  ];
+  constructor(private carteService: CarteService) {}
 
-  recentActivity = [
-    { action: 'Attended event: Comedy Night', points: '+50', date: 'Mar 20, 2026' },
-    { action: 'Purchased ticket: Film Festival', points: '+30', date: 'Mar 15, 2026' },
-    { action: 'Feedback submitted', points: '+10', date: 'Mar 12, 2026' },
-    { action: 'Referred a friend', points: '+100', date: 'Mar 5, 2026' },
-    { action: 'Monthly subscription bonus', points: '+200', date: 'Mar 1, 2026' }
-  ];
+  ngOnInit() {
+    this.carteService.getMaCarte().subscribe({
+      next: (carte) => {
+        this.carte = carte;
+        this.loading = false;
+      },
+      error: () => this.loading = false
+    });
+
+    this.carteService.getHistory().subscribe({
+      next: (h) => this.history = h
+    });
+
+    this.carteService.getRewards().subscribe({
+      next: (r) => this.rewards = r
+    });
+  }
+
+  get currentTier() {
+    return this.carte ? this.tierConfig[this.carte.level] : null;
+  }
+
+  get progressPercent(): number {
+    if (!this.carte || !this.currentTier) return 0;
+    if (this.carte.level === 'VIP') return 100;
+    const range = this.currentTier.nextMin - this.currentTier.min;
+    const progress = this.carte.points - this.currentTier.min;
+    return Math.min(100, Math.round((progress / range) * 100));
+  }
+
+  get pointsToNext(): number {
+    if (!this.carte || !this.currentTier || this.carte.level === 'VIP') return 0;
+    return this.currentTier.nextMin - this.carte.points;
+  }
+
+  redeem(rewardType: string) {
+    this.redeemMessage = '';
+    this.redeemError = '';
+    this.carteService.redeemReward(rewardType).subscribe({
+      next: (res) => {
+        this.redeemMessage = res.message;
+        // Recharger la carte après rachat
+        this.carteService.getMaCarte().subscribe({ next: (c) => this.carte = c });
+      },
+      error: (err) => this.redeemError = err?.error?.message || 'Points insuffisants.'
+    });
+  }
+
+  transfer() {
+    this.transferMessage = '';
+    this.transferError = '';
+    if (!this.transferForm.toUserId || !this.transferForm.points) return;
+    this.carteService.transferPoints(this.transferForm.toUserId, this.transferForm.points).subscribe({
+      next: () => {
+        this.transferMessage = 'Transfert effectué avec succès.';
+        this.carteService.getMaCarte().subscribe({ next: (c) => this.carte = c });
+        this.transferForm = { toUserId: null, points: null };
+      },
+      error: (err) => this.transferError = err?.error?.message || 'Transfert impossible.'
+    });
+  }
+
+  formatDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString('fr-FR');
+  }
+
+  formatPoints(points: number): string {
+    return points >= 0 ? `+${points}` : `${points}`;
+  }
 }

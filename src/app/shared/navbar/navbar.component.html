@@ -15,7 +15,7 @@
         <a routerLink="/home" routerLinkActive="text-primary bg-primary/5" class="px-4 py-2 rounded-lg text-gray-700 hover:text-primary hover:bg-primary/5 font-medium text-sm transition-all">Home</a>
 
         <!-- Management Dropdown -->
-        <div class="relative">
+        <div class="relative" *ngIf="isAdmin()">
           <button (click)="toggleManagement()" class="px-4 py-2 rounded-lg text-gray-700 hover:text-primary hover:bg-primary/5 font-medium text-sm transition-all flex items-center gap-1">
             Management
             <svg class="w-4 h-4 transition-transform" [class.rotate-180]="managementDropdown" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -60,11 +60,12 @@
       <!-- Right side actions -->
       <div class="hidden lg:flex items-center gap-3">
         <!-- Profile Dropdown -->
-        <div class="relative">
+        <div class="relative" *ngIf="isAuthenticated()">
           <button (click)="toggleProfile()" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
             <div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-              <span class="text-primary font-semibold text-sm">U</span>
+              <span class="text-primary font-semibold text-sm">{{ userName.charAt(0) || 'U' }}</span>
             </div>
+            <span class="text-sm font-medium text-dark">{{ userName || 'Mon compte' }}</span>
             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <div *ngIf="profileDropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in">
@@ -72,9 +73,10 @@
             <a routerLink="/loyalty" (click)="closeDropdowns()" class="block px-4 py-2.5 hover:bg-primary/5 text-gray-700 hover:text-primary transition-colors">⭐ Loyalty Card</a>
             <a routerLink="/tickets" (click)="closeDropdowns()" class="block px-4 py-2.5 hover:bg-primary/5 text-gray-700 hover:text-primary transition-colors">🎟️ My Tickets</a>
             <div class="border-t border-gray-100 my-1"></div>
-            <a routerLink="/auth/sign-in" (click)="closeDropdowns()" class="block px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors">🚪 Sign Out</a>
+            <button (click)="logout()" class="w-full text-left px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors">🚪 Sign Out</button>
           </div>
         </div>
+        <a *ngIf="!isAuthenticated()" routerLink="/auth/sign-in" class="px-4 py-2 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary-light transition-all">Sign In</a>
       </div>
 
       <!-- Mobile Hamburger -->
@@ -98,9 +100,10 @@
       <a routerLink="/logistics" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">📦 Logistics</a>
       <a routerLink="/feedback" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">💬 Feedback</a>
       <a routerLink="/notifications" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">🔔 Notifications</a>
-      <a routerLink="/profile" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">👤 Profile</a>
+      <a *ngIf="isAuthenticated()" routerLink="/profile" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">👤 Profile</a>
       <div class="border-t border-gray-100 pt-2">
-        <a routerLink="/auth/sign-in" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg bg-primary text-white text-center font-medium">Sign In</a>
+        <a *ngIf="!isAuthenticated()" routerLink="/auth/sign-in" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg bg-primary text-white text-center font-medium">Sign In</a>
+        <button *ngIf="isAuthenticated()" (click)="logout(); toggleMobileMenu()" class="w-full text-left px-4 py-2.5 rounded-lg bg-primary text-white text-center font-medium">Sign Out</button>
       </div>
     </div>
   </div>

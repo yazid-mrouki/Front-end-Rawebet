@@ -1,7 +1,28 @@
 <div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div><h1 class="font-serif text-2xl font-bold text-dark">User Management</h1><p class="text-sm text-gray-400 mt-1">{{ users.length }} registered users</p></div>
-    <button class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors">Export Users</button>
+    <div class="flex items-center gap-3">
+      <button (click)="showAddAdminForm = !showAddAdminForm" class="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-colors">Add Admin</button>
+      <button class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors">Export Users</button>
+    </div>
+  </div>
+
+  <div *ngIf="showAddAdminForm" class="bg-white rounded-2xl border border-gray-100 p-6">
+    <h3 class="font-semibold mb-4">Create Admin</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <input [(ngModel)]="newAdminForm.nom" placeholder="Full name" class="px-3 py-2 border rounded" />
+      <input [(ngModel)]="newAdminForm.email" placeholder="Email" class="px-3 py-2 border rounded" />
+      <input [(ngModel)]="newAdminForm.password" placeholder="Password" type="password" class="px-3 py-2 border rounded" />
+      <select [(ngModel)]="newAdminForm.role" class="px-3 py-2 border rounded">
+        <option *ngFor="let r of availableRoles" [value]="r">{{ r }}</option>
+      </select>
+      <div class="col-span-3 flex gap-2">
+        <button (click)="addAdmin()" class="px-4 py-2 bg-primary text-white rounded">Create</button>
+        <button (click)="showAddAdminForm = false" class="px-4 py-2 border rounded">Cancel</button>
+      </div>
+    </div>
+    <p *ngIf="addAdminMessage" class="text-green-600 mt-3">{{ addAdminMessage }}</p>
+    <p *ngIf="addAdminError" class="text-red-600 mt-3">{{ addAdminError }}</p>
   </div>
   <div class="flex flex-col sm:flex-row gap-3">
     <input [(ngModel)]="searchQuery" type="text" placeholder="Search by name or email..." class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary" />
@@ -28,7 +49,10 @@
             <td class="px-4 py-4 text-xs font-semibold" [ngClass]="getTierColor(u.tier)">{{ u.tier }}</td>
             <td class="px-4 py-4 text-gray-500 text-xs">{{ u.joined }}</td>
             <td class="px-4 py-4"><span [class]="getStatusClass(u.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ u.status }}</span></td>
-            <td class="px-4 py-4 text-right"><button class="p-1.5 hover:bg-blue-50 rounded-lg text-xs">✏️</button><button class="p-1.5 hover:bg-red-50 rounded-lg text-xs">🗑️</button></td>
+            <td class="px-4 py-4 text-right space-x-2">
+              <button *ngIf="u.status === 'Active'" (click)="banUser(u.id)" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100">Ban</button>
+              <button *ngIf="u.status !== 'Active'" (click)="unbanUser(u.id)" class="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg text-xs font-semibold hover:bg-green-100">Unban</button>
+            </td>
           </tr>
         </tbody>
       </table>

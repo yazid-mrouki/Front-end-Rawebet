@@ -1,17 +1,24 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { UserService } from '../../core/services/user.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './admin-layout.component.html',
-  styleUrl: './admin-layout.component.scss'
+  styleUrls: ['./admin-layout.component.scss']
 })
-export class AdminLayoutComponent {
+export class AdminLayoutComponent implements OnInit {
   sidebarCollapsed = false;
   activeSection = '';
+
+  adminName = 'Super Admin';
+  adminEmail = '';
+
+  constructor(private userService: UserService, private auth: AuthService) {}
 
   menuItems = [
     { label: 'Dashboard', icon: '📊', route: '/admin/dashboard' },
@@ -27,7 +34,18 @@ export class AdminLayoutComponent {
     { label: 'Notifications', icon: '🔔', route: '/admin/notifications' },
   ];
 
+  ngOnInit() {
+    this.userService.getMe().subscribe({
+      next: (u) => {
+        this.adminName = u.nom;
+        this.adminEmail = u.email;
+      }
+    });
+  }
+
   toggleSidebar() {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
+
+  logout() { this.auth.logout(); }
 }
