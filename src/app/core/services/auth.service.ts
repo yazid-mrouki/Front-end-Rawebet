@@ -1,42 +1,75 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { tap } from 'rxjs/operators';
+import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { LoginRequest, AuthResponse, RegisterRequest } from '../models/auth.model';
 
-export type UserRole = 'admin' | 'member' | 'guest';
-
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-  private _role: UserRole = 'admin'; // Default to admin for demo purposes
-  private _isAuthenticated = true;
+  private api = environment.apiUrl;
+  public authState = new BehaviorSubject<boolean>(this.isAuthenticated());
 
-  get role(): UserRole {
-    return this._role;
+  constructor(private http: HttpClient, private router: Router) {}
+
+  login(body: LoginRequest) {
+    return this.http.post<AuthResponse>(`${this.api}/auth/login`, body).pipe(
+      tap(res => {
+        localStorage.setItem('token', res.accessToken);
+        this.authState.next(true);
+      })
+    );
   }
 
-  get isAuthenticated(): boolean {
-    return this._isAuthenticated;
+  register(body: RegisterRequest) {
+    return this.http.post<void>(`${this.api}/users/add`, body);
   }
 
-  get isAdmin(): boolean {
-    return this._role === 'admin';
+  logout() {
+    this.http.post(`${this.api}/auth/logout`, {}).subscribe();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('token');
+    }
+    this.authState.next(false);
+    this.router.navigate(['/auth/sign-in']);
   }
 
-  /** Toggle role between admin and member (for demo/testing) */
-  toggleRole(): void {
-    this._role = this._role === 'admin' ? 'member' : 'admin';
+  getToken(): string | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+    return localStorage.getItem('token');
   }
 
-  setRole(role: UserRole): void {
-    this._role = role;
+  isAuthenticated(): boolean { return !!this.getToken(); }
+
+  getRoles(): string[] {
+    const token = this.getToken();
+    if (!token) return [];
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.roles || payload.authorities || [];
+    } catch {
+      return [];
+    }
   }
 
-  login(role: UserRole = 'member'): void {
-    this._isAuthenticated = true;
-    this._role = role;
+  isAdmin(): boolean {
+    const roles = this.getRoles();
+    console.log('roles from token:', roles);
+    return roles.some(r =>
+      ['SUPER_ADMIN','ADMIN_CINEMA','ADMIN_EVENT','ADMIN_FORMATION'].includes(r)
+    );
   }
 
-  logout(): void {
-    this._isAuthenticated = false;
-    this._role = 'guest';
+  isSuperAdmin(): boolean { return this.getRoles().includes('SUPER_ADMIN'); }
+
+  forgotPassword(email: string) {
+    return this.http.post(`${this.api}/auth/forgot-password?email=${email}`, {});
+  }
+
+  resetPassword(token: string, newPassword: string) {
+    return this.http.post(`${this.api}/auth/reset-password?token=${token}&newPassword=${newPassword}`, {});
   }
 }

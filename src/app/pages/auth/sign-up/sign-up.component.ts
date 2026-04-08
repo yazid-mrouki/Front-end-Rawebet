@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-sign-up',
@@ -11,9 +12,22 @@ import { CommonModule } from '@angular/common';
 })
 export class SignUpComponent {
   model = { fullName: '', email: '', password: '', confirmPassword: '' };
+  error = '';
   showPassword = false;
 
+  constructor(private auth: AuthService, private router: Router) {}
+
   onSubmit() {
-    console.log('Sign up:', this.model);
+    if (this.model.password !== this.model.confirmPassword) {
+      this.error = 'Les mots de passe ne correspondent pas.';
+      return;
+    }
+
+    this.error = '';
+    this.auth.register({ nom: this.model.fullName, email: this.model.email, password: this.model.password })
+      .subscribe({
+        next: () => this.router.navigate(['/auth/sign-in']),
+        error: () => this.error = 'Impossible de créer le compte.'
+      });
   }
 }

@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { UserService } from '../../../core/services/user.service';
+import { UserResponse } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-admin-users',
@@ -8,25 +10,78 @@ import { FormsModule } from '@angular/forms';
   imports: [CommonModule, FormsModule],
   templateUrl: './admin-users.component.html'
 })
-export class AdminUsersComponent {
+export class AdminUsersComponent implements OnInit {
   searchQuery = '';
   selectedRole = 'all';
 
-  users = [
-    { id: 1, name: 'Ahmed Ben Ali', email: 'ahmed@email.com', role: 'Member', plan: 'Patron', joined: '2023-05-10', tier: 'Gold', status: 'Active' },
-    { id: 2, name: 'Fatma Saidi', email: 'fatma@email.com', role: 'Member', plan: 'Culture Pass', joined: '2023-08-22', tier: 'Gold', status: 'Active' },
-    { id: 3, name: 'Sami Trabelsi', email: 'sami@email.com', role: 'Member', plan: 'Culture Pass', joined: '2024-01-15', tier: 'Silver', status: 'Active' },
-    { id: 4, name: 'Nour Hamdi', email: 'nour@email.com', role: 'Club Leader', plan: 'Explorer', joined: '2023-06-01', tier: 'Silver', status: 'Active' },
-    { id: 5, name: 'Youssef Karim', email: 'youssef@email.com', role: 'Member', plan: 'Explorer', joined: '2024-03-20', tier: 'Bronze', status: 'Active' },
-    { id: 6, name: 'Leila Bouzid', email: 'leila@email.com', role: 'Admin', plan: 'Patron', joined: '2022-11-01', tier: 'Platinum', status: 'Active' },
-    { id: 7, name: 'Karim Saad', email: 'karim@email.com', role: 'Member', plan: 'Explorer', joined: '2025-01-05', tier: 'Bronze', status: 'Suspended' },
-  ];
+  showAddAdminForm = false;
+  newAdminForm = { nom: '', email: '', password: '', role: 'ADMIN_CINEMA' };
+  addAdminMessage = '';
+  addAdminError = '';
+
+  availableRoles = ['ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_FORMATION'];
+
+  users: Array<{ id: number; name: string; email: string; role: string; plan: string; joined: string; tier: string; status: string }> = [];
+
+  constructor(private userService: UserService) {}
+
+  ngOnInit() {
+    this.loadUsers();
+  }
+
+  addAdmin() {
+    this.addAdminMessage = '';
+    this.addAdminError = '';
+    this.userService.createUserByAdmin({
+      nom: this.newAdminForm.nom,
+      email: this.newAdminForm.email,
+      password: this.newAdminForm.password,
+      roles: [this.newAdminForm.role]
+    }).subscribe({
+      next: () => {
+        this.addAdminMessage = `Admin ${this.newAdminForm.nom} créé avec succès.`;
+        this.newAdminForm = { nom: '', email: '', password: '', role: 'ADMIN_CINEMA' };
+        this.showAddAdminForm = false;
+        this.loadUsers();
+      },
+      error: (err) => this.addAdminError = err?.error?.message || 'Impossible de créer l\'admin.'
+    });
+  }
+
+  loadUsers() {
+    this.userService.getAllUsers().subscribe({
+      next: (users: UserResponse[]) => {
+        this.users = users.map(u => ({
+          id: u.id,
+          name: u.nom,
+          email: u.email,
+          role: u.roles?.[0] || 'Member',
+          plan: 'Standard',
+          joined: '2025-01-01',
+          tier: 'Gold',
+          status: u.isActive ? 'Active' : 'Suspended'
+        }));
+      }
+    });
+  }
 
   get filteredUsers() {
     return this.users.filter(u => {
       const matchSearch = u.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || u.email.toLowerCase().includes(this.searchQuery.toLowerCase());
       const matchRole = this.selectedRole === 'all' || u.role === this.selectedRole;
       return matchSearch && matchRole;
+    });
+  }
+
+  banUser(id: number) {
+    this.userService.banUser(id).subscribe({
+      next: () => this.loadUsers()
+    });
+  }
+
+  unbanUser(id: number) {
+    this.userService.unbanUser(id).subscribe({
+      next: () => this.loadUsers()
     });
   }
 

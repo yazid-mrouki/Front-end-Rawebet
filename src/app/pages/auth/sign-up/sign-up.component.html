@@ -82,6 +82,7 @@
         <button type="submit" class="w-full py-3 bg-accent text-white rounded-xl font-semibold hover:bg-accent-light hover:text-dark transition-colors shadow-lg shadow-accent/20">
           Create Account
         </button>
+        <p *ngIf="error" class="text-red-500 text-sm mt-2">{{ error }}</p>
       </form>
 
       <div class="mt-6 text-center">

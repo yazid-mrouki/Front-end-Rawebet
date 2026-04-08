@@ -11,6 +11,57 @@
     </div>
   </div>
 
+<!-- Stats réelles du backend -->
+<div class="grid sm:grid-cols-5 gap-4">
+  <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+    <div class="text-2xl font-bold text-dark">{{ stats.totalClients }}</div>
+    <div class="text-xs text-gray-400 mt-1">Total clients</div>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+    <div class="text-2xl font-bold text-gray-400">{{ stats.totalSilver }}</div>
+    <div class="text-xs text-gray-400 mt-1">Silver</div>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+    <div class="text-2xl font-bold text-yellow-500">{{ stats.totalGold }}</div>
+    <div class="text-xs text-gray-400 mt-1">Gold</div>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+    <div class="text-2xl font-bold text-purple-500">{{ stats.totalVip }}</div>
+    <div class="text-xs text-gray-400 mt-1">VIP</div>
+  </div>
+  <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+    <div class="text-2xl font-bold text-primary">{{ stats['totalPointsDistribués'] }}</div>
+    <div class="text-xs text-gray-400 mt-1">Points distribués</div>
+  </div>
+</div>
+
+<!-- Top 10 clients -->
+<div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+  <div class="p-6 pb-0"><h3 class="font-semibold text-dark">Top 10 clients</h3></div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm mt-4">
+      <thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100">
+        <th class="px-6 py-3">#</th><th class="px-4 py-3">Nom</th><th class="px-4 py-3">Email</th>
+        <th class="px-4 py-3">Points</th><th class="px-4 py-3">Niveau</th>
+      </tr></thead>
+      <tbody>
+        <tr *ngFor="let c of topClients; let i = index" class="border-b border-gray-50 hover:bg-gray-50/50">
+          <td class="px-6 py-4 text-gray-400 text-xs">{{ i + 1 }}</td>
+          <td class="px-4 py-4 font-medium text-dark text-xs">{{ c.nom }}</td>
+          <td class="px-4 py-4 text-gray-500 text-xs">{{ c.email }}</td>
+          <td class="px-4 py-4 font-bold text-accent text-xs">{{ c.points }} pts</td>
+          <td class="px-4 py-4 text-xs">
+            <span class="px-2 py-1 rounded-full text-xs font-medium"
+                  [class.bg-gray-100]="c.level === 'SILVER'"
+                  [class.bg-yellow-100]="c.level === 'GOLD'"
+                  [class.bg-purple-100]="c.level === 'VIP'">{{ c.level }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
   <!-- Recent Redemptions -->
   <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
     <div class="p-6 pb-0"><h3 class="font-semibold text-dark">Recent Redemptions</h3><p class="text-xs text-gray-400 mt-0.5">Latest reward redemptions by members</p></div>
@@ -28,6 +79,29 @@
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Ajouter des points manuellement -->
+  <div class="bg-white rounded-2xl border border-gray-100 p-6">
+    <h3 class="font-semibold text-dark mb-4">➕ Ajouter des points manuellement</h3>
+    <div *ngIf="addPointsMessage" class="mb-3 p-3 bg-green-50 text-green-700 rounded-xl text-sm">{{ addPointsMessage }}</div>
+    <div *ngIf="addPointsError" class="mb-3 p-3 bg-red-50 text-red-600 rounded-xl text-sm">{{ addPointsError }}</div>
+    <div class="flex gap-4 items-end">
+      <div class="flex-1">
+        <label class="block text-xs font-medium text-gray-600 mb-1">ID utilisateur</label>
+        <input type="number" [(ngModel)]="addPointsForm.userId"
+               class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-primary" />
+      </div>
+      <div class="flex-1">
+        <label class="block text-xs font-medium text-gray-600 mb-1">Points à ajouter</label>
+        <input type="number" [(ngModel)]="addPointsForm.points"
+               class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-primary" />
+      </div>
+      <button (click)="addPoints()"
+              class="px-5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-light transition-colors">
+        Ajouter
+      </button>
     </div>
   </div>
 </div>

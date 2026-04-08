@@ -12,6 +12,9 @@ import { LogisticsComponent } from './pages/logistics/logistics.component';
 import { FeedbackComponent } from './pages/feedback/feedback.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { NotificationsComponent } from './pages/notifications/notifications.component';
+import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './pages/auth/reset-password/reset-password.component';
+import { authGuard } from './core/guards/auth.guard';
 
 // Admin
 import { AdminLayoutComponent } from './admin/admin-layout/admin-layout.component';
@@ -32,16 +35,18 @@ export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: 'auth/sign-in', component: SignInComponent },
   { path: 'auth/sign-up', component: SignUpComponent },
+  { path: 'auth/forgot-password', component: ForgotPasswordComponent },
+  { path: 'auth/reset-password', component: ResetPasswordComponent },
   { path: 'home', component: HomeComponent },
   { path: 'events', component: EventsComponent },
   { path: 'films', component: FilmsComponent },
   { path: 'tickets', component: TicketsComponent },
   { path: 'clubs', component: ClubsComponent },
   { path: 'subscriptions', component: SubscriptionsComponent },
-  { path: 'loyalty', component: LoyaltyComponent },
+  { path: 'loyalty', component: LoyaltyComponent, canActivate: [authGuard] },
   { path: 'logistics', component: LogisticsComponent },
   { path: 'feedback', component: FeedbackComponent },
-  { path: 'profile', component: ProfileComponent },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'notifications', component: NotificationsComponent },
 
   // ─── Admin Panel ───
