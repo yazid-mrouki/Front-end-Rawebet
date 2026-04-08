@@ -33,10 +33,12 @@ import { permissionGuard } from './core/guards/permission.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
+
   { path: 'auth/sign-in', component: SignInComponent },
   { path: 'auth/sign-up', component: SignUpComponent },
   { path: 'auth/forgot-password', component: ForgotPasswordComponent },
   { path: 'auth/reset-password', component: ResetPasswordComponent },
+
   { path: 'home', component: HomeComponent },
   { path: 'events', component: EventsComponent },
   { path: 'films', component: FilmsComponent },
@@ -48,24 +50,51 @@ export const routes: Routes = [
   { path: 'feedback', component: FeedbackComponent },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'notifications', component: NotificationsComponent },
+
+  // === CLUB FEATURE ===
+  {
+    path: 'club',
+    loadChildren: () => import('./features/club/club.routes').then((m) => m.CLUB_ROUTES),
+  },
+
   {
     path: 'admin',
     component: AdminLayoutComponent,
     canActivate: [adminGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+
       { path: 'dashboard', component: AdminDashboardComponent },
+
       { path: 'events', component: AdminEventsComponent },
+
       { path: 'films', component: AdminFilmsComponent },
+
       { path: 'tickets', component: AdminTicketsComponent },
+
       { path: 'clubs', component: AdminClubsComponent },
+
       { path: 'subscriptions', component: AdminSubscriptionsComponent },
-      { path: 'users', component: AdminUsersComponent, canActivate: [permissionGuard(['ADMIN_MANAGE'])] },
-      { path: 'loyalty', component: AdminLoyaltyComponent, canActivate: [permissionGuard(['FIDELITY_UPDATE'])] },
+
+      {
+        path: 'users',
+        component: AdminUsersComponent,
+        canActivate: [permissionGuard(['ADMIN_MANAGE'])],
+      },
+
+      {
+        path: 'loyalty',
+        component: AdminLoyaltyComponent,
+        canActivate: [permissionGuard(['FIDELITY_UPDATE'])],
+      },
+
       { path: 'logistics', component: AdminLogisticsComponent },
+
       { path: 'feedback', component: AdminFeedbackComponent },
+
       { path: 'notifications', component: AdminNotificationsComponent },
     ],
   },
+
   { path: '**', redirectTo: 'home' },
 ];

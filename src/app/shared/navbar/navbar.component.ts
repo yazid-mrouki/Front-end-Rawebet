@@ -12,66 +12,126 @@ import { UserService } from '../../core/services/user.service';
   styleUrl: './navbar.component.scss'
 })
 export class NavbarComponent implements OnInit {
+
   mobileMenuOpen = false;
+
   managementDropdown = false;
+
   profileDropdown = false;
+
   userName = '';
+
   private auth = inject(AuthService);
+
   private userService = inject(UserService);
 
-  ngOnInit() {
-    // Load immediately if already authenticated
-    if (this.auth.isAuthenticated()) {
+  ngOnInit(){
+
+    if(this.auth.isAuthenticated()){
+
       this.userService.getMe().subscribe({
-        next: (u) => {
+
+        next:(u)=>{
+
           const anyU = u as any;
-          this.userName = anyU.nom || anyU.fullName || anyU.name || anyU.username || '';
+
+          this.userName =
+            anyU.nom ||
+            anyU.fullName ||
+            anyU.name ||
+            anyU.username ||
+            '';
+
         }
+
       });
+
     }
 
-    // React to future login/logout events so the navbar updates dynamically
-    this.auth.authState.subscribe(authenticated => {
-      if (authenticated) {
-        this.userService.getMe().subscribe({ next: (u) => {
-          const anyU = u as any;
-          this.userName = anyU.nom || anyU.fullName || anyU.name || anyU.username || '';
-        }});
-      } else {
-        this.userName = '';
+    this.auth.authState.subscribe(authenticated=>{
+
+      if(authenticated){
+
+        this.userService.getMe().subscribe({
+
+          next:(u)=>{
+
+            const anyU = u as any;
+
+            this.userName =
+              anyU.nom ||
+              anyU.fullName ||
+              anyU.name ||
+              anyU.username ||
+              '';
+
+          }
+
+        });
+
       }
+
+      else{
+
+        this.userName='';
+
+      }
+
     });
+
   }
 
-  toggleMobileMenu() {
-    this.mobileMenuOpen = !this.mobileMenuOpen;
+  toggleMobileMenu(){
+
+    this.mobileMenuOpen =
+      !this.mobileMenuOpen;
+
   }
 
-  toggleManagement() {
-    this.managementDropdown = !this.managementDropdown;
-    this.profileDropdown = false;
+  toggleManagement(){
+
+    this.managementDropdown =
+      !this.managementDropdown;
+
+    this.profileDropdown=false;
+
   }
 
-  toggleProfile() {
-    this.profileDropdown = !this.profileDropdown;
-    this.managementDropdown = false;
+  toggleProfile(){
+
+    this.profileDropdown =
+      !this.profileDropdown;
+
+    this.managementDropdown=false;
+
   }
 
-  closeDropdowns() {
-    this.managementDropdown = false;
-    this.profileDropdown = false;
+  closeDropdowns(){
+
+    this.managementDropdown=false;
+
+    this.profileDropdown=false;
+
   }
 
-  isAuthenticated() {
+  isAuthenticated(){
+
     return this.auth.isAuthenticated();
+
   }
 
-  isAdmin() {
+  isAdmin(){
+
     return this.auth.isAdmin();
+
   }
 
-  logout() {
+  logout(){
+
     this.closeDropdowns();
+
     this.auth.logout();
+
   }
+
 }

@@ -1,0 +1,82 @@
+<div class="club-events">
+
+    <h2>Club Events</h2>
+
+    <div *ngIf="success" class="success">
+        {{success}}
+    </div>
+
+    <div *ngIf="error" class="error">
+        {{error}}
+    </div>
+
+    <div *ngIf="!myMembership" class="warning">
+
+        You must be a club member to reserve events
+
+    </div>
+
+    <div *ngIf="loading">
+        Loading events...
+    </div>
+
+    <div *ngIf="!loading && events.length === 0">
+        No events available
+    </div>
+
+    <div class="event-card"
+         *ngFor="let event of events">
+
+        <h3>{{event.title}}</h3>
+
+        <p>{{event.description}}</p>
+
+        <div class="event-info">
+
+            <span>
+                {{event.eventDate | date:'medium'}}
+            </span>
+
+            <span
+              [class.full]="event.remainingPlaces === 0"
+              [class.available]="event.remainingPlaces > 0">
+
+                {{event.remainingPlaces}}
+                /
+                {{event.maxPlaces}}
+
+            </span>
+
+        </div>
+
+        <div *ngIf="alreadyReserved(event.id)"
+             class="reserved">
+
+            Already reserved
+
+        </div>
+
+        <div class="reserve-section"
+             *ngIf="!alreadyReserved(event.id)">
+
+            <input
+                type="number"
+                min="1"
+                [(ngModel)]="places[event.id]"
+                [disabled]="!myMembership">
+
+            <button
+                (click)="reserve(event.id)"
+                [disabled]="
+                    event.remainingPlaces === 0 ||
+                    !myMembership">
+
+                Reserve
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>

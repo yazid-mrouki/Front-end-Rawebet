@@ -1,0 +1,69 @@
+<div class="club-container">
+
+    <div *ngIf="loading">
+        Loading club...
+    </div>
+
+    <div *ngIf="error">
+        {{error}}
+    </div>
+
+    <!-- Club info -->
+    <div *ngIf="club" class="club-header">
+
+        <h1>{{club.name}}</h1>
+
+        <p>{{club.description}}</p>
+
+        <small>
+            Created :
+            {{club.createdAt | date:'medium'}}
+        </small>
+
+    </div>
+
+    <!-- Club navigation -->
+    <div class="club-nav">
+
+        <a routerLink="/club"
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{exact:true}">
+            Events
+        </a>
+
+        <a routerLink="/club/members"
+           routerLinkActive="active">
+            Members
+        </a>
+
+        <a *ngIf="!myMembership"
+           routerLink="/club/join"
+           routerLinkActive="active">
+            Join Club
+        </a>
+
+        <a *ngIf="myMembership"
+           routerLink="/club/my-reservations"
+           routerLinkActive="active">
+
+            My Reservations
+
+            <span *ngIf="reservationCount() > 0"
+                  class="badge">
+
+                {{reservationCount()}}
+
+            </span>
+
+        </a>
+
+    </div>
+
+    <!-- Club pages -->
+    <div class="club-content">
+
+        <router-outlet></router-outlet>
+
+    </div>
+
+</div>

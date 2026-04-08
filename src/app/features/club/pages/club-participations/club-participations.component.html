@@ -1,0 +1,50 @@
+<div class="club-participations">
+
+    <h2>My Reservations</h2>
+
+    <div *ngIf="loading">
+
+        Loading reservations...
+
+    </div>
+
+    <div *ngIf="!loading && reservations.length === 0">
+
+        No reservations yet
+
+    </div>
+
+    <div class="reservation-card"
+         *ngFor="let r of reservations">
+
+        <div>
+
+            <h3>{{r.eventTitle}}</h3>
+
+            <p>
+
+                Places :
+                {{r.reservedPlaces}}
+
+            </p>
+
+            <small>
+
+                Reserved :
+                {{r.reservationDate | date:'medium'}}
+
+            </small>
+
+        </div>
+
+        <button
+            *ngIf="r.status === 'CONFIRMED'"
+            (click)="cancel(r.id)">
+
+            Cancel
+
+        </button>
+
+    </div>
+
+</div>

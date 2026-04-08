@@ -1,0 +1,37 @@
+<div class="club-join">
+
+    <h2>Join Club</h2>
+
+    <div *ngIf="success" class="success">
+
+        Request submitted successfully
+
+    </div>
+
+    <div *ngIf="error" class="error">
+
+        {{error}}
+
+    </div>
+
+    <div class="form">
+
+        <textarea
+
+            [(ngModel)]="motivation"
+
+            placeholder="Why do you want to join ?">
+
+        </textarea>
+
+        <button
+            (click)="submit()"
+            [disabled]="loading">
+
+            Submit request
+
+        </button>
+
+    </div>
+
+</div>

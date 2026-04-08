@@ -1,0 +1,43 @@
+<div class="club-members">
+
+    <h2>Club Members</h2>
+
+    <div *ngIf="loading">
+        Loading members...
+    </div>
+
+    <div *ngIf="myMembership" class="my-membership">
+
+        <p>
+
+            You are a member :
+            <b>{{myMembership.userName}}</b>
+
+        </p>
+
+        <button (click)="leaveClub()">
+
+            Leave club
+
+        </button>
+
+    </div>
+
+    <div *ngIf="!loading">
+
+        <div class="member-card"
+             *ngFor="let member of members">
+
+            <span>{{member.userName}}</span>
+
+            <span class="status">
+
+                {{member.status}}
+
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
