@@ -4,6 +4,10 @@ export interface UserResponse {
   email: string;
   roles: string[];
   isActive: boolean;
+  loyaltyLevel?: string;
+  loyaltyPoints?: number;
+  createdAt?: string;
+  dateInscription?: string;
 }
 
 export interface UpdateProfileRequest { nom: string; email: string; }

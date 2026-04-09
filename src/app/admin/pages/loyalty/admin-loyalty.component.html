@@ -1,106 +1,127 @@
 <div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
-  <div><h1 class="font-serif text-2xl font-bold text-dark">Loyalty Program</h1><p class="text-sm text-gray-400 mt-1">Manage tiers, points and rewards</p></div>
+  <div>
+    <h1 class="font-serif text-2xl font-bold text-dark">Programme fidélité</h1>
+    <p class="text-sm text-gray-400 mt-1">Vue admin alimentée uniquement par la logique backend.</p>
+  </div>
 
-  <!-- Tier cards -->
   <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
-    <div *ngFor="let t of tiers" class="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg transition-all">
-      <div class="flex items-center gap-3 mb-3"><div class="w-4 h-4 rounded-full" [ngClass]="t.color"></div><h3 class="font-semibold text-dark">{{ t.name }}</h3></div>
-      <div class="text-2xl font-bold text-dark">{{ t.members }}</div>
-      <p class="text-xs text-gray-400 mt-1">{{ t.min }}+ points required</p>
-      <p class="text-xs text-gray-500 mt-3 bg-gray-50 rounded-lg p-2">{{ t.perks }}</p>
+    <div *ngFor="let tier of tiers" class="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg transition-all">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-4 h-4 rounded-full" [ngClass]="tier.color"></div>
+        <h3 class="font-semibold text-dark">{{ tier.name }}</h3>
+      </div>
+      <div class="text-2xl font-bold text-dark">{{ tier.members }}</div>
+      <p class="text-xs text-gray-400 mt-1">{{ tier.min }}+ points requis</p>
+      <p class="text-xs text-gray-500 mt-3 bg-gray-50 rounded-lg p-2">{{ tier.perks }}</p>
     </div>
   </div>
 
-<!-- Stats réelles du backend -->
-<div class="grid sm:grid-cols-5 gap-4">
-  <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
-    <div class="text-2xl font-bold text-dark">{{ stats.totalClients }}</div>
-    <div class="text-xs text-gray-400 mt-1">Total clients</div>
+  <div class="grid sm:grid-cols-5 gap-4">
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+      <div class="text-2xl font-bold text-dark">{{ stats.totalClients }}</div>
+      <div class="text-xs text-gray-400 mt-1">Total clients</div>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+      <div class="text-2xl font-bold text-gray-400">{{ stats.totalSilver }}</div>
+      <div class="text-xs text-gray-400 mt-1">Silver</div>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+      <div class="text-2xl font-bold text-yellow-500">{{ stats.totalGold }}</div>
+      <div class="text-xs text-gray-400 mt-1">Gold</div>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+      <div class="text-2xl font-bold text-purple-500">{{ stats.totalVip }}</div>
+      <div class="text-xs text-gray-400 mt-1">VIP</div>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
+      <div class="text-2xl font-bold text-primary">{{ stats.totalPointsDistribues }}</div>
+      <div class="text-xs text-gray-400 mt-1">Points distribués</div>
+    </div>
   </div>
-  <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
-    <div class="text-2xl font-bold text-gray-400">{{ stats.totalSilver }}</div>
-    <div class="text-xs text-gray-400 mt-1">Silver</div>
-  </div>
-  <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
-    <div class="text-2xl font-bold text-yellow-500">{{ stats.totalGold }}</div>
-    <div class="text-xs text-gray-400 mt-1">Gold</div>
-  </div>
-  <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
-    <div class="text-2xl font-bold text-purple-500">{{ stats.totalVip }}</div>
-    <div class="text-xs text-gray-400 mt-1">VIP</div>
-  </div>
-  <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
-    <div class="text-2xl font-bold text-primary">{{ stats['totalPointsDistribués'] }}</div>
-    <div class="text-xs text-gray-400 mt-1">Points distribués</div>
-  </div>
-</div>
 
-<!-- Top 10 clients -->
-<div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-  <div class="p-6 pb-0"><h3 class="font-semibold text-dark">Top 10 clients</h3></div>
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm mt-4">
-      <thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100">
-        <th class="px-6 py-3">#</th><th class="px-4 py-3">Nom</th><th class="px-4 py-3">Email</th>
-        <th class="px-4 py-3">Points</th><th class="px-4 py-3">Niveau</th>
-      </tr></thead>
-      <tbody>
-        <tr *ngFor="let c of topClients; let i = index" class="border-b border-gray-50 hover:bg-gray-50/50">
-          <td class="px-6 py-4 text-gray-400 text-xs">{{ i + 1 }}</td>
-          <td class="px-4 py-4 font-medium text-dark text-xs">{{ c.nom }}</td>
-          <td class="px-4 py-4 text-gray-500 text-xs">{{ c.email }}</td>
-          <td class="px-4 py-4 font-bold text-accent text-xs">{{ c.points }} pts</td>
-          <td class="px-4 py-4 text-xs">
-            <span class="px-2 py-1 rounded-full text-xs font-medium"
-                  [class.bg-gray-100]="c.level === 'SILVER'"
-                  [class.bg-yellow-100]="c.level === 'GOLD'"
-                  [class.bg-purple-100]="c.level === 'VIP'">{{ c.level }}</span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-  <!-- Recent Redemptions -->
   <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-    <div class="p-6 pb-0"><h3 class="font-semibold text-dark">Recent Redemptions</h3><p class="text-xs text-gray-400 mt-0.5">Latest reward redemptions by members</p></div>
+    <div class="p-6 pb-0">
+      <h3 class="font-semibold text-dark">Top 10 clients</h3>
+      <p class="text-xs text-gray-400 mt-1">Classement réel calculé depuis les cartes fidélité.</p>
+    </div>
     <div class="overflow-x-auto">
       <table class="w-full text-sm mt-4">
-        <thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100">
-          <th class="px-6 py-3 font-medium">Member</th><th class="px-4 py-3 font-medium">Reward</th><th class="px-4 py-3 font-medium">Points Used</th><th class="px-4 py-3 font-medium">Date</th>
-        </tr></thead>
+        <thead>
+          <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
+            <th class="px-6 py-3">#</th>
+            <th class="px-4 py-3">Nom</th>
+            <th class="px-4 py-3">Email</th>
+            <th class="px-4 py-3">Points</th>
+            <th class="px-4 py-3">Niveau</th>
+          </tr>
+        </thead>
         <tbody>
-          <tr *ngFor="let r of recentRedemptions" class="border-b border-gray-50 hover:bg-gray-50/50">
-            <td class="px-6 py-4 font-medium text-dark text-xs">{{ r.user }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ r.reward }}</td>
-            <td class="px-4 py-4 text-accent font-semibold text-xs">-{{ r.points }} pts</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ r.date }}</td>
+          <tr *ngIf="loadingData" class="border-b border-gray-50">
+            <td colspan="5" class="px-6 py-8 text-center text-gray-400">Chargement...</td>
+          </tr>
+          <tr *ngFor="let client of topClients; let i = index; trackBy: trackByTop" class="border-b border-gray-50 hover:bg-gray-50/50">
+            <td class="px-6 py-4 text-gray-400 text-xs">{{ i + 1 }}</td>
+            <td class="px-4 py-4 font-medium text-dark text-xs">{{ client.nom }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ client.email }}</td>
+            <td class="px-4 py-4 font-bold text-accent text-xs">{{ client.points }} pts</td>
+            <td class="px-4 py-4 text-xs">
+              <span class="px-2 py-1 rounded-full text-xs font-medium"
+                    [class.bg-gray-100]="client.level === 'SILVER'"
+                    [class.bg-yellow-100]="client.level === 'GOLD'"
+                    [class.bg-purple-100]="client.level === 'VIP'">{{ client.level }}</span>
+            </td>
+          </tr>
+          <tr *ngIf="!loadingData && topClients.length === 0">
+            <td colspan="5" class="px-6 py-8 text-center text-gray-400">Aucune donnée disponible.</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- Ajouter des points manuellement -->
   <div class="bg-white rounded-2xl border border-gray-100 p-6">
     <h3 class="font-semibold text-dark mb-4">➕ Ajouter des points manuellement</h3>
     <div *ngIf="addPointsMessage" class="mb-3 p-3 bg-green-50 text-green-700 rounded-xl text-sm">{{ addPointsMessage }}</div>
     <div *ngIf="addPointsError" class="mb-3 p-3 bg-red-50 text-red-600 rounded-xl text-sm">{{ addPointsError }}</div>
-    <div class="flex gap-4 items-end">
-      <div class="flex-1">
-        <label class="block text-xs font-medium text-gray-600 mb-1">ID utilisateur</label>
-        <input type="number" [(ngModel)]="addPointsForm.userId"
-               class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-primary" />
+    <div class="flex gap-4 items-end flex-col md:flex-row">
+      <div class="flex-1 w-full relative">
+        <label class="block text-xs font-medium text-gray-600 mb-1">Utilisateur</label>
+        <div class="flex items-center gap-2">
+          <input
+            type="text"
+            [(ngModel)]="addPointsForm.target"
+            (ngModelChange)="onTargetInput($event)"
+            [readonly]="!!selectedUser"
+            [disabled]="addPointsLoading"
+            [placeholder]="selectedUser ? 'Client sélectionné' : 'Nom ou email'"
+            class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-primary readonly:bg-gray-50 readonly:text-gray-500 disabled:bg-gray-50 disabled:text-gray-400"
+          />
+          <button *ngIf="selectedUser" type="button" (click)="clearSelectedUser()" [disabled]="addPointsLoading" class="shrink-0 px-3 py-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60">
+            Modifier client
+          </button>
+        </div>
+        <div *ngIf="!selectedUser && addPointsForm.target && matchingUsers.length > 0" class="absolute z-10 mt-2 w-full max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+          <button
+            *ngFor="let user of matchingUsers"
+            type="button"
+            (click)="selectUser(user)"
+            class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50"
+          >
+            <span class="min-w-0">
+              <span class="block truncate font-medium text-dark">{{ user.nom }}</span>
+              <span class="block truncate text-xs text-gray-400">{{ user.email }}</span>
+            </span>
+            <span class="shrink-0 rounded-full bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-600">#{{ user.id }}</span>
+          </button>
+        </div>
       </div>
-      <div class="flex-1">
+      <div class="flex-1 w-full">
         <label class="block text-xs font-medium text-gray-600 mb-1">Points à ajouter</label>
-        <input type="number" [(ngModel)]="addPointsForm.points"
-               class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-primary" />
+        <input type="number" [(ngModel)]="addPointsForm.points" (ngModelChange)="onPointsInput()" [disabled]="addPointsLoading" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-primary disabled:bg-gray-50 disabled:text-gray-400" />
       </div>
-      <button (click)="addPoints()"
-              class="px-5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-light transition-colors">
-        Ajouter
+      <button (click)="addPoints()" [disabled]="addPointsLoading" class="px-5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-light transition-colors disabled:opacity-60">
+        <span *ngIf="!addPointsLoading">Ajouter</span>
+        <span *ngIf="addPointsLoading">Ajout...</span>
       </button>
     </div>
   </div>

@@ -1,58 +1,91 @@
 <div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div><h1 class="font-serif text-2xl font-bold text-dark">User Management</h1><p class="text-sm text-gray-400 mt-1">{{ users.length }} registered users</p></div>
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="font-serif text-2xl font-bold text-dark">Gestion des utilisateurs</h1>
+      <p class="text-sm text-gray-400 mt-1">{{ users.length }} utilisateurs chargés selon la logique backend.</p>
+    </div>
     <div class="flex items-center gap-3">
-      <button (click)="showAddAdminForm = !showAddAdminForm" class="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-colors">Add Admin</button>
-      <button class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors">Export Users</button>
+      <button (click)="showAddAdminForm = !showAddAdminForm" class="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-colors">Ajouter un sous-admin</button>
     </div>
   </div>
 
-  <div *ngIf="showAddAdminForm" class="bg-white rounded-2xl border border-gray-100 p-6">
-    <h3 class="font-semibold mb-4">Create Admin</h3>
+  <div *ngIf="pageMessage" class="p-3 rounded-xl bg-green-50 text-green-700 text-sm">{{ pageMessage }}</div>
+  <div *ngIf="pageError" class="p-3 rounded-xl bg-red-50 text-red-600 text-sm">{{ pageError }}</div>
+
+  <div *ngIf="showAddAdminForm" class="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+    <h3 class="font-semibold text-dark">Créer un sous-admin</h3>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-      <input [(ngModel)]="newAdminForm.nom" placeholder="Full name" class="px-3 py-2 border rounded" />
-      <input [(ngModel)]="newAdminForm.email" placeholder="Email" class="px-3 py-2 border rounded" />
-      <input [(ngModel)]="newAdminForm.password" placeholder="Password" type="password" class="px-3 py-2 border rounded" />
-      <select [(ngModel)]="newAdminForm.role" class="px-3 py-2 border rounded">
-        <option *ngFor="let r of availableRoles" [value]="r">{{ r }}</option>
+      <input [(ngModel)]="newAdminForm.nom" placeholder="Nom complet" class="px-3 py-2 border rounded-xl" />
+      <input [(ngModel)]="newAdminForm.email" placeholder="Email" class="px-3 py-2 border rounded-xl" />
+      <input [(ngModel)]="newAdminForm.password" placeholder="Mot de passe" type="password" class="px-3 py-2 border rounded-xl" />
+      <select multiple [(ngModel)]="newAdminForm.role" class="px-3 py-2 border rounded-xl h-32 md:col-span-3">
+        <option *ngFor="let role of availableRoles" [value]="role">{{ role }}</option>
       </select>
-      <div class="col-span-3 flex gap-2">
-        <button (click)="addAdmin()" class="px-4 py-2 bg-primary text-white rounded">Create</button>
-        <button (click)="showAddAdminForm = false" class="px-4 py-2 border rounded">Cancel</button>
+      <div class="md:col-span-3 flex gap-2">
+        <button (click)="addAdmin()" class="px-4 py-2 bg-primary text-white rounded-xl">Créer</button>
+        <button (click)="showAddAdminForm = false" class="px-4 py-2 border rounded-xl">Annuler</button>
       </div>
     </div>
-    <p *ngIf="addAdminMessage" class="text-green-600 mt-3">{{ addAdminMessage }}</p>
-    <p *ngIf="addAdminError" class="text-red-600 mt-3">{{ addAdminError }}</p>
+    <p *ngIf="addAdminMessage" class="text-green-600 text-sm">{{ addAdminMessage }}</p>
+    <p *ngIf="addAdminError" class="text-red-600 text-sm">{{ addAdminError }}</p>
   </div>
+
   <div class="flex flex-col sm:flex-row gap-3">
-    <input [(ngModel)]="searchQuery" type="text" placeholder="Search by name or email..." class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary" />
+    <input [(ngModel)]="searchQuery" type="text" placeholder="Rechercher par nom ou email..." class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary" />
     <select [(ngModel)]="selectedRole" class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-600">
-      <option value="all">All Roles</option><option value="Admin">Admin</option><option value="Club Leader">Club Leader</option><option value="Member">Member</option>
+      <option value="all">Tous les rôles</option>
+      <option *ngFor="let role of ['SUPER_ADMIN','ADMIN_CINEMA','ADMIN_EVENT','ADMIN_FORMATION','CLIENT']" [value]="role">{{ role }}</option>
     </select>
   </div>
+
   <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
-          <th class="px-6 py-3 font-medium">User</th><th class="px-4 py-3 font-medium">Role</th><th class="px-4 py-3 font-medium">Plan</th><th class="px-4 py-3 font-medium">Tier</th><th class="px-4 py-3 font-medium">Joined</th><th class="px-4 py-3 font-medium">Status</th><th class="px-4 py-3 font-medium text-right">Actions</th>
-        </tr></thead>
+        <thead>
+          <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+            <th class="px-6 py-3 font-medium">Utilisateur</th>
+            <th class="px-4 py-3 font-medium">Rôle</th>
+            <th class="px-4 py-3 font-medium">Fidélité</th>
+            <th class="px-4 py-3 font-medium">Points</th>
+            <th class="px-4 py-3 font-medium">Statut</th>
+            <th class="px-4 py-3 font-medium text-right">Actions</th>
+          </tr>
+        </thead>
         <tbody>
-          <tr *ngFor="let u of filteredUsers" class="border-b border-gray-50 hover:bg-gray-50/50">
+          <tr *ngIf="loading">
+            <td colspan="6" class="px-6 py-10 text-center text-gray-400">Chargement des utilisateurs...</td>
+          </tr>
+          <tr *ngFor="let user of filteredUsers" class="border-b border-gray-50 hover:bg-gray-50/50">
             <td class="px-6 py-4">
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center"><span class="text-primary text-xs font-semibold">{{ u.name.charAt(0) }}</span></div>
-                <div><div class="text-dark font-medium text-xs">{{ u.name }}</div><div class="text-gray-400 text-[10px]">{{ u.email }}</div></div>
+                <div class="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center">
+                  <span class="text-primary text-xs font-semibold">{{ user.name.charAt(0) }}</span>
+                </div>
+                <div>
+                  <div class="text-dark font-medium text-sm flex items-center gap-2">
+                    {{ user.name }}
+                    <span *ngIf="user.isCurrentUser" class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-semibold">Vous</span>
+                  </div>
+                  <div class="text-gray-400 text-xs">{{ user.email }}</div>
+                </div>
               </div>
             </td>
-            <td class="px-4 py-4"><span [class]="getRoleClass(u.role)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ u.role }}</span></td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ u.plan }}</td>
-            <td class="px-4 py-4 text-xs font-semibold" [ngClass]="getTierColor(u.tier)">{{ u.tier }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ u.joined }}</td>
-            <td class="px-4 py-4"><span [class]="getStatusClass(u.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ u.status }}</span></td>
-            <td class="px-4 py-4 text-right space-x-2">
-              <button *ngIf="u.status === 'Active'" (click)="banUser(u.id)" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100">Ban</button>
-              <button *ngIf="u.status !== 'Active'" (click)="unbanUser(u.id)" class="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg text-xs font-semibold hover:bg-green-100">Unban</button>
+            <td class="px-4 py-4">
+              <span [class]="getRoleClass(user.roleLabel)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ user.roleLabel }}</span>
             </td>
+            <td class="px-4 py-4 text-xs font-semibold" [ngClass]="getTierColor(user.loyaltyLevel)">{{ user.loyaltyLevel }}</td>
+            <td class="px-4 py-4 text-xs text-gray-600">{{ user.loyaltyPoints }} pts</td>
+            <td class="px-4 py-4">
+              <span [class]="getStatusClass(user.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ user.status }}</span>
+            </td>
+            <td class="px-4 py-4 text-right space-x-2">
+              <button *ngIf="canBan(user)" (click)="banUser(user)" [disabled]="actionLoadingId === user.id" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 disabled:opacity-60">{{ actionLoadingId === user.id ? '...' : 'Bannir' }}</button>
+              <button *ngIf="canUnban(user)" (click)="unbanUser(user)" [disabled]="actionLoadingId === user.id" class="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg text-xs font-semibold hover:bg-green-100 disabled:opacity-60">{{ actionLoadingId === user.id ? '...' : 'Débannir' }}</button>
+              <span *ngIf="!canBan(user) && !canUnban(user)" class="text-[11px] text-gray-400">Aucune action</span>
+            </td>
+          </tr>
+          <tr *ngIf="!loading && filteredUsers.length === 0">
+            <td colspan="6" class="px-6 py-10 text-center text-gray-400">Aucun utilisateur trouvé.</td>
           </tr>
         </tbody>
       </table>

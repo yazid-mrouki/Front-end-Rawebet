@@ -6,14 +6,20 @@
       <h1 class="font-serif text-2xl lg:text-3xl font-bold text-dark">Dashboard</h1>
       <p class="text-gray-500 text-sm mt-1">Welcome back, Super Admin. Here's your cultural center overview.</p>
     </div>
-    <div class="flex gap-2">
-      <select class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 outline-none">
-        <option>Last 30 days</option>
-        <option>Last 7 days</option>
-        <option>This month</option>
-        <option>This year</option>
-      </select>
-      <button class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors">Export Report</button>
+    <div class="flex flex-col items-stretch gap-2 sm:items-end">
+      <div class="flex gap-2">
+        <select class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-600 outline-none">
+          <option>Last 30 days</option>
+          <option>Last 7 days</option>
+          <option>This month</option>
+          <option>This year</option>
+        </select>
+        <button (click)="exportReport()" [disabled]="exportLoading" class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors disabled:opacity-60">
+          {{ exportLoading ? 'Export...' : 'Export Report' }}
+        </button>
+      </div>
+      <p *ngIf="exportMessage" class="text-xs text-green-600">{{ exportMessage }}</p>
+      <p *ngIf="exportError" class="text-xs text-red-600">{{ exportError }}</p>
     </div>
   </div>
 
@@ -175,10 +181,10 @@
       </div>
     </div>
 
-    <!-- Subscription Breakdown -->
+    <!-- Client Tier Breakdown -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6">
-      <h3 class="font-semibold text-dark mb-1">Subscriptions</h3>
-      <p class="text-xs text-gray-400 mb-6">Current plan distribution</p>
+      <h3 class="font-semibold text-dark mb-1">Client Tiers</h3>
+      <p class="text-xs text-gray-400 mb-6">Distribution des clients par niveau fidélité</p>
       <div class="space-y-4">
         <div *ngFor="let sub of subscriptionData">
           <div class="flex items-center justify-between text-sm mb-1.5">
@@ -188,7 +194,7 @@
           <div class="w-full bg-gray-100 rounded-full h-2.5">
             <div class="rounded-full h-2.5 transition-all" [ngClass]="sub.color" [style.width.%]="sub.pct"></div>
           </div>
-          <div class="text-[10px] text-gray-400 mt-1">{{ sub.pct }}% of total users</div>
+          <div class="text-[10px] text-gray-400 mt-1">{{ sub.pct }}% des clients</div>
         </div>
       </div>
     </div>

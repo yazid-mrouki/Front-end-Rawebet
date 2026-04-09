@@ -1,9 +1,6 @@
 @use "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap');
 
-/* ── Google Fonts ── */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
-
-/* ── Custom Theme ── */
 :root {
   --color-primary: #7b1f27;
   --color-primary-light: #a3333d;
@@ -22,22 +19,32 @@
   --color-dark: #1a1a2e;
   --color-surface: #faf8f5;
   --font-serif: 'Playfair Display', serif;
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: 'Manrope', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   background-color: var(--color-surface);
   color: #1a1a2e;
   margin: 0;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga' 1, 'kern' 1;
 }
 
 h1, h2, h3, h4, h5 {
   font-family: 'Playfair Display', serif;
+  letter-spacing: -0.02em;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
-
