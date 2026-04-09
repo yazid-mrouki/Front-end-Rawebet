@@ -1,43 +1,69 @@
-<div class="club-members">
+<div>
 
-    <h2>Club Members</h2>
+  <!-- My membership banner -->
+  <div *ngIf="myMembership"
+       class="bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl border border-primary/10 p-5 mb-6 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center font-semibold text-primary text-lg shrink-0">
+        {{myMembership.userName.charAt(0).toUpperCase()}}
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Your membership</p>
+        <p class="font-semibold text-dark">{{myMembership.userName}}</p>
+        <span class="bg-primary/10 text-primary text-xs rounded-full px-2.5 py-0.5 font-semibold">
+          {{myMembership.status}}
+        </span>
+      </div>
+    </div>
+    <button (click)="leaveClub()"
+            class="bg-red-50 text-red-600 rounded-xl px-4 py-2 text-sm font-semibold hover:bg-red-100 transition-colors shrink-0">
+      Leave Club
+    </button>
+  </div>
 
-    <div *ngIf="loading">
-        Loading members...
+  <!-- Section header -->
+  <div class="flex items-center justify-between mb-5">
+    <h2 class="font-serif text-xl font-bold text-dark">Members</h2>
+    <span *ngIf="!loading"
+          class="bg-gray-100 text-gray-500 text-xs rounded-full px-3 py-1 font-medium">
+      {{members.length}} members
+    </span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-16">
+    <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">👥</div>
+    <p class="text-gray-400 text-sm">Loading members...</p>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && members.length === 0" class="text-center py-16">
+    <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">👥</div>
+    <p class="text-gray-500 font-medium">No members yet</p>
+  </div>
+
+  <!-- Members grid -->
+  <div *ngIf="!loading && members.length > 0"
+       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+    <div *ngFor="let member of members"
+         class="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-all duration-300">
+
+      <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center font-semibold text-primary shrink-0">
+        {{member.userName.charAt(0).toUpperCase()}}
+      </div>
+
+      <div class="flex-1 min-w-0">
+        <p class="font-semibold text-dark text-sm truncate">{{member.userName}}</p>
+        <span class="text-xs font-medium"
+              [class.text-green-500]="member.status === 'ACTIVE'"
+              [class.text-gray-400]="member.status !== 'ACTIVE'">
+          {{member.status}}
+        </span>
+      </div>
+
     </div>
 
-    <div *ngIf="myMembership" class="my-membership">
-
-        <p>
-
-            You are a member :
-            <b>{{myMembership.userName}}</b>
-
-        </p>
-
-        <button (click)="leaveClub()">
-
-            Leave club
-
-        </button>
-
-    </div>
-
-    <div *ngIf="!loading">
-
-        <div class="member-card"
-             *ngFor="let member of members">
-
-            <span>{{member.userName}}</span>
-
-            <span class="status">
-
-                {{member.status}}
-
-            </span>
-
-        </div>
-
-    </div>
+  </div>
 
 </div>

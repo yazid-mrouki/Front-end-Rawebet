@@ -1,11 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { ClubService } from '../../services/club.service';
 import { ClubMemberService } from '../../services/club-member.service';
 import { ClubParticipationService } from '../../services/club-participation.service';
-
-import { Club } from '../../models/club.model';
 import { ClubMember } from '../../models/club-member.model';
 import { ClubParticipation } from '../../models/club-participation.model';
 
@@ -21,25 +18,16 @@ import { ClubParticipation } from '../../models/club-participation.model';
 })
 export class ClubHomeComponent implements OnInit {
 
-  club: Club | null = null;
-
   myMembership: ClubMember | null = null;
 
   myReservations: ClubParticipation[] = [];
 
-  loading = true;
-
-  error: string | null = null;
-
   constructor(
-    private clubService: ClubService,
     private memberService: ClubMemberService,
     private participationService: ClubParticipationService
   ) {}
 
   ngOnInit(): void {
-
-    this.loadClub();
 
     this.loadMembership();
 
@@ -47,42 +35,17 @@ export class ClubHomeComponent implements OnInit {
 
   }
 
-  loadClub(): void {
+  loadMembership(): void {
 
-    this.clubService.getClub().subscribe({
+    this.memberService.getMyMembership().subscribe({
 
       next: (data) => {
-
-        this.club = data;
-
-        this.loading = false;
-
-      },
-
-      error: () => {
-
-        this.error = 'Failed to load club';
-
-        this.loading = false;
-
-      }
-
-    });
-
-  }
-
-  loadMembership():void{
-
-    this.memberService.getMyMembership()
-    .subscribe({
-
-      next:(data)=>{
 
         this.myMembership = data;
 
       },
 
-      error:()=>{
+      error: () => {
 
         this.myMembership = null;
 
@@ -92,14 +55,19 @@ export class ClubHomeComponent implements OnInit {
 
   }
 
-  loadReservations():void{
+  loadReservations(): void {
 
-    this.participationService.myReservations()
-    .subscribe({
+    this.participationService.myReservations().subscribe({
 
-      next:(data)=>{
+      next: (data) => {
 
         this.myReservations = data;
+
+      },
+
+      error: () => {
+
+        this.myReservations = [];
 
       }
 
@@ -107,7 +75,7 @@ export class ClubHomeComponent implements OnInit {
 
   }
 
-  reservationCount():number{
+  reservationCount(): number {
 
     return this.myReservations
       .filter(r => r.status === 'CONFIRMED')

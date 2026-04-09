@@ -3,13 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ClubJoinRequest } from '../models/club-join-request.model';
 import { ClubJoinRequestPayload } from '../models/club-join-request-payload.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ClubJoinRequestService {
 
-  private apiUrl = '/api/club/requests';
+  private apiUrl = `${environment.apiUrl}/club/requests`;
 
   constructor(private http: HttpClient) {}
 

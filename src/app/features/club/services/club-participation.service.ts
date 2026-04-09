@@ -3,13 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ClubParticipation } from '../models/club-participation.model';
 import { ClubParticipationRequest } from '../models/club-participation-request.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ClubParticipationService {
 
-  private apiUrl = '/api/club/reservations';
+  private apiUrl = `${environment.apiUrl}/club/reservations`;
 
   constructor(private http: HttpClient) {}
 

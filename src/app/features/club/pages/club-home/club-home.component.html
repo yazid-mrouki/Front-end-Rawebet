@@ -1,69 +1,63 @@
-<div class="club-container">
+<!-- Club header (static) -->
+<div class="bg-gradient-to-r from-primary to-primary-light py-16">
+  <div class="max-w-7xl mx-auto px-6">
 
-    <div *ngIf="loading">
-        Loading club...
+    <div class="flex items-center gap-5 mb-4">
+      <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-4xl shrink-0">🏆</div>
+      <div>
+        <h1 class="font-serif text-4xl font-bold text-white">Club Rawabet</h1>
+        <p class="text-white/70 text-sm mt-1">📅 Created January 1, 2024</p>
+      </div>
     </div>
 
-    <div *ngIf="error">
-        {{error}}
-    </div>
+    <p class="text-white/80 max-w-2xl">
+      A unified club bringing members together through events, culture, and shared experiences.
+      Join us to reserve events and connect with the community.
+    </p>
 
-    <!-- Club info -->
-    <div *ngIf="club" class="club-header">
+  </div>
+</div>
 
-        <h1>{{club.name}}</h1>
+<!-- Navigation tabs -->
+<div class="bg-white border-b border-gray-100 sticky top-16 z-40">
+  <div class="max-w-7xl mx-auto px-6">
+    <nav class="flex gap-1 py-2">
 
-        <p>{{club.description}}</p>
+      <a routerLink="/club/events"
+         routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
+         class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
+        🎭 See Events
+      </a>
 
-        <small>
-            Created :
-            {{club.createdAt | date:'medium'}}
-        </small>
+      <a routerLink="/club/members"
+         routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
+         class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
+        👥 Members
+      </a>
 
-    </div>
+      <a *ngIf="!myMembership"
+         routerLink="/club/join"
+         routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
+         class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
+        ✋ Join Club
+      </a>
 
-    <!-- Club navigation -->
-    <div class="club-nav">
+      <a *ngIf="myMembership"
+         routerLink="/club/my-reservations"
+         routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
+         class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
+        🎟️ My Reservations
+        <span *ngIf="reservationCount() > 0"
+              class="bg-primary text-white text-xs rounded-full px-2 py-0.5 font-semibold ml-1">
+          {{reservationCount()}}
+        </span>
+      </a>
 
-        <a routerLink="/club"
-           routerLinkActive="active"
-           [routerLinkActiveOptions]="{exact:true}">
-            Events
-        </a>
+    </nav>
+  </div>
+</div>
 
-        <a routerLink="/club/members"
-           routerLinkActive="active">
-            Members
-        </a>
-
-        <a *ngIf="!myMembership"
-           routerLink="/club/join"
-           routerLinkActive="active">
-            Join Club
-        </a>
-
-        <a *ngIf="myMembership"
-           routerLink="/club/my-reservations"
-           routerLinkActive="active">
-
-            My Reservations
-
-            <span *ngIf="reservationCount() > 0"
-                  class="badge">
-
-                {{reservationCount()}}
-
-            </span>
-
-        </a>
-
-    </div>
-
-    <!-- Club pages -->
-    <div class="club-content">
-
-        <router-outlet></router-outlet>
-
-    </div>
-
+<!-- Sub-page content -->
+<div class="max-w-7xl mx-auto px-6 py-8">
+  <router-outlet></router-outlet>
 </div>

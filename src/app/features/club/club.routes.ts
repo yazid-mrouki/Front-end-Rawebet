@@ -13,10 +13,11 @@ export const CLUB_ROUTES: Routes = [
     component: ClubHomeComponent,
     children:[
 
-      // Default club page
+      // Default → redirect to events
       {
         path:'',
-        component: ClubEventsComponent
+        redirectTo:'events',
+        pathMatch:'full'
       },
 
       // Club events
