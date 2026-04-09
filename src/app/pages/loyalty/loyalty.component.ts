@@ -21,30 +21,30 @@ export class LoyaltyComponent implements OnInit {
   transferMessage = '';
   transferError = '';
 
-  // Niveaux backend : SILVER=0-199, GOLD=200-499, VIP=500+
   tierConfig: Record<string, { label: string; icon: string; min: number; next: string; nextMin: number }> = {
-    'SILVER': { label: 'Silver', icon: '🥈', min: 0,   next: 'GOLD', nextMin: 200 },
-    'GOLD':   { label: 'Gold',   icon: '🥇', min: 200, next: 'VIP',  nextMin: 500 },
-    'VIP':    { label: 'VIP',    icon: '💎', min: 500, next: 'VIP',  nextMin: 500 }
+    SILVER: { label: 'Silver', icon: '🥈', min: 0, next: 'GOLD', nextMin: 200 },
+    GOLD: { label: 'Gold', icon: '🥇', min: 200, next: 'VIP', nextMin: 500 },
+    VIP: { label: 'VIP', icon: '💎', min: 500, next: 'VIP', nextMin: 500 },
   };
 
   constructor(private carteService: CarteService) {}
 
   ngOnInit() {
-    this.carteService.getMaCarte().subscribe({
-      next: (carte) => {
-        this.carte = carte;
+    this.loadDashboard();
+  }
+
+  loadDashboard() {
+    this.loading = true;
+    this.carteService.getDashboard().subscribe({
+      next: (dashboard) => {
+        this.carte = dashboard.carte;
+        this.history = dashboard.history || [];
+        this.rewards = dashboard.rewards || [];
         this.loading = false;
       },
-      error: () => this.loading = false
-    });
-
-    this.carteService.getHistory().subscribe({
-      next: (h) => this.history = h
-    });
-
-    this.carteService.getRewards().subscribe({
-      next: (r) => this.rewards = r
+      error: () => {
+        this.loading = false;
+      },
     });
   }
 
@@ -71,8 +71,7 @@ export class LoyaltyComponent implements OnInit {
     this.carteService.redeemReward(rewardType).subscribe({
       next: (res) => {
         this.redeemMessage = res.message;
-        // Recharger la carte après rachat
-        this.carteService.getMaCarte().subscribe({ next: (c) => this.carte = c });
+        this.loadDashboard();
       },
       error: (err) => this.redeemError = err?.error?.message || 'Points insuffisants.'
     });
@@ -82,11 +81,12 @@ export class LoyaltyComponent implements OnInit {
     this.transferMessage = '';
     this.transferError = '';
     if (!this.transferForm.toUserId || !this.transferForm.points) return;
+
     this.carteService.transferPoints(this.transferForm.toUserId, this.transferForm.points).subscribe({
       next: () => {
         this.transferMessage = 'Transfert effectué avec succès.';
-        this.carteService.getMaCarte().subscribe({ next: (c) => this.carte = c });
         this.transferForm = { toUserId: null, points: null };
+        this.loadDashboard();
       },
       error: (err) => this.transferError = err?.error?.message || 'Transfert impossible.'
     });

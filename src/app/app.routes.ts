@@ -16,7 +16,6 @@ import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-pas
 import { ResetPasswordComponent } from './pages/auth/reset-password/reset-password.component';
 import { authGuard } from './core/guards/auth.guard';
 
-// Admin
 import { AdminLayoutComponent } from './admin/admin-layout/admin-layout.component';
 import { AdminDashboardComponent } from './admin/pages/dashboard/admin-dashboard.component';
 import { AdminEventsComponent } from './admin/pages/events/admin-events.component';
@@ -30,6 +29,7 @@ import { AdminLogisticsComponent } from './admin/pages/logistics/admin-logistics
 import { AdminFeedbackComponent } from './admin/pages/feedback/admin-feedback.component';
 import { AdminNotificationsComponent } from './admin/pages/notifications/admin-notifications.component';
 import { adminGuard } from './core/guards/admin.guard';
+import { permissionGuard } from './core/guards/permission.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -48,8 +48,6 @@ export const routes: Routes = [
   { path: 'feedback', component: FeedbackComponent },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'notifications', component: NotificationsComponent },
-
-  // ─── Admin Panel ───
   {
     path: 'admin',
     component: AdminLayoutComponent,
@@ -62,13 +60,12 @@ export const routes: Routes = [
       { path: 'tickets', component: AdminTicketsComponent },
       { path: 'clubs', component: AdminClubsComponent },
       { path: 'subscriptions', component: AdminSubscriptionsComponent },
-      { path: 'users', component: AdminUsersComponent },
-      { path: 'loyalty', component: AdminLoyaltyComponent },
+      { path: 'users', component: AdminUsersComponent, canActivate: [permissionGuard(['ADMIN_MANAGE'])] },
+      { path: 'loyalty', component: AdminLoyaltyComponent, canActivate: [permissionGuard(['FIDELITY_UPDATE'])] },
       { path: 'logistics', component: AdminLogisticsComponent },
       { path: 'feedback', component: AdminFeedbackComponent },
       { path: 'notifications', component: AdminNotificationsComponent },
-    ]
+    ],
   },
-
-  { path: '**', redirectTo: 'home' }
+  { path: '**', redirectTo: 'home' },
 ];
