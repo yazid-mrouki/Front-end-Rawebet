@@ -30,6 +30,7 @@ import { AdminFeedbackComponent } from './admin/pages/feedback/admin-feedback.co
 import { AdminNotificationsComponent } from './admin/pages/notifications/admin-notifications.component';
 import { adminGuard } from './core/guards/admin.guard';
 import { permissionGuard } from './core/guards/permission.guard';
+import { AdminChatComponent } from './admin/pages/chat/admin-chat.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -55,6 +56,12 @@ export const routes: Routes = [
   {
     path: 'club',
     loadChildren: () => import('./features/club/club.routes').then((m) => m.CLUB_ROUTES),
+  },
+
+  // === CHAT FEATURE ===
+  {
+    path: 'chat',
+    loadChildren: () => import('./features/chat/chat.routes').then((m) => m.CHAT_ROUTES),
   },
 
   {
@@ -93,6 +100,8 @@ export const routes: Routes = [
       { path: 'feedback', component: AdminFeedbackComponent },
 
       { path: 'notifications', component: AdminNotificationsComponent },
+
+      { path: 'chat', component: AdminChatComponent },
     ],
   },
 
