@@ -107,7 +107,7 @@ export class AuthService {
 
   isAdmin(): boolean {
     const roles = this.getRoles();
-    return roles.some((role) => ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_FORMATION'].includes(role));
+    return roles.some((role) => ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'].includes(role));
   }
 
   isSuperAdmin(): boolean {

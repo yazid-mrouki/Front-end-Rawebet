@@ -34,7 +34,7 @@
     <input [(ngModel)]="searchQuery" type="text" placeholder="Rechercher par nom ou email..." class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary" />
     <select [(ngModel)]="selectedRole" class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-600">
       <option value="all">Tous les rôles</option>
-      <option *ngFor="let role of ['SUPER_ADMIN','ADMIN_CINEMA','ADMIN_EVENT','ADMIN_FORMATION','CLIENT']" [value]="role">{{ role }}</option>
+      <option *ngFor="let role of ['SUPER_ADMIN','ADMIN_CINEMA','ADMIN_EVENT','ADMIN_CLUB','CLIENT']" [value]="role">{{ role }}</option>
     </select>
   </div>
 

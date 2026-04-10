@@ -34,17 +34,17 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   private readonly allMenuItems: AdminMenuItem[] = [
-    { label: 'Dashboard', icon: '📊', route: '/admin/dashboard', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_FORMATION'] },
+    { label: 'Dashboard', icon: '📊', route: '/admin/dashboard', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'] },
     { label: 'Events', icon: '🎭', route: '/admin/events', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
     { label: 'Films', icon: '🎬', route: '/admin/films', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
     { label: 'Tickets', icon: '🎟️', route: '/admin/tickets', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
-    { label: 'Clubs', icon: '👥', route: '/admin/clubs', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+    { label: 'Clubs', icon: '👥', route: '/admin/clubs', roles: ['SUPER_ADMIN', 'ADMIN_CLUB'] },
     { label: 'Subscriptions', icon: '💳', route: '/admin/subscriptions', roles: ['SUPER_ADMIN'] },
     { label: 'Users', icon: '👤', route: '/admin/users', permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
     { label: 'Loyalty', icon: '⭐', route: '/admin/loyalty', permissions: ['FIDELITY_UPDATE'], roles: ['SUPER_ADMIN'] },
     { label: 'Logistics', icon: '📦', route: '/admin/logistics', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
     { label: 'Feedback', icon: '💬', route: '/admin/feedback', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
-    { label: 'Notifications', icon: '🔔', route: '/admin/notifications', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_FORMATION'] },
+    { label: 'Notifications', icon: '🔔', route: '/admin/notifications', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'] },
   ];
 
   get menuItems(): AdminMenuItem[] {
@@ -77,7 +77,7 @@ export class AdminLayoutComponent implements OnInit {
     if (roles.includes('SUPER_ADMIN')) return 'Super Admin';
     if (roles.includes('ADMIN_CINEMA')) return 'Admin Cinéma';
     if (roles.includes('ADMIN_EVENT')) return 'Admin Event';
-    if (roles.includes('ADMIN_FORMATION')) return 'Admin Formation';
+    if (roles.includes('ADMIN_CLUB')) return 'Admin Club';
     return 'Admin';
   }
 

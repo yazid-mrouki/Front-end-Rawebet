@@ -1,29 +1,64 @@
-<div>
+<!-- ─── Navigation tabs (partagée entre les sous-pages du club) ─── -->
+<div class="bg-white border-b border-gray-100 sticky top-16 z-40 -mx-6 px-6 mb-8">
+  <nav class="max-w-7xl mx-auto flex gap-1 py-2">
+    <a routerLink="/club" [routerLinkActiveOptions]="{exact:true}" routerLinkActive="text-primary bg-primary/5"
+       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
+      🏠 Club Home
+    </a>
+    <a routerLink="/club/events" routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
+       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
+      🎭 Events
+    </a>
+    <a routerLink="/club/members" routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
+       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
+      👥 Members
+    </a>
+    <a routerLink="/club/my-reservations" routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
+       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
+      🎟️ My Reservations
+    </a>
+  </nav>
+</div>
+
+<div class="max-w-7xl mx-auto px-6 pb-12">
 
   <!-- Alerts -->
-  <div *ngIf="success" class="mb-6 bg-green-50 border border-green-100 text-green-700 rounded-xl px-4 py-3 flex items-center gap-2 text-sm">
-    <span>✅</span> {{success}}
+  <div *ngIf="success"
+       class="mb-6 bg-green-50 border border-green-100 text-green-700 rounded-xl px-4 py-3 flex items-center gap-2 text-sm animate-pulse">
+    ✅ {{success}}
+  </div>
+  <div *ngIf="error"
+       class="mb-6 bg-red-50 border border-red-100 text-red-700 rounded-xl px-4 py-3 flex items-center gap-2 text-sm">
+    ⚠️ {{error}}
   </div>
 
-  <div *ngIf="error" class="mb-6 bg-red-50 border border-red-100 text-red-700 rounded-xl px-4 py-3 flex items-center gap-2 text-sm">
-    <span>⚠️</span> {{error}}
-  </div>
-
-  <div *ngIf="!myMembership" class="mb-6 bg-amber-50 border border-amber-100 text-amber-700 rounded-xl px-4 py-3 flex items-center gap-2 text-sm">
-    <span>ℹ️</span> You must join the club before reserving.
+  <!-- Not-member banner -->
+  <div *ngIf="!myMembership && !loading"
+       class="mb-8 bg-amber-50 border border-amber-100 rounded-2xl p-5 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">ℹ️</span>
+      <div>
+        <p class="font-semibold text-amber-800 text-sm">You're not a club member yet</p>
+        <p class="text-amber-600 text-xs mt-0.5">Join the club to start reserving events.</p>
+      </div>
+    </div>
+    <a routerLink="/club/join"
+       class="shrink-0 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-light transition-colors">
+      Join Club →
+    </a>
   </div>
 
   <!-- Loading -->
-  <div *ngIf="loading" class="text-center py-16">
-    <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">🎭</div>
+  <div *ngIf="loading" class="text-center py-20">
+    <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl animate-pulse">🎭</div>
     <p class="text-gray-400 text-sm">Loading events...</p>
   </div>
 
   <!-- Empty state -->
-  <div *ngIf="!loading && events.length === 0" class="text-center py-16">
+  <div *ngIf="!loading && events.length === 0" class="text-center py-20">
     <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">🎭</div>
-    <p class="text-gray-500 font-medium">No events available yet</p>
-    <p class="text-gray-400 text-sm mt-1">Check back later for upcoming events</p>
+    <p class="text-gray-500 font-semibold">No events available yet</p>
+    <p class="text-gray-400 text-sm mt-1">Check back soon for upcoming events.</p>
   </div>
 
   <!-- Events grid -->
@@ -31,26 +66,35 @@
        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
     <div *ngFor="let event of events"
-         class="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group">
+         class="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col">
 
-      <!-- Event icon area -->
-      <div class="h-28 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center relative">
-        <span class="text-5xl group-hover:scale-110 transition-transform duration-300">🎭</span>
+      <!-- Poster or fallback -->
+      <div class="relative h-40 overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10 shrink-0">
+        <img *ngIf="event.posterUrl"
+             [src]="event.posterUrl"
+             [alt]="event.title"
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+        <div *ngIf="!event.posterUrl"
+             class="w-full h-full flex items-center justify-center">
+          <span class="text-6xl group-hover:scale-110 transition-transform duration-300">🎭</span>
+        </div>
+
+        <!-- Badges -->
         <div *ngIf="alreadyReserved(event.id)"
-             class="absolute top-3 right-3 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+             class="absolute top-3 right-3 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
           ✓ Reserved
         </div>
         <div *ngIf="event.remainingPlaces === 0 && !alreadyReserved(event.id)"
-             class="absolute top-3 right-3 bg-gray-400 text-white text-xs font-semibold px-3 py-1 rounded-full">
+             class="absolute top-3 right-3 bg-gray-700 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
           Sold Out
         </div>
       </div>
 
-      <!-- Event info -->
-      <div class="p-5">
+      <!-- Content -->
+      <div class="p-5 flex flex-col flex-1">
 
         <h3 class="font-semibold text-dark text-lg mb-1 truncate">{{event.title}}</h3>
-        <p class="text-gray-500 text-sm mb-3 line-clamp-2">{{event.description}}</p>
+        <p class="text-gray-500 text-sm mb-3 line-clamp-2 flex-1">{{event.description}}</p>
 
         <div class="flex items-center gap-2 text-xs text-gray-400 mb-4">
           <span>📅</span>
@@ -59,17 +103,21 @@
 
         <!-- Capacity bar -->
         <div class="mb-4">
-          <div class="flex justify-between text-xs mb-1">
+          <div class="flex justify-between text-xs mb-1.5">
             <span class="text-gray-400">Spots available</span>
-            <span [class.text-green-500]="event.remainingPlaces > 0"
-                  [class.text-red-500]="event.remainingPlaces === 0"
-                  class="font-medium">
+            <span class="font-semibold"
+                  [class.text-green-500]="event.remainingPlaces > 5"
+                  [class.text-amber-500]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                  [class.text-red-500]="event.remainingPlaces === 0">
               {{event.remainingPlaces}} / {{event.maxPlaces}}
             </span>
           </div>
           <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div class="h-full bg-primary rounded-full transition-all"
-                 [style.width.%]="((event.maxPlaces - event.remainingPlaces) / event.maxPlaces) * 100">
+            <div class="h-full rounded-full transition-all"
+                 [class.bg-primary]="event.remainingPlaces > 5"
+                 [class.bg-amber-400]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                 [class.bg-red-400]="event.remainingPlaces === 0"
+                 [style.width.%]="capacityPercent(event)">
             </div>
           </div>
         </div>
@@ -81,17 +129,23 @@
         </div>
 
         <!-- Reserve section -->
-        <div *ngIf="!alreadyReserved(event.id) && event.remainingPlaces > 0" class="flex items-center gap-3">
-          <input type="number"
-                 min="1"
+        <div *ngIf="!alreadyReserved(event.id) && event.remainingPlaces > 0"
+             class="flex items-center gap-3">
+          <input type="number" min="1" [max]="event.remainingPlaces"
                  [(ngModel)]="places[event.id]"
                  [disabled]="!myMembership"
-                 class="w-20 px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-center focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none disabled:opacity-50 disabled:cursor-not-allowed">
+                 class="w-20 px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-center focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none disabled:opacity-40 disabled:cursor-not-allowed">
           <button (click)="reserve(event.id)"
-                  [disabled]="event.remainingPlaces === 0 || !myMembership"
-                  class="flex-1 bg-primary text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  [disabled]="!myMembership"
+                  class="flex-1 bg-primary text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-primary-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
             Reserve
           </button>
+        </div>
+
+        <!-- Sold out -->
+        <div *ngIf="!alreadyReserved(event.id) && event.remainingPlaces === 0"
+             class="text-center text-sm text-gray-400 font-medium bg-gray-50 rounded-xl px-4 py-3">
+          No spots remaining
         </div>
 
       </div>
