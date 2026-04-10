@@ -12,66 +12,46 @@ import { UserService } from '../../core/services/user.service';
   styleUrl: './navbar.component.scss'
 })
 export class NavbarComponent implements OnInit {
+
   mobileMenuOpen = false;
   managementDropdown = false;
   profileDropdown = false;
   userName = '';
+
   private auth = inject(AuthService);
   private userService = inject(UserService);
 
   ngOnInit() {
-    // Load immediately if already authenticated
     if (this.auth.isAuthenticated()) {
-      this.userService.getMe().subscribe({
-        next: (u) => {
-          const anyU = u as any;
-          this.userName = anyU.nom || anyU.fullName || anyU.name || anyU.username || '';
-        }
-      });
+      this.loadUserName();
     }
-
-    // React to future login/logout events so the navbar updates dynamically
     this.auth.authState.subscribe(authenticated => {
-      if (authenticated) {
-        this.userService.getMe().subscribe({ next: (u) => {
-          const anyU = u as any;
-          this.userName = anyU.nom || anyU.fullName || anyU.name || anyU.username || '';
-        }});
-      } else {
-        this.userName = '';
+      if (authenticated) this.loadUserName();
+      else this.userName = '';
+    });
+  }
+
+  private loadUserName() {
+    this.userService.getMe().subscribe({
+      next: (u: any) => {
+        this.userName = u.nom || u.fullName || u.name || u.username || '';
       }
     });
   }
 
-  toggleMobileMenu() {
-    this.mobileMenuOpen = !this.mobileMenuOpen;
+  // Seuls SUPER_ADMIN, ADMIN_CINEMA, ADMIN_EVENT voient le menu Management (back-office)
+  // ADMIN_CLUB gère depuis le front-office (/club/admin)
+  isBackOfficeAdmin(): boolean {
+    const roles = this.auth.getRoles();
+    return roles.some(r => ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'].includes(r));
   }
 
-  toggleManagement() {
-    this.managementDropdown = !this.managementDropdown;
-    this.profileDropdown = false;
-  }
+  isAuthenticated() { return this.auth.isAuthenticated(); }
 
-  toggleProfile() {
-    this.profileDropdown = !this.profileDropdown;
-    this.managementDropdown = false;
-  }
+  toggleMobileMenu() { this.mobileMenuOpen = !this.mobileMenuOpen; }
+  toggleManagement() { this.managementDropdown = !this.managementDropdown; this.profileDropdown = false; }
+  toggleProfile() { this.profileDropdown = !this.profileDropdown; this.managementDropdown = false; }
+  closeDropdowns() { this.managementDropdown = false; this.profileDropdown = false; }
 
-  closeDropdowns() {
-    this.managementDropdown = false;
-    this.profileDropdown = false;
-  }
-
-  isAuthenticated() {
-    return this.auth.isAuthenticated();
-  }
-
-  isAdmin() {
-    return this.auth.isAdmin();
-  }
-
-  logout() {
-    this.closeDropdowns();
-    this.auth.logout();
-  }
+  logout() { this.closeDropdowns(); this.auth.logout(); }
 }
