@@ -39,6 +39,7 @@ export class AdminLayoutComponent implements OnInit {
     { label: 'Films', icon: '🎬', route: '/admin/films', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
     { label: 'Tickets', icon: '🎟️', route: '/admin/tickets', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
     { label: 'Clubs', icon: '👥', route: '/admin/clubs', roles: ['SUPER_ADMIN', 'ADMIN_CLUB'] },
+    { label: 'Chat', icon: '💬', route: '/admin/chat', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
     { label: 'Subscriptions', icon: '💳', route: '/admin/subscriptions', roles: ['SUPER_ADMIN'] },
     { label: 'Users', icon: '👤', route: '/admin/users', permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
     { label: 'Loyalty', icon: '⭐', route: '/admin/loyalty', permissions: ['FIDELITY_UPDATE'], roles: ['SUPER_ADMIN'] },
