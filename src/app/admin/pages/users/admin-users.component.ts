@@ -37,7 +37,7 @@ export class AdminUsersComponent implements OnInit {
   pageMessage = '';
   pageError = '';
 
-  availableRoles = ['ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_FORMATION'];
+  availableRoles = ['ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'];
   currentUserId: number | null = null;
 
   users: AdminUserViewModel[] = [];

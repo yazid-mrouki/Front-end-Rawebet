@@ -1,5 +1,5 @@
 export type Level = 'SILVER' | 'GOLD' | 'VIP';
-export type RewardType = 'CINEMA_FREE' | 'EVENT_DISCOUNT' | 'FORMATION_DISCOUNT';
+export type RewardType = 'CINEMA_FREE' | 'EVENT_DISCOUNT' | 'CLUB_DISCOUNT';
 
 export interface CarteFideliteResponse {
   points: number;
