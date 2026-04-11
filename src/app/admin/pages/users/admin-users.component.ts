@@ -195,7 +195,7 @@ export class AdminUsersComponent implements OnInit {
       roleLabel: roles.join(', ') || 'CLIENT',
       loyaltyLevel: user.loyaltyLevel || 'SILVER',
       loyaltyPoints: user.loyaltyPoints || 0,
-      status: user.isActive ? 'Active' : 'Suspended',
+      status: user.active ? 'Active' : 'Suspended',
       isCurrentUser: user.id === this.currentUserId,
       isSuperAdmin: roles.includes('SUPER_ADMIN'),
     };
