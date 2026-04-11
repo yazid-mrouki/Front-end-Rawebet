@@ -1,28 +1,4 @@
-<!-- ─── Navigation tabs ─── -->
-<div class="bg-white border-b border-gray-100 sticky top-16 z-40 -mx-6 px-6 mb-8">
-  <nav class="max-w-7xl mx-auto flex gap-1 py-2">
-    <a routerLink="/club" [routerLinkActiveOptions]="{exact:true}" routerLinkActive="text-primary bg-primary/5"
-       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
-      🏠 Club Home
-    </a>
-    <a routerLink="/club/events" routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
-       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
-      🎭 Events
-    </a>
-    <a routerLink="/club/members" routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
-       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
-      👥 Members
-    </a>
-    <a routerLink="/club/my-reservations" routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
-       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
-      🎟️ My Reservations
-      <span *ngIf="confirmedCount > 0"
-            class="bg-primary text-white text-xs rounded-full px-1.5 py-0.5 font-bold ml-1">
-        {{confirmedCount}}
-      </span>
-    </a>
-  </nav>
-</div>
+<app-club-nav [showReservations]="true"></app-club-nav>
 
 <div class="max-w-7xl mx-auto px-6 pb-12">
 
@@ -48,14 +24,16 @@
     </div>
   </div>
 
-  <!-- Alerts -->
+  <!-- Alerts avec bouton fermer -->
   <div *ngIf="success"
-       class="mb-6 bg-green-50 border border-green-100 text-green-700 rounded-xl px-4 py-3 flex items-center gap-2 text-sm">
-    ✅ {{success}}
+       class="mb-6 bg-green-50 border border-green-100 text-green-700 rounded-xl px-4 py-3 flex items-center justify-between gap-2 text-sm">
+    <span>✅ {{success}}</span>
+    <button (click)="success = null" class="text-green-400 hover:text-green-600 font-bold text-lg leading-none">✕</button>
   </div>
   <div *ngIf="error"
-       class="mb-6 bg-red-50 border border-red-100 text-red-700 rounded-xl px-4 py-3 flex items-center gap-2 text-sm">
-    ⚠️ {{error}}
+       class="mb-6 bg-red-50 border border-red-100 text-red-700 rounded-xl px-4 py-3 flex items-center justify-between gap-2 text-sm">
+    <span>⚠️ {{error}}</span>
+    <button (click)="error = null" class="text-red-400 hover:text-red-600 font-bold text-lg leading-none">✕</button>
   </div>
 
   <!-- Section header -->

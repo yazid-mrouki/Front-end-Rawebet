@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ClubParticipationService } from '../../services/club-participation.service';
 import { ClubParticipation } from '../../models/club-participation.model';
+import { ClubNavComponent } from '../../components/club-nav/club-nav.component';
 
 @Component({
   selector: 'app-club-participations',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ClubNavComponent],
   templateUrl: './club-participations.component.html',
   styleUrls: ['./club-participations.component.scss']
 })
@@ -18,7 +19,6 @@ export class ClubParticipationsComponent implements OnInit {
   error: string | null = null;
   success: string | null = null;
 
-  // Id de la réservation en cours d'annulation (confirmation)
   cancelTargetId: number | null = null;
 
   constructor(private participationService: ClubParticipationService) {}
@@ -30,10 +30,7 @@ export class ClubParticipationsComponent implements OnInit {
   loadReservations(): void {
     this.loading = true;
     this.participationService.myReservations().subscribe({
-      next: (data) => {
-        this.reservations = data;
-        this.loading = false;
-      },
+      next: (data) => { this.reservations = data; this.loading = false; },
       error: () => { this.loading = false; }
     });
   }
@@ -42,27 +39,33 @@ export class ClubParticipationsComponent implements OnInit {
     return this.reservations.filter(r => r.status === 'CONFIRMED').length;
   }
 
-  confirmCancel(id: number): void {
-    this.cancelTargetId = id;
+  confirmCancel(id: number): void { this.cancelTargetId = id; }
+  abortCancel(): void { this.cancelTargetId = null; }
+
+  // ── Alertes auto-dismiss ───────────────────────────────────
+
+  private showSuccess(msg: string): void {
+    this.success = msg;
+    setTimeout(() => { this.success = null; }, 4000);
   }
 
-  abortCancel(): void {
-    this.cancelTargetId = null;
+  private showError(msg: string): void {
+    this.error = msg;
+    setTimeout(() => { this.error = null; }, 6000);
   }
 
   cancel(): void {
     if (this.cancelTargetId === null) return;
     const id = this.cancelTargetId;
     this.cancelTargetId = null;
-    this.error = null;
 
     this.participationService.cancel(id).subscribe({
       next: () => {
-        this.success = 'Reservation cancelled.';
+        this.showSuccess('Reservation cancelled.');
         this.loadReservations();
       },
       error: (err) => {
-        this.error = err?.error?.error || 'Cancellation failed.';
+        this.showError(err?.error?.error || 'Cancellation failed.');
       }
     });
   }

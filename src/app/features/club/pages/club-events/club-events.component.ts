@@ -8,11 +8,14 @@ import { ClubMemberService } from '../../services/club-member.service';
 import { ClubEvent } from '../../models/club-event.model';
 import { ClubParticipation } from '../../models/club-participation.model';
 import { ClubMember } from '../../models/club-member.model';
+import { ClubNavComponent } from '../../components/club-nav/club-nav.component';
+
+type EventFilter = 'upcoming' | 'past';
 
 @Component({
   selector: 'app-club-events',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ClubNavComponent],
   templateUrl: './club-events.component.html',
   styleUrls: ['./club-events.component.scss']
 })
@@ -26,7 +29,8 @@ export class ClubEventsComponent implements OnInit {
   error: string | null = null;
   success: string | null = null;
 
-  // Places sélectionnées par event
+  filter: EventFilter = 'upcoming';
+
   places: { [key: number]: number } = {};
 
   constructor(
@@ -58,7 +62,7 @@ export class ClubEventsComponent implements OnInit {
         });
       },
       error: () => {
-        this.error = 'Failed to load events';
+        this.showError('Failed to load events');
         this.loading = false;
       }
     });
@@ -78,34 +82,66 @@ export class ClubEventsComponent implements OnInit {
     });
   }
 
+  // ── Filtre upcoming / past ─────────────────────────────────
+
+  get filteredEvents(): ClubEvent[] {
+    const now = new Date();
+    if (this.filter === 'upcoming') {
+      return this.events.filter(e => new Date(e.eventDate) >= now);
+    }
+    return this.events.filter(e => new Date(e.eventDate) < now);
+  }
+
+  get upcomingCount(): number {
+    return this.events.filter(e => new Date(e.eventDate) >= new Date()).length;
+  }
+
+  get pastCount(): number {
+    return this.events.filter(e => new Date(e.eventDate) < new Date()).length;
+  }
+
+  setFilter(f: EventFilter): void {
+    this.filter = f;
+  }
+
+  // ── Alertes auto-dismiss ───────────────────────────────────
+
+  private showSuccess(msg: string): void {
+    this.success = msg;
+    setTimeout(() => { this.success = null; }, 4000);
+  }
+
+  private showError(msg: string): void {
+    this.error = msg;
+    setTimeout(() => { this.error = null; }, 6000);
+  }
+
+  // ── Réservation ───────────────────────────────────────────
+
   alreadyReserved(eventId: number): boolean {
     return this.reservations.some(r => r.eventId === eventId && r.status === 'CONFIRMED');
   }
 
   reserve(eventId: number): void {
-    this.error = null;
-    this.success = null;
-
     if (!this.myMembership) {
-      this.error = 'You must join the club before reserving.';
+      this.showError('You must join the club before reserving.');
       return;
     }
-
     if (this.alreadyReserved(eventId)) return;
 
     const p = this.places[eventId];
     if (!p || p < 1) {
-      this.error = 'Please select at least 1 place.';
+      this.showError('Please select at least 1 place.');
       return;
     }
 
     this.participationService.reserve({ eventId, places: p }).subscribe({
       next: () => {
-        this.success = 'Reservation confirmed! 🎉';
+        this.showSuccess('Reservation confirmed! 🎉');
         this.loadAll();
       },
       error: (err) => {
-        this.error = err?.error?.error || 'Reservation failed. Please try again.';
+        this.showError(err?.error?.error || 'Reservation failed. Please try again.');
       }
     });
   }

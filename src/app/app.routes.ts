@@ -21,7 +21,7 @@ import { AdminDashboardComponent } from './admin/pages/dashboard/admin-dashboard
 import { AdminEventsComponent } from './admin/pages/events/admin-events.component';
 import { AdminFilmsComponent } from './admin/pages/films/admin-films.component';
 import { AdminTicketsComponent } from './admin/pages/tickets/admin-tickets.component';
-import { AdminClubsComponent } from './admin/pages/clubs/admin-clubs.component';
+import { AdminClubComponent } from './admin/pages/club/admin-club.component';
 import { AdminSubscriptionsComponent } from './admin/pages/subscriptions/admin-subscriptions.component';
 import { AdminUsersComponent } from './admin/pages/users/admin-users.component';
 import { AdminLoyaltyComponent } from './admin/pages/loyalty/admin-loyalty.component';
@@ -79,7 +79,7 @@ export const routes: Routes = [
 
       { path: 'tickets', component: AdminTicketsComponent },
 
-      { path: 'clubs', component: AdminClubsComponent },
+      { path: 'club', component: AdminClubComponent },
 
       { path: 'subscriptions', component: AdminSubscriptionsComponent },
 

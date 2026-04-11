@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ClubMemberService } from '../../services/club-member.service';
 import { ClubMember } from '../../models/club-member.model';
+import { ClubNavComponent } from '../../components/club-nav/club-nav.component';
 
 @Component({
   selector: 'app-club-members',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ClubNavComponent],
   templateUrl: './club-members.component.html',
   styleUrls: ['./club-members.component.scss']
 })
@@ -21,7 +22,6 @@ export class ClubMembersComponent implements OnInit {
   error: string | null = null;
   success: string | null = null;
 
-  // Confirmation dialog
   showLeaveConfirm = false;
 
   constructor(private memberService: ClubMemberService) {}
@@ -33,10 +33,7 @@ export class ClubMembersComponent implements OnInit {
 
   loadMembers(): void {
     this.memberService.getAllMembers().subscribe({
-      next: (data) => {
-        this.members = data;
-        this.loading = false;
-      },
+      next: (data) => { this.members = data; this.loading = false; },
       error: () => { this.loading = false; }
     });
   }
@@ -56,29 +53,37 @@ export class ClubMembersComponent implements OnInit {
     return this.members.filter(m => m.status === 'LEFT');
   }
 
-  confirmLeave(): void {
-    this.showLeaveConfirm = true;
+  // ── Alertes auto-dismiss ───────────────────────────────────
+
+  private showSuccess(msg: string): void {
+    this.success = msg;
+    setTimeout(() => { this.success = null; }, 4000);
   }
 
-  cancelLeave(): void {
-    this.showLeaveConfirm = false;
+  private showError(msg: string): void {
+    this.error = msg;
+    setTimeout(() => { this.error = null; }, 6000);
   }
+
+  // ── Leave club ─────────────────────────────────────────────
+
+  confirmLeave(): void { this.showLeaveConfirm = true; }
+  cancelLeave(): void { this.showLeaveConfirm = false; }
 
   leaveClub(): void {
     this.showLeaveConfirm = false;
     this.leaveLoading = true;
-    this.error = null;
 
     this.memberService.leaveClub().subscribe({
       next: () => {
-        this.success = 'You have left the club.';
         this.leaveLoading = false;
+        this.showSuccess('You have left the club.');
         this.loadMembers();
         this.loadMyMembership();
       },
       error: (err) => {
-        this.error = err?.error?.error || 'Failed to leave club.';
         this.leaveLoading = false;
+        this.showError(err?.error?.error || 'Failed to leave club.');
       }
     });
   }

@@ -1,24 +1,4 @@
-<!-- ─── Navigation tabs (vue admin : pas de My Reservations) ─── -->
-<div class="bg-white border-b border-gray-100 sticky top-16 z-40 -mx-6 px-6 mb-8">
-  <nav class="max-w-7xl mx-auto flex gap-1 py-2 overflow-x-auto">
-    <a routerLink="/club" [routerLinkActiveOptions]="{exact:true}" routerLinkActive="text-primary bg-primary/5"
-       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors whitespace-nowrap">
-      🏠 Club Home
-    </a>
-    <a routerLink="/club/events" routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
-       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors whitespace-nowrap">
-      🎭 Events
-    </a>
-    <a routerLink="/club/members" routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
-       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors whitespace-nowrap">
-      👥 Members
-    </a>
-    <a routerLink="/club/admin" routerLinkActive="text-primary border-b-2 border-primary"
-       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-semibold text-primary whitespace-nowrap">
-      ⚙️ Admin
-    </a>
-  </nav>
-</div>
+<app-club-nav [isAdmin]="true"></app-club-nav>
 
 <div class="max-w-7xl mx-auto px-6 pb-12">
 
@@ -50,9 +30,9 @@
     <p class="text-gray-400 text-sm">Loading club data...</p>
   </div>
 
-  <!-- Contenu (affiché seulement quand tout est chargé) -->
   <div *ngIf="!globalLoading" class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
 
+    <!-- Tabs -->
     <div class="flex border-b border-gray-100">
       <button (click)="setTab('requests')"
               class="flex items-center gap-2 px-6 py-4 text-sm transition-colors"
@@ -92,13 +72,16 @@
     <!-- ═══ TAB REQUESTS ═══ -->
     <div *ngIf="activeTab === 'requests'" class="p-6">
 
+      <!-- Alertes avec bouton fermer -->
       <div *ngIf="requestSuccess"
-           class="mb-4 p-3 bg-green-50 text-green-700 rounded-xl text-sm flex items-center gap-2">
-        ✅ {{ requestSuccess }}
+           class="mb-4 p-3 bg-green-50 text-green-700 rounded-xl text-sm flex items-center justify-between gap-2">
+        <span>✅ {{ requestSuccess }}</span>
+        <button (click)="requestSuccess = null" class="text-green-400 hover:text-green-600 font-bold text-lg leading-none">✕</button>
       </div>
       <div *ngIf="requestError"
-           class="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm flex items-center gap-2">
-        ⚠️ {{ requestError }}
+           class="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm flex items-center justify-between gap-2">
+        <span>⚠️ {{ requestError }}</span>
+        <button (click)="requestError = null" class="text-red-400 hover:text-red-600 font-bold text-lg leading-none">✕</button>
       </div>
 
       <div *ngIf="pendingRequests.length === 0" class="text-center py-16">
@@ -131,7 +114,7 @@
                     class="px-5 py-2 bg-green-500 text-white rounded-xl text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50">
               {{ actionLoadingId === req.id ? '...' : '✓ Approve' }}
             </button>
-            <button (click)="reject(req.id)"
+            <button (click)="confirmReject(req.id)"
                     [disabled]="actionLoadingId === req.id"
                     class="px-5 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-100 transition-colors disabled:opacity-50">
               {{ actionLoadingId === req.id ? '...' : '✕ Reject' }}
@@ -224,8 +207,17 @@
 
       <div *ngIf="showEventForm" class="bg-gray-50 rounded-2xl p-5 border border-gray-100 mb-5">
         <h3 class="font-semibold text-dark mb-4">Create New Event</h3>
+
         <div *ngIf="eventFormError"
-             class="mb-3 p-3 bg-red-50 text-red-600 rounded-xl text-sm">{{ eventFormError }}</div>
+             class="mb-3 p-3 bg-red-50 text-red-600 rounded-xl text-sm flex items-center justify-between gap-2">
+          <span>{{ eventFormError }}</span>
+          <button (click)="eventFormError = null" class="text-red-400 hover:text-red-600 font-bold text-lg leading-none">✕</button>
+        </div>
+        <div *ngIf="eventFormSuccess"
+             class="mb-3 p-3 bg-green-50 text-green-700 rounded-xl text-sm flex items-center gap-2">
+          ✅ {{ eventFormSuccess }}
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <input [(ngModel)]="eventForm.title" placeholder="Title *"
                  class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white" />
@@ -233,11 +225,22 @@
                  class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white" />
           <input [(ngModel)]="eventForm.maxPlaces" type="number" min="1" placeholder="Max places *"
                  class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white" />
-          <input [(ngModel)]="eventForm.posterUrl" placeholder="Poster URL (optional)"
-                 class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white" />
+
+          <!-- Poster URL + prévisualisation -->
+          <div class="flex gap-2 items-center">
+            <input [(ngModel)]="eventForm.posterUrl" placeholder="Poster URL (optional)"
+                   class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white" />
+            <img *ngIf="eventForm.posterUrl"
+                 [src]="eventForm.posterUrl"
+                 alt="Poster preview"
+                 class="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0"
+                 (error)="eventForm.posterUrl = ''">
+          </div>
+
           <textarea [(ngModel)]="eventForm.description" placeholder="Description (optional)" rows="2"
                     class="md:col-span-2 px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white resize-none"></textarea>
         </div>
+
         <button (click)="createEvent()" [disabled]="eventFormLoading"
                 class="mt-4 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-light transition-colors disabled:opacity-50">
           {{ eventFormLoading ? 'Creating...' : 'Create Event' }}
@@ -287,4 +290,27 @@
 
     </div>
   </div>
+
+  <!-- Reject Confirmation Modal -->
+  <div *ngIf="rejectTargetId !== null"
+       class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+    <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
+      <div class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">✕</div>
+      <h3 class="font-serif text-xl font-bold text-dark text-center mb-2">Reject this request?</h3>
+      <p class="text-gray-500 text-sm text-center mb-6">
+        This action cannot be undone. The applicant will not be able to join unless they reapply.
+      </p>
+      <div class="flex gap-3">
+        <button (click)="abortReject()"
+                class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-colors">
+          Cancel
+        </button>
+        <button (click)="reject(rejectTargetId)"
+                class="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-colors">
+          Yes, Reject
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

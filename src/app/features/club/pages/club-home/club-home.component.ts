@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { ClubMemberService } from '../../services/club-member.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ClubMember } from '../../models/club-member.model';
+import { ClubNavComponent } from '../../components/club-nav/club-nav.component';
 
 @Component({
   selector: 'app-club-home',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ClubNavComponent],
   templateUrl: './club-home.component.html',
   styleUrls: ['./club-home.component.scss']
 })

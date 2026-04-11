@@ -9,26 +9,28 @@ import { ClubEventService } from '../../services/club-event.service';
 import { ClubJoinRequest } from '../../models/club-join-request.model';
 import { ClubMember } from '../../models/club-member.model';
 import { ClubEvent } from '../../models/club-event.model';
+import { ClubNavComponent } from '../../components/club-nav/club-nav.component';
 
 type Tab = 'requests' | 'members' | 'events';
 
 @Component({
   selector: 'app-club-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ClubNavComponent],
   templateUrl: './club-admin.component.html',
   styleUrls: ['./club-admin.component.scss']
 })
 export class ClubAdminComponent implements OnInit {
 
   activeTab: Tab = 'requests';
-  globalLoading = true; // Un seul état de chargement global
+  globalLoading = true;
 
   // ── Demandes ──────────────────────────────────────────────
   pendingRequests: ClubJoinRequest[] = [];
   actionLoadingId: number | null = null;
   requestSuccess: string | null = null;
   requestError: string | null = null;
+  rejectTargetId: number | null = null;
 
   // ── Membres ───────────────────────────────────────────────
   members: ClubMember[] = [];
@@ -38,6 +40,7 @@ export class ClubAdminComponent implements OnInit {
   showEventForm = false;
   eventFormLoading = false;
   eventFormError: string | null = null;
+  eventFormSuccess: string | null = null;
   eventForm = { title: '', description: '', eventDate: '', maxPlaces: 1, posterUrl: '' };
 
   constructor(
@@ -50,7 +53,6 @@ export class ClubAdminComponent implements OnInit {
     this.loadAll();
   }
 
-  // Charge tout en parallèle — une seule attente, pas de loading successifs
   loadAll(): void {
     this.globalLoading = true;
     forkJoin({
@@ -64,9 +66,7 @@ export class ClubAdminComponent implements OnInit {
         this.events = events;
         this.globalLoading = false;
       },
-      error: () => {
-        this.globalLoading = false;
-      }
+      error: () => { this.globalLoading = false; }
     });
   }
 
@@ -74,6 +74,23 @@ export class ClubAdminComponent implements OnInit {
     this.activeTab = tab;
     this.requestSuccess = null;
     this.requestError = null;
+  }
+
+  // ── Alertes auto-dismiss ───────────────────────────────────
+
+  private showRequestSuccess(msg: string): void {
+    this.requestSuccess = msg;
+    setTimeout(() => { this.requestSuccess = null; }, 4000);
+  }
+
+  private showRequestError(msg: string): void {
+    this.requestError = msg;
+    setTimeout(() => { this.requestError = null; }, 6000);
+  }
+
+  private showEventFormSuccess(msg: string): void {
+    this.eventFormSuccess = msg;
+    setTimeout(() => { this.eventFormSuccess = null; }, 4000);
   }
 
   // ── Demandes ──────────────────────────────────────────────
@@ -84,9 +101,8 @@ export class ClubAdminComponent implements OnInit {
     this.requestError = null;
     this.joinRequestService.approve(id).subscribe({
       next: () => {
-        this.requestSuccess = 'Request approved — member added.';
         this.actionLoadingId = null;
-        // Recharger requests + members ensemble
+        this.showRequestSuccess('Request approved — member added.');
         forkJoin({
           requests: this.joinRequestService.getPendingRequests(),
           members: this.memberService.getAllMembers()
@@ -96,25 +112,29 @@ export class ClubAdminComponent implements OnInit {
         });
       },
       error: (err) => {
-        this.requestError = err?.error?.error || 'Approval failed.';
         this.actionLoadingId = null;
+        this.showRequestError(err?.error?.error || 'Approval failed.');
       }
     });
   }
 
+  confirmReject(id: number): void { this.rejectTargetId = id; }
+  abortReject(): void { this.rejectTargetId = null; }
+
   reject(id: number): void {
+    this.rejectTargetId = null;
     this.actionLoadingId = id;
     this.requestSuccess = null;
     this.requestError = null;
     this.joinRequestService.reject(id).subscribe({
       next: () => {
-        this.requestSuccess = 'Request rejected.';
         this.actionLoadingId = null;
+        this.showRequestSuccess('Request rejected.');
         this.joinRequestService.getPendingRequests().subscribe(r => this.pendingRequests = r);
       },
       error: (err) => {
-        this.requestError = err?.error?.error || 'Rejection failed.';
         this.actionLoadingId = null;
+        this.showRequestError(err?.error?.error || 'Rejection failed.');
       }
     });
   }
@@ -134,6 +154,7 @@ export class ClubAdminComponent implements OnInit {
   toggleEventForm(): void {
     this.showEventForm = !this.showEventForm;
     this.eventFormError = null;
+    this.eventFormSuccess = null;
     this.eventForm = { title: '', description: '', eventDate: '', maxPlaces: 1, posterUrl: '' };
   }
 
@@ -144,11 +165,16 @@ export class ClubAdminComponent implements OnInit {
     }
     this.eventFormLoading = true;
     this.eventFormError = null;
+    this.eventFormSuccess = null;
     this.eventService.createEvent(this.eventForm).subscribe({
       next: () => {
         this.eventFormLoading = false;
-        this.showEventForm = false;
+        this.showEventFormSuccess('Event created successfully!');
         this.eventService.getEvents().subscribe(e => this.events = e);
+        setTimeout(() => {
+          this.showEventForm = false;
+          this.eventFormSuccess = null;
+        }, 1500);
       },
       error: (err) => {
         this.eventFormError = err?.error?.error || 'Failed to create event.';

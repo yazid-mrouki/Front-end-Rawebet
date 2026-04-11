@@ -1,35 +1,17 @@
-<!-- ─── Navigation tabs (partagée entre les sous-pages du club) ─── -->
-<div class="bg-white border-b border-gray-100 sticky top-16 z-40 -mx-6 px-6 mb-8">
-  <nav class="max-w-7xl mx-auto flex gap-1 py-2">
-    <a routerLink="/club" [routerLinkActiveOptions]="{exact:true}" routerLinkActive="text-primary bg-primary/5"
-       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
-      🏠 Club Home
-    </a>
-    <a routerLink="/club/events" routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
-       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
-      🎭 Events
-    </a>
-    <a routerLink="/club/members" routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
-       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
-      👥 Members
-    </a>
-    <a routerLink="/club/my-reservations" routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
-       class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors">
-      🎟️ My Reservations
-    </a>
-  </nav>
-</div>
+<app-club-nav [showReservations]="!!myMembership"></app-club-nav>
 
 <div class="max-w-7xl mx-auto px-6 pb-12">
 
-  <!-- Alerts -->
+  <!-- Alerts avec bouton fermer -->
   <div *ngIf="success"
-       class="mb-6 bg-green-50 border border-green-100 text-green-700 rounded-xl px-4 py-3 flex items-center gap-2 text-sm animate-pulse">
-    ✅ {{success}}
+       class="mb-6 bg-green-50 border border-green-100 text-green-700 rounded-xl px-4 py-3 flex items-center justify-between gap-2 text-sm">
+    <span>✅ {{success}}</span>
+    <button (click)="success = null" class="text-green-400 hover:text-green-600 font-bold text-lg leading-none">✕</button>
   </div>
   <div *ngIf="error"
-       class="mb-6 bg-red-50 border border-red-100 text-red-700 rounded-xl px-4 py-3 flex items-center gap-2 text-sm">
-    ⚠️ {{error}}
+       class="mb-6 bg-red-50 border border-red-100 text-red-700 rounded-xl px-4 py-3 flex items-center justify-between gap-2 text-sm">
+    <span>⚠️ {{error}}</span>
+    <button (click)="error = null" class="text-red-400 hover:text-red-600 font-bold text-lg leading-none">✕</button>
   </div>
 
   <!-- Not-member banner -->
@@ -54,103 +36,162 @@
     <p class="text-gray-400 text-sm">Loading events...</p>
   </div>
 
-  <!-- Empty state -->
-  <div *ngIf="!loading && events.length === 0" class="text-center py-20">
-    <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">🎭</div>
-    <p class="text-gray-500 font-semibold">No events available yet</p>
-    <p class="text-gray-400 text-sm mt-1">Check back soon for upcoming events.</p>
-  </div>
+  <ng-container *ngIf="!loading">
 
-  <!-- Events grid -->
-  <div *ngIf="!loading && events.length > 0"
-       class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <!-- Filtre Upcoming / Past -->
+    <div class="flex items-center gap-3 mb-6">
+      <button (click)="setFilter('upcoming')"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+              [class.bg-primary]="filter === 'upcoming'"
+              [class.text-white]="filter === 'upcoming'"
+              [class.bg-gray-100]="filter !== 'upcoming'"
+              [class.text-gray-500]="filter !== 'upcoming'">
+        🗓️ Upcoming
+        <span class="text-xs rounded-full px-1.5 py-0.5 font-bold"
+              [class.bg-white/20]="filter === 'upcoming'"
+              [class.bg-gray-200]="filter !== 'upcoming'">
+          {{ upcomingCount }}
+        </span>
+      </button>
 
-    <div *ngFor="let event of events"
-         class="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col">
-
-      <!-- Poster or fallback -->
-      <div class="relative h-40 overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10 shrink-0">
-        <img *ngIf="event.posterUrl"
-             [src]="event.posterUrl"
-             [alt]="event.title"
-             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-        <div *ngIf="!event.posterUrl"
-             class="w-full h-full flex items-center justify-center">
-          <span class="text-6xl group-hover:scale-110 transition-transform duration-300">🎭</span>
-        </div>
-
-        <!-- Badges -->
-        <div *ngIf="alreadyReserved(event.id)"
-             class="absolute top-3 right-3 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
-          ✓ Reserved
-        </div>
-        <div *ngIf="event.remainingPlaces === 0 && !alreadyReserved(event.id)"
-             class="absolute top-3 right-3 bg-gray-700 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
-          Sold Out
-        </div>
-      </div>
-
-      <!-- Content -->
-      <div class="p-5 flex flex-col flex-1">
-
-        <h3 class="font-semibold text-dark text-lg mb-1 truncate">{{event.title}}</h3>
-        <p class="text-gray-500 text-sm mb-3 line-clamp-2 flex-1">{{event.description}}</p>
-
-        <div class="flex items-center gap-2 text-xs text-gray-400 mb-4">
-          <span>📅</span>
-          <span>{{event.eventDate | date:'medium'}}</span>
-        </div>
-
-        <!-- Capacity bar -->
-        <div class="mb-4">
-          <div class="flex justify-between text-xs mb-1.5">
-            <span class="text-gray-400">Spots available</span>
-            <span class="font-semibold"
-                  [class.text-green-500]="event.remainingPlaces > 5"
-                  [class.text-amber-500]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
-                  [class.text-red-500]="event.remainingPlaces === 0">
-              {{event.remainingPlaces}} / {{event.maxPlaces}}
-            </span>
-          </div>
-          <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div class="h-full rounded-full transition-all"
-                 [class.bg-primary]="event.remainingPlaces > 5"
-                 [class.bg-amber-400]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
-                 [class.bg-red-400]="event.remainingPlaces === 0"
-                 [style.width.%]="capacityPercent(event)">
-            </div>
-          </div>
-        </div>
-
-        <!-- Already reserved -->
-        <div *ngIf="alreadyReserved(event.id)"
-             class="flex items-center gap-2 text-sm text-green-600 font-medium bg-green-50 rounded-xl px-4 py-3">
-          <span>✓</span> Already reserved
-        </div>
-
-        <!-- Reserve section -->
-        <div *ngIf="!alreadyReserved(event.id) && event.remainingPlaces > 0"
-             class="flex items-center gap-3">
-          <input type="number" min="1" [max]="event.remainingPlaces"
-                 [(ngModel)]="places[event.id]"
-                 [disabled]="!myMembership"
-                 class="w-20 px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-center focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none disabled:opacity-40 disabled:cursor-not-allowed">
-          <button (click)="reserve(event.id)"
-                  [disabled]="!myMembership"
-                  class="flex-1 bg-primary text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-primary-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-            Reserve
-          </button>
-        </div>
-
-        <!-- Sold out -->
-        <div *ngIf="!alreadyReserved(event.id) && event.remainingPlaces === 0"
-             class="text-center text-sm text-gray-400 font-medium bg-gray-50 rounded-xl px-4 py-3">
-          No spots remaining
-        </div>
-
-      </div>
+      <button (click)="setFilter('past')"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+              [class.bg-primary]="filter === 'past'"
+              [class.text-white]="filter === 'past'"
+              [class.bg-gray-100]="filter !== 'past'"
+              [class.text-gray-500]="filter !== 'past'">
+        🕐 Past
+        <span class="text-xs rounded-full px-1.5 py-0.5 font-bold"
+              [class.bg-white/20]="filter === 'past'"
+              [class.bg-gray-200]="filter !== 'past'">
+          {{ pastCount }}
+        </span>
+      </button>
     </div>
 
-  </div>
+    <!-- Empty state global -->
+    <div *ngIf="events.length === 0" class="text-center py-20">
+      <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">🎭</div>
+      <p class="text-gray-500 font-semibold">No events available yet</p>
+      <p class="text-gray-400 text-sm mt-1">Check back soon for upcoming events.</p>
+    </div>
+
+    <!-- Empty state filtre -->
+    <div *ngIf="events.length > 0 && filteredEvents.length === 0" class="text-center py-20">
+      <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
+        {{ filter === 'upcoming' ? '🗓️' : '🕐' }}
+      </div>
+      <p class="text-gray-500 font-semibold">
+        {{ filter === 'upcoming' ? 'No upcoming events' : 'No past events' }}
+      </p>
+      <p class="text-gray-400 text-sm mt-1">
+        {{ filter === 'upcoming' ? 'Check back soon.' : 'Events will appear here once they\'ve passed.' }}
+      </p>
+    </div>
+
+    <!-- Events grid -->
+    <div *ngIf="filteredEvents.length > 0"
+         class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+      <div *ngFor="let event of filteredEvents"
+           class="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col">
+
+        <!-- Poster or fallback -->
+        <div class="relative h-40 overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10 shrink-0">
+          <img *ngIf="event.posterUrl"
+               [src]="event.posterUrl"
+               [alt]="event.title"
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+          <div *ngIf="!event.posterUrl"
+               class="w-full h-full flex items-center justify-center">
+            <span class="text-6xl group-hover:scale-110 transition-transform duration-300">🎭</span>
+          </div>
+
+          <!-- Badges -->
+          <div *ngIf="alreadyReserved(event.id)"
+               class="absolute top-3 right-3 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
+            ✓ Reserved
+          </div>
+          <div *ngIf="event.remainingPlaces === 0 && !alreadyReserved(event.id)"
+               class="absolute top-3 right-3 bg-gray-700 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
+            Sold Out
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-5 flex flex-col flex-1">
+
+          <h3 class="font-semibold text-dark text-lg mb-1 truncate">{{event.title}}</h3>
+          <p class="text-gray-500 text-sm mb-3 line-clamp-2 flex-1">{{event.description}}</p>
+
+          <div class="flex items-center gap-2 text-xs text-gray-400 mb-4">
+            <span>📅</span>
+            <span>{{event.eventDate | date:'medium'}}</span>
+          </div>
+
+          <!-- Capacity bar -->
+          <div class="mb-4">
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-gray-400">Spots available</span>
+              <span class="font-semibold"
+                    [class.text-green-500]="event.remainingPlaces > 5"
+                    [class.text-amber-500]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                    [class.text-red-500]="event.remainingPlaces === 0">
+                {{event.remainingPlaces}} / {{event.maxPlaces}}
+              </span>
+            </div>
+            <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all"
+                   [class.bg-primary]="event.remainingPlaces > 5"
+                   [class.bg-amber-400]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                   [class.bg-red-400]="event.remainingPlaces === 0"
+                   [style.width.%]="capacityPercent(event)">
+              </div>
+            </div>
+          </div>
+
+          <!-- Already reserved -->
+          <div *ngIf="alreadyReserved(event.id)"
+               class="flex items-center gap-2 text-sm text-green-600 font-medium bg-green-50 rounded-xl px-4 py-3">
+            <span>✓</span> Already reserved
+          </div>
+
+          <!-- Reserve section -->
+          <div *ngIf="!alreadyReserved(event.id) && event.remainingPlaces > 0 && filter === 'upcoming'"
+               class="flex items-center gap-3">
+            <div class="flex flex-col gap-0.5">
+              <label class="text-xs text-gray-400 text-center">Places</label>
+              <input type="number" min="1" [max]="event.remainingPlaces"
+                     [(ngModel)]="places[event.id]"
+                     [disabled]="!myMembership"
+                     aria-label="Number of seats"
+                     class="w-20 px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-center focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none disabled:opacity-40 disabled:cursor-not-allowed">
+            </div>
+            <button (click)="reserve(event.id)"
+                    [disabled]="!myMembership"
+                    [title]="!myMembership ? 'Join the club to reserve' : ''"
+                    class="flex-1 bg-primary text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-primary-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              {{ myMembership ? 'Reserve' : 'Members only' }}
+            </button>
+          </div>
+
+          <!-- Sold out -->
+          <div *ngIf="!alreadyReserved(event.id) && event.remainingPlaces === 0"
+               class="text-center text-sm text-gray-400 font-medium bg-gray-50 rounded-xl px-4 py-3">
+            No spots remaining
+          </div>
+
+          <!-- Past event — pas de bouton réservation -->
+          <div *ngIf="!alreadyReserved(event.id) && event.remainingPlaces > 0 && filter === 'past'"
+               class="text-center text-sm text-gray-400 font-medium bg-gray-50 rounded-xl px-4 py-3">
+            Event ended
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </ng-container>
 
 </div>
