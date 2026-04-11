@@ -1,25 +1,90 @@
 <div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div><h1 class="font-serif text-2xl font-bold text-dark">Ticket Management</h1><p class="text-sm text-gray-400 mt-1">{{ tickets.length }} tickets issued</p></div>
-    <button class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors">Export CSV</button>
+    <div>
+      <h1 class="font-serif text-2xl font-bold text-dark">Ticket Management</h1>
+      <p class="text-sm text-gray-400 mt-1">{{ reservations.length }} reservations</p>
+    </div>
   </div>
-  <input [(ngModel)]="searchQuery" type="text" placeholder="Search by user, event, or ticket ID..." class="w-full sm:w-96 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary" />
+
+  <div *ngIf="errorMessage" class="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-600">{{ successMessage }}</div>
+  <div *ngIf="formErrorMessage" class="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">{{ formErrorMessage }}</div>
+
+  <div class="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+    <div *ngIf="!editMode" class="grid gap-4 md:grid-cols-4">
+      <input type="number" min="1" [(ngModel)]="createForm.userId" placeholder="User ID" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
+      <select [(ngModel)]="createForm.seanceId" (ngModelChange)="onCreateSeanceChange($event)" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
+        <option [ngValue]="0">Seance</option>
+        <option *ngFor="let seance of seances" [ngValue]="seance.id">{{ getSeanceLabel(seance.id) }}</option>
+      </select>
+      <select [(ngModel)]="createForm.seatNumero" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
+        <option [value]="0" disabled>Choisir un siege</option>
+        <option *ngFor="let seat of seats" [value]="seat.numero">Siege {{ seat.numero }}</option>
+      </select>
+    </div>
+
+    <div *ngIf="editMode" class="grid gap-4 md:grid-cols-4">
+      <input type="number" min="1" [(ngModel)]="updateForm.userId" placeholder="User ID" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
+      <select [(ngModel)]="updateForm.seanceId" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
+        <option [ngValue]="0">Seance</option>
+        <option *ngFor="let seance of seances" [ngValue]="seance.id">{{ getSeanceLabel(seance.id) }}</option>
+      </select>
+      <input type="number" min="1" [(ngModel)]="updateForm.seatId" placeholder="Seat ID" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
+      <select [(ngModel)]="updateForm.statut" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
+        <option value="PENDING">PENDING</option>
+        <option value="CONFIRMED">CONFIRMED</option>
+        <option value="CANCELLED">CANCELLED</option>
+      </select>
+    </div>
+
+    <div *ngIf="editMode" class="grid gap-4 md:grid-cols-2">
+      <input type="date" [(ngModel)]="updateForm.dateReservation" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
+      <input type="number" min="0" [(ngModel)]="updateForm.paiementId" placeholder="Paiement ID" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
+    </div>
+
+    <div class="flex gap-3">
+      <button type="button" (click)="editMode ? updateReservation() : addReservation()" class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors">
+        {{ editMode ? 'Mettre a jour' : 'Ajouter' }}
+      </button>
+      <button *ngIf="editMode" type="button" (click)="cancelEdit()" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
+        Annuler
+      </button>
+    </div>
+  </div>
+
+  <input [(ngModel)]="searchQuery" type="text" placeholder="Search by user, seance, or reservation ID..." class="w-full sm:w-96 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary">
+
   <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
-          <th class="px-6 py-3 font-medium">Ticket ID</th><th class="px-4 py-3 font-medium">User</th><th class="px-4 py-3 font-medium">Event</th><th class="px-4 py-3 font-medium">Qty</th><th class="px-4 py-3 font-medium">Total</th><th class="px-4 py-3 font-medium">Date</th><th class="px-4 py-3 font-medium">Status</th><th class="px-4 py-3 font-medium text-right">Actions</th>
-        </tr></thead>
+        <thead>
+          <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+            <th class="px-6 py-3 font-medium">Reservation ID</th>
+            <th class="px-4 py-3 font-medium">User</th>
+            <th class="px-4 py-3 font-medium">Seance</th>
+            <th class="px-4 py-3 font-medium">Seat</th>
+            <th class="px-4 py-3 font-medium">Paiement</th>
+            <th class="px-4 py-3 font-medium">Date</th>
+            <th class="px-4 py-3 font-medium">Status</th>
+            <th class="px-4 py-3 font-medium text-right">Actions</th>
+          </tr>
+        </thead>
         <tbody>
-          <tr *ngFor="let t of filteredTickets" class="border-b border-gray-50 hover:bg-gray-50/50">
+          <tr *ngIf="loading">
+            <td colspan="8" class="px-6 py-4 text-gray-500">Chargement...</td>
+          </tr>
+          <tr *ngFor="let t of filteredReservations" class="border-b border-gray-50 hover:bg-gray-50/50">
             <td class="px-6 py-4 font-mono text-xs text-primary font-semibold">{{ t.id }}</td>
-            <td class="px-4 py-4 text-dark font-medium text-xs">{{ t.user }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ t.event }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ t.qty }}</td>
-            <td class="px-4 py-4 text-dark font-semibold text-xs">{{ t.total > 0 ? t.total + ' TND' : 'Free' }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ t.date }}</td>
-            <td class="px-4 py-4"><span [class]="getStatusClass(t.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ t.status }}</span></td>
-            <td class="px-4 py-4 text-right"><button class="p-1.5 hover:bg-blue-50 rounded-lg text-xs">👁️</button><button class="p-1.5 hover:bg-red-50 rounded-lg text-xs">🗑️</button></td>
+            <td class="px-4 py-4 text-dark font-medium text-xs">#{{ t.user?.id || '-' }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ getSeanceLabel(t.seance?.id) }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">#{{ t.seat?.id || '-' }}</td>
+            <td class="px-4 py-4 text-dark font-semibold text-xs">#{{ t.paiement?.id || '-' }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ t.dateReservation || '-' }}</td>
+            <td class="px-4 py-4"><span [class]="getStatusClass(t.statut)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ t.statut || '-' }}</span></td>
+            <td class="px-4 py-4 text-right">
+              <button type="button" (click)="startEdit(t)" class="p-1.5 hover:bg-blue-50 rounded-lg text-xs text-blue-600">Edit</button>
+              <button type="button" (click)="deleteReservation(t.id)" class="p-1.5 hover:bg-red-50 rounded-lg text-xs text-red-600">Delete</button>
+            </td>
           </tr>
         </tbody>
       </table>
