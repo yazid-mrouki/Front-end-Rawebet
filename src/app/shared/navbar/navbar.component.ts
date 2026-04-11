@@ -20,38 +20,41 @@ export class NavbarComponent implements OnInit {
 
   private auth = inject(AuthService);
   private userService = inject(UserService);
-  private cdr = inject(ChangeDetectorRef);  // ← AJOUTER
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     if (this.auth.isAuthenticated()) {
       this.loadUser();
     }
-
     this.auth.authState.subscribe(authenticated => {
       if (authenticated) {
         this.loadUser();
       } else {
         this.userName = '';
-        this.cdr.detectChanges();  // ← AJOUTER
+        this.cdr.detectChanges();
       }
     });
   }
 
   private loadUser(): void {
     this.userService.getMe().subscribe({
-      next: (u) => {
-        const anyU = u as any;
-        this.userName = anyU.nom || anyU.fullName || anyU.name || anyU.username || '';
-        this.cdr.detectChanges();  // ← AJOUTER
+      next: (u: any) => {
+        this.userName = u.nom || u.fullName || u.name || u.username || '';
+        this.cdr.detectChanges();
       }
     });
   }
 
+  isBackOfficeAdmin(): boolean {
+    const roles = this.auth.getRoles();
+    return roles.some(r => ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'].includes(r));
+  }
+
+  isAuthenticated() { return this.auth.isAuthenticated(); }
+  isAdmin() { return this.auth.isAdmin(); }
   toggleMobileMenu() { this.mobileMenuOpen = !this.mobileMenuOpen; }
   toggleManagement() { this.managementDropdown = !this.managementDropdown; this.profileDropdown = false; }
   toggleProfile() { this.profileDropdown = !this.profileDropdown; this.managementDropdown = false; }
   closeDropdowns() { this.managementDropdown = false; this.profileDropdown = false; }
-  isAuthenticated() { return this.auth.isAuthenticated(); }
-  isAdmin() { return this.auth.isAdmin(); }
   logout() { this.closeDropdowns(); this.auth.logout(); }
 }

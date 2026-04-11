@@ -8,6 +8,7 @@ import { LoginRequest, AuthResponse, RegisterRequest } from '../models/auth.mode
 
 interface DecodedToken {
   exp?: number;
+  sub?: string;
   roles?: string[];
   permissions?: string[];
   userId?: number;
@@ -90,11 +91,18 @@ export class AuthService {
   }
 
   getCurrentUserName(): string {
-    return this.getDecodedToken()?.name || '';
+    const decoded = this.getDecodedToken();
+    if (decoded?.name) {
+      return decoded.name;
+    }
+
+    const subject = decoded?.sub || decoded?.email || '';
+    return subject.includes('@') ? subject.split('@')[0] : subject;
   }
 
   getCurrentUserEmail(): string {
-    return this.getDecodedToken()?.email || '';
+    const decoded = this.getDecodedToken();
+    return decoded?.email || decoded?.sub || '';
   }
 
   hasPermission(permission: string): boolean {
@@ -107,7 +115,7 @@ export class AuthService {
 
   isAdmin(): boolean {
     const roles = this.getRoles();
-    return roles.some((role) => ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_FORMATION'].includes(role));
+    return roles.some((role) => ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'].includes(role));
   }
 
   isSuperAdmin(): boolean {

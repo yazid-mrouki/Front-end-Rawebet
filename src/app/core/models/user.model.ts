@@ -3,15 +3,21 @@ export interface UserResponse {
   nom: string;
   email: string;
   roles: string[];
-  isActive: boolean;
+  active: boolean;
   loyaltyLevel?: string;
   loyaltyPoints?: number;
   createdAt?: string;
   dateInscription?: string;
 }
 
-export interface UpdateProfileRequest { nom: string; email: string; }
-export interface ChangePasswordRequest { oldPassword: string; newPassword: string; }
+export interface UpdateProfileRequest {
+  nom: string;
+  email: string;
+}
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+}
 
 export interface RegisterRequest {
   nom: string;

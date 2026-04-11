@@ -4,7 +4,7 @@ import { SignUpComponent } from './pages/auth/sign-up/sign-up.component';
 import { HomeComponent } from './pages/home/home.component';
 import { EventsComponent } from './pages/events/events.component';
 import { FilmsComponent } from './pages/films/films.component';
-import { CinemasComponent } from './pages/cinemas/cinemas.component';          // ← NOUVEAU
+import { CinemasComponent } from './pages/cinemas/cinemas.component';
 import { TicketsComponent } from './pages/tickets/tickets.component';
 import { ClubsComponent } from './pages/clubs/clubs.component';
 import { SubscriptionsComponent } from './pages/subscriptions/subscriptions.component';
@@ -21,15 +21,16 @@ import { AdminLayoutComponent } from './admin/admin-layout/admin-layout.componen
 import { AdminDashboardComponent } from './admin/pages/dashboard/admin-dashboard.component';
 import { AdminEventsComponent } from './admin/pages/events/admin-events.component';
 import { AdminFilmsComponent } from './admin/pages/films/admin-films.component';
-import { AdminCinemasComponent } from './admin/pages/cinemas/admin-cinemas.component'; // ← NOUVEAU
+import { AdminCinemasComponent } from './admin/pages/cinemas/admin-cinemas.component';
 import { AdminTicketsComponent } from './admin/pages/tickets/admin-tickets.component';
-import { AdminClubsComponent } from './admin/pages/clubs/admin-clubs.component';
+import { AdminClubComponent } from './admin/pages/club/admin-club.component';
 import { AdminSubscriptionsComponent } from './admin/pages/subscriptions/admin-subscriptions.component';
 import { AdminUsersComponent } from './admin/pages/users/admin-users.component';
 import { AdminLoyaltyComponent } from './admin/pages/loyalty/admin-loyalty.component';
 import { AdminLogisticsComponent } from './admin/pages/logistics/admin-logistics.component';
 import { AdminFeedbackComponent } from './admin/pages/feedback/admin-feedback.component';
 import { AdminNotificationsComponent } from './admin/pages/notifications/admin-notifications.component';
+import { AdminChatComponent } from './admin/pages/chat/admin-chat.component';
 import { adminGuard } from './core/guards/admin.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 
@@ -44,13 +45,13 @@ export const routes: Routes = [
   { path: 'home', component: HomeComponent },
   { path: 'events', component: EventsComponent },
   { path: 'films', component: FilmsComponent },
-  { path: 'cinemas', component: CinemasComponent },                            // ← NOUVEAU
-  { path: 'tickets', component: TicketsComponent },
+  { path: 'cinemas', component: CinemasComponent },
+  { path: 'tickets', component: TicketsComponent, canActivate: [authGuard] },
   { path: 'clubs', component: ClubsComponent },
   { path: 'subscriptions', component: SubscriptionsComponent },
   { path: 'loyalty', component: LoyaltyComponent, canActivate: [authGuard] },
   { path: 'logistics', component: LogisticsComponent },
-  { path: 'feedback', component: FeedbackComponent },
+  { path: 'feedback', component: FeedbackComponent, canActivate: [authGuard] },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'notifications', component: NotificationsComponent },
 
@@ -58,6 +59,12 @@ export const routes: Routes = [
   {
     path: 'club',
     loadChildren: () => import('./features/club/club.routes').then((m) => m.CLUB_ROUTES),
+  },
+
+  // === CHAT FEATURE ===
+  {
+    path: 'chat',
+    loadChildren: () => import('./features/chat/chat.routes').then((m) => m.CHAT_ROUTES),
   },
 
   {
@@ -69,9 +76,9 @@ export const routes: Routes = [
       { path: 'dashboard', component: AdminDashboardComponent },
       { path: 'events', component: AdminEventsComponent },
       { path: 'films', component: AdminFilmsComponent },
-      { path: 'cinemas', component: AdminCinemasComponent },                   // ← NOUVEAU
+      { path: 'cinemas', component: AdminCinemasComponent },
       { path: 'tickets', component: AdminTicketsComponent },
-      { path: 'clubs', component: AdminClubsComponent },
+      { path: 'club', component: AdminClubComponent },
       { path: 'subscriptions', component: AdminSubscriptionsComponent },
       {
         path: 'users',
@@ -86,6 +93,7 @@ export const routes: Routes = [
       { path: 'logistics', component: AdminLogisticsComponent },
       { path: 'feedback', component: AdminFeedbackComponent },
       { path: 'notifications', component: AdminNotificationsComponent },
+      { path: 'chat', component: AdminChatComponent },
     ],
   },
 

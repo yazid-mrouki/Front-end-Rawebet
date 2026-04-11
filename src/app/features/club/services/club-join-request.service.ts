@@ -14,41 +14,24 @@ export class ClubJoinRequestService {
 
   constructor(private http: HttpClient) {}
 
-  submitRequest(
-    payload: ClubJoinRequestPayload
-  ): Observable<ClubJoinRequest>{
-
-    return this.http.post<ClubJoinRequest>(
-      this.apiUrl,
-      payload
-    );
-
+  submitRequest(payload: ClubJoinRequestPayload): Observable<ClubJoinRequest> {
+    return this.http.post<ClubJoinRequest>(this.apiUrl, payload);
   }
 
-  getPendingRequests(): Observable<ClubJoinRequest[]>{
-
-    return this.http.get<ClubJoinRequest[]>(
-      `${this.apiUrl}/pending`
-    );
-
+  /** Récupère la demande de l'utilisateur connecté (PENDING, APPROVED ou REJECTED) */
+  getMyRequest(): Observable<ClubJoinRequest> {
+    return this.http.get<ClubJoinRequest>(`${this.apiUrl}/my`);
   }
 
-  approve(id:number): Observable<ClubJoinRequest>{
-
-    return this.http.put<ClubJoinRequest>(
-      `${this.apiUrl}/${id}/approve`,
-      {}
-    );
-
+  getPendingRequests(): Observable<ClubJoinRequest[]> {
+    return this.http.get<ClubJoinRequest[]>(`${this.apiUrl}/pending`);
   }
 
-  reject(id:number): Observable<ClubJoinRequest>{
-
-    return this.http.put<ClubJoinRequest>(
-      `${this.apiUrl}/${id}/reject`,
-      {}
-    );
-
+  approve(id: number): Observable<ClubJoinRequest> {
+    return this.http.put<ClubJoinRequest>(`${this.apiUrl}/${id}/approve`, {});
   }
 
+  reject(id: number): Observable<ClubJoinRequest> {
+    return this.http.put<ClubJoinRequest>(`${this.apiUrl}/${id}/reject`, {});
+  }
 }

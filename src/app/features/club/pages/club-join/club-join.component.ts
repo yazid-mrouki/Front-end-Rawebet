@@ -1,68 +1,57 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { ClubJoinRequestService } from '../../services/club-join-request.service';
+import { ClubNavComponent } from '../../components/club-nav/club-nav.component';
 
 @Component({
   selector: 'app-club-join',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
+  imports: [CommonModule, FormsModule, RouterModule, ClubNavComponent],
   templateUrl: './club-join.component.html',
   styleUrls: ['./club-join.component.scss']
 })
-export class ClubJoinComponent {
+export class ClubJoinComponent implements OnInit {
 
   motivation = '';
-
-  success = false;
-
-  error:string | null = null;
-
   loading = false;
+  success = false;
+  error: string | null = null;
 
-  constructor(
-    private joinService: ClubJoinRequestService
-  ){}
+  /** true si une demande est déjà en cours (PENDING) */
+  alreadyPending = false;
 
-  submit(): void{
+  constructor(private joinRequestService: ClubJoinRequestService) {}
 
-    if(!this.motivation){
-
-      return;
-
-    }
-
-    this.loading = true;
-
-    this.joinService.submitRequest({
-
-      motivation:this.motivation
-
-    }).subscribe({
-
-      next: () => {
-
-        this.success = true;
-
-        this.loading = false;
-
+  ngOnInit(): void {
+    // Vérifie si l'utilisateur a déjà une demande en attente
+    this.joinRequestService.getMyRequest().subscribe({
+      next: (req) => {
+        if (req && req.status === 'PENDING') {
+          this.alreadyPending = true;
+        }
       },
-
-      error: (err) => {
-
-        this.error =
-          err?.error?.error ||
-          'Request failed';
-
-        this.loading = false;
-
+      error: () => {
+        // Pas de demande existante — état normal
       }
-
     });
-
   }
 
+  submit(): void {
+    if (!this.motivation.trim() || this.loading) return;
+    this.loading = true;
+    this.error = null;
+
+    this.joinRequestService.submitRequest({ motivation: this.motivation }).subscribe({
+      next: () => {
+        this.loading = false;
+        this.success = true;
+      },
+      error: (err) => {
+        this.error = err?.error?.error || 'Failed to submit request. Please try again.';
+        this.loading = false;
+      }
+    });
+  }
 }
