@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
@@ -20,38 +20,41 @@ export class NavbarComponent implements OnInit {
 
   private auth = inject(AuthService);
   private userService = inject(UserService);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     if (this.auth.isAuthenticated()) {
-      this.loadUserName();
+      this.loadUser();
     }
     this.auth.authState.subscribe(authenticated => {
-      if (authenticated) this.loadUserName();
-      else this.userName = '';
-    });
-  }
-
-  private loadUserName() {
-    this.userService.getMe().subscribe({
-      next: (u: any) => {
-        this.userName = u.nom || u.fullName || u.name || u.username || '';
+      if (authenticated) {
+        this.loadUser();
+      } else {
+        this.userName = '';
+        this.cdr.detectChanges();
       }
     });
   }
 
-  // Seuls SUPER_ADMIN, ADMIN_CINEMA, ADMIN_EVENT voient le menu Management (back-office)
-  // ADMIN_CLUB gère depuis le front-office (/club/admin)
+  private loadUser(): void {
+    this.userService.getMe().subscribe({
+      next: (u: any) => {
+        this.userName = u.nom || u.fullName || u.name || u.username || '';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   isBackOfficeAdmin(): boolean {
     const roles = this.auth.getRoles();
     return roles.some(r => ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'].includes(r));
   }
 
   isAuthenticated() { return this.auth.isAuthenticated(); }
-
+  isAdmin() { return this.auth.isAdmin(); }
   toggleMobileMenu() { this.mobileMenuOpen = !this.mobileMenuOpen; }
   toggleManagement() { this.managementDropdown = !this.managementDropdown; this.profileDropdown = false; }
   toggleProfile() { this.profileDropdown = !this.profileDropdown; this.managementDropdown = false; }
   closeDropdowns() { this.managementDropdown = false; this.profileDropdown = false; }
-
   logout() { this.closeDropdowns(); this.auth.logout(); }
 }

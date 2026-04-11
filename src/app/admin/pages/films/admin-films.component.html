@@ -1,43 +1,349 @@
-<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+<div class="p-6">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="font-serif text-2xl font-bold text-dark">Film Management</h1>
-      <p class="text-sm text-gray-400 mt-1">{{ films.length }} films in catalog</p>
+      <h1 class="text-2xl font-bold text-gray-800">Films</h1>
+      <p class="text-sm text-gray-500 mt-0.5">{{ films.length }} film(s) au total</p>
     </div>
-    <button class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors flex items-center gap-2"><span>＋</span> Add Film</button>
+    <button (click)="openModal()"
+            class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors">
+      <span class="text-lg leading-none">+</span> Ajouter un film
+    </button>
   </div>
-  <input [(ngModel)]="searchQuery" type="text" placeholder="Search by title or director..." class="w-full sm:w-80 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary" />
-  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
-            <th class="px-6 py-3 font-medium">Title</th>
-            <th class="px-4 py-3 font-medium">Director</th>
-            <th class="px-4 py-3 font-medium">Genre</th>
-            <th class="px-4 py-3 font-medium">Duration</th>
-            <th class="px-4 py-3 font-medium">Rating</th>
-            <th class="px-4 py-3 font-medium">Showtimes</th>
-            <th class="px-4 py-3 font-medium">Status</th>
-            <th class="px-4 py-3 font-medium text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let f of filteredFilms" class="border-b border-gray-50 hover:bg-gray-50/50">
-            <td class="px-6 py-4 font-medium text-dark">{{ f.title }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ f.director }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ f.genre }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ f.duration }} min</td>
-            <td class="px-4 py-4 text-accent font-semibold text-xs">⭐ {{ f.rating }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ f.showtimes }}</td>
-            <td class="px-4 py-4"><span [class]="getStatusClass(f.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ f.status }}</span></td>
-            <td class="px-4 py-4 text-right">
-              <button class="p-1.5 hover:bg-blue-50 rounded-lg text-xs" title="Edit">✏️</button>
-              <button class="p-1.5 hover:bg-red-50 rounded-lg text-xs" title="Delete" (click)="deleteFilm(f.id)">🗑️</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+
+  <!-- Search -->
+  <div class="mb-4">
+    <div class="flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2 w-full max-w-sm">
+      <svg class="w-4 h-4 text-gray-400 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+      <input [(ngModel)]="searchQuery" type="text" placeholder="Rechercher par titre ou réalisateur..."
+             class="bg-transparent outline-none text-sm text-gray-600 w-full"/>
+      <button *ngIf="searchQuery" (click)="searchQuery = ''" class="text-gray-400 hover:text-gray-600 ml-2">&times;</button>
     </div>
   </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="flex justify-center py-16">
+    <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{{ error }}</div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading" class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b border-gray-100">
+        <tr>
+          <th class="text-left px-4 py-3 text-gray-500 font-medium">Film</th>
+          <th class="text-left px-4 py-3 text-gray-500 font-medium">Réalisateur</th>
+          <th class="text-left px-4 py-3 text-gray-500 font-medium">Genre</th>
+          <th class="text-left px-4 py-3 text-gray-500 font-medium">Durée</th>
+          <th class="text-left px-4 py-3 text-gray-500 font-medium">Note</th>
+          <th class="text-right px-4 py-3 text-gray-500 font-medium">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        <tr *ngFor="let film of filteredFilms" class="hover:bg-gray-50 transition-colors">
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-14 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                <img *ngIf="film.posterUrl" [src]="film.posterUrl" [alt]="film.title"
+                     class="w-full h-full object-cover"/>
+                <div *ngIf="!film.posterUrl"
+                     class="w-full h-full flex items-center justify-center text-gray-300 text-xs">🎬</div>
+              </div>
+              <div>
+                <p class="font-medium text-gray-800">{{ film.title }}</p>
+                <p class="text-xs text-gray-400 mt-0.5">{{ film.releaseDate | date:'dd/MM/yyyy' }}</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3 text-gray-600">{{ film.director }}</td>
+          <td class="px-4 py-3">
+            <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">{{ film.genre }}</span>
+          </td>
+          <td class="px-4 py-3 text-gray-600">{{ getDurationLabel(film.durationMinutes) }}</td>
+          <td class="px-4 py-3 text-gray-600">
+            <span *ngIf="film.averageRating">★ {{ film.averageRating | number:'1.1-1' }}</span>
+            <span *ngIf="!film.averageRating" class="text-gray-300">—</span>
+          </td>
+          <td class="px-4 py-3 text-right">
+            <button (click)="deleteFilm(film.id)"
+                    class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-medium">
+              Désactiver
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredFilms.length === 0">
+          <td colspan="6" class="text-center py-10 text-gray-400">Aucun film trouvé.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══ MODAL ══ -->
+  <div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+
+      <!-- Modal header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+        <div class="flex items-center gap-3">
+          <div *ngIf="modalStep === 'confirm'" (click)="backToSearch()"
+               class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="font-bold text-gray-800">
+              {{ modalStep === 'search' ? 'Rechercher un film' : 'Confirmer les informations' }}
+            </h2>
+            <p class="text-xs text-gray-400 mt-0.5">
+              {{ modalStep === 'search' ? 'Powered by TMDB' : 'Modifiez si nécessaire avant d\'ajouter' }}
+            </p>
+          </div>
+        </div>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors">&times;</button>
+      </div>
+
+      <!-- ── STEP 1 : Recherche TMDB ── -->
+      <div *ngIf="modalStep === 'search'" class="flex flex-col flex-1 overflow-hidden">
+
+        <!-- Search input -->
+        <div class="px-6 py-4 border-b border-gray-50">
+          <div class="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 gap-3">
+            <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input
+              [(ngModel)]="tmdbQuery"
+              (ngModelChange)="onTmdbSearch()"
+              type="text"
+              placeholder="Rechercher un film... ex: Dune, Oppenheimer"
+              class="bg-transparent outline-none text-sm text-gray-700 w-full placeholder-gray-400"
+              autofocus/>
+            <div *ngIf="isSearching" class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0"></div>
+            <button *ngIf="tmdbQuery && !isSearching" (click)="tmdbQuery=''; tmdbResults=[]"
+                    class="text-gray-400 hover:text-gray-600 shrink-0">&times;</button>
+          </div>
+        </div>
+
+        <!-- Résultats -->
+        <div class="flex-1 overflow-y-auto">
+
+          <!-- Placeholder vide -->
+          <div *ngIf="!isSearching && tmdbResults.length === 0 && !tmdbQuery"
+               class="flex flex-col items-center justify-center py-16 text-gray-400">
+            <svg class="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
+            </svg>
+            <p class="text-sm">Tapez le titre d'un film pour commencer</p>
+          </div>
+
+          <!-- Aucun résultat -->
+          <div *ngIf="!isSearching && tmdbResults.length === 0 && tmdbQuery.length >= 2"
+               class="flex flex-col items-center justify-center py-16 text-gray-400">
+            <p class="text-sm">Aucun résultat pour "{{ tmdbQuery }}"</p>
+          </div>
+
+          <!-- Liste résultats -->
+          <div *ngIf="tmdbResults.length > 0" class="divide-y divide-gray-50">
+            <div *ngFor="let movie of tmdbResults"
+                 (click)="selectMovie(movie)"
+                 class="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 cursor-pointer transition-colors group">
+
+              <!-- Poster -->
+              <div class="w-12 h-16 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                <img *ngIf="movie.poster_path"
+                     [src]="getPosterUrl(movie.poster_path)"
+                     [alt]="movie.title"
+                     class="w-full h-full object-cover"/>
+                <div *ngIf="!movie.poster_path"
+                     class="w-full h-full flex items-center justify-center text-gray-300 text-xs">🎬</div>
+              </div>
+
+              <!-- Info -->
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-gray-800 truncate group-hover:text-primary transition-colors">
+                  {{ movie.title }}
+                </p>
+                <p class="text-xs text-gray-400 mt-0.5">
+                  {{ getYear(movie.release_date) }}
+                  <span *ngIf="movie.vote_average"> · ★ {{ movie.vote_average | number:'1.1-1' }}</span>
+                </p>
+                <p class="text-xs text-gray-500 mt-1 line-clamp-1">{{ movie.overview }}</p>
+              </div>
+
+              <!-- Arrow -->
+              <svg class="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors shrink-0"
+                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Loading overlay résultats -->
+          <div *ngIf="isSearching && tmdbResults.length === 0"
+               class="flex items-center justify-center py-16">
+            <div class="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STEP 2 : Confirmation ── -->
+      <div *ngIf="modalStep === 'confirm'" class="flex-1 overflow-y-auto">
+
+        <!-- Loading état -->
+        <div *ngIf="isSearching" class="flex flex-col items-center justify-center py-16 gap-3">
+          <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-sm text-gray-500">Chargement des informations TMDB...</p>
+        </div>
+
+        <div *ngIf="!isSearching" class="px-6 py-4 space-y-4">
+
+          <!-- Aperçu poster + titre -->
+          <div class="flex gap-4 items-start bg-gray-50 rounded-xl p-4">
+            <div class="w-20 h-28 rounded-xl overflow-hidden bg-gray-200 shrink-0">
+              <img *ngIf="form.posterUrl" [src]="form.posterUrl" alt="poster" class="w-full h-full object-cover"/>
+              <div *ngIf="!form.posterUrl" class="w-full h-full flex items-center justify-center text-gray-300">🎬</div>
+            </div>
+            <div class="flex-1">
+              <p class="font-bold text-gray-800 text-lg leading-tight">{{ form.title }}</p>
+              <p class="text-sm text-gray-500 mt-1">{{ form.director }}</p>
+              <p class="text-xs text-gray-400 mt-1">{{ form.genre }}</p>
+              <div class="flex items-center gap-3 mt-2">
+                <span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">{{ getDurationLabel(form.durationMinutes) }}</span>
+                <span class="text-xs text-gray-400">{{ form.releaseDate }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Champs auto-remplis (éditables) -->
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Synopsis</label>
+            <textarea [(ngModel)]="form.synopsis" rows="3"
+                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary resize-none"></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Titre</label>
+              <input [(ngModel)]="form.title" type="text"
+                     class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Réalisateur</label>
+              <input [(ngModel)]="form.director" type="text"
+                     class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Genre</label>
+              <input [(ngModel)]="form.genre" type="text"
+                     class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Durée (minutes)</label>
+              <input [(ngModel)]="form.durationMinutes" type="number"
+                     class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+  <div>
+    <label class="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1">
+      Langue
+      <span class="text-red-500 text-xs font-bold">*</span>
+      <span class="text-gray-400 font-normal">(à renseigner)</span>
+    </label>
+    <select [(ngModel)]="form.language"
+            class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm outline-none focus:border-primary bg-orange-50/30">
+      <option value="" disabled selected>Choisir une langue...</option>
+      <option value="VF">VF — Version Française</option>
+      <option value="VOSTFR">VOSTFR — Sous-titres français</option>
+      <option value="VO">VO — Version Originale</option>
+      <option value="VOSTA">VOSTA — Sous-titres anglais</option>
+      <option value="AR">AR — Version Arabe</option>
+    </select>
+  </div>
+  <div>
+    <label class="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1">
+      Classification
+      <span class="text-red-500 text-xs font-bold">*</span>
+      <span class="text-gray-400 font-normal">(à renseigner)</span>
+    </label>
+    <select [(ngModel)]="form.rating"
+            class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm outline-none focus:border-primary bg-orange-50/30">
+      <option value="" disabled selected>Choisir une classification...</option>
+      <option value="Tout public">Tout public</option>
+      <option value="-10">-10 ans</option>
+      <option value="-12">-12 ans</option>
+      <option value="-16">-16 ans</option>
+      <option value="-18">-18 ans</option>
+      <option value="PG">PG — Guidance parentale</option>
+      <option value="PG-13">PG-13</option>
+      <option value="R">R — Restreint</option>
+      <option value="NC-17">NC-17</option>
+    </select>
+  </div>
+</div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Date de sortie</label>
+              <input [(ngModel)]="form.releaseDate" type="date"
+                     class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">IMDb ID</label>
+              <input [(ngModel)]="form.imdbId" type="text"
+                     class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Casting principal</label>
+            <input [(ngModel)]="form.castSummary" type="text"
+                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">URL Affiche</label>
+            <input [(ngModel)]="form.posterUrl" type="url"
+                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+          </div>
+
+          <!-- Erreur -->
+          <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-xs">
+            {{ errorMessage }}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Footer modal -->
+      <div *ngIf="modalStep === 'confirm' && !isSearching"
+           class="px-6 py-4 border-t border-gray-100 flex justify-between items-center shrink-0">
+        <p class="text-xs text-gray-400 flex items-center gap-1">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Les champs en orange sont obligatoires
+        </p>
+        <div class="flex gap-3">
+          <button (click)="closeModal()" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Annuler</button>
+          <button (click)="submitFilm()"
+                  [disabled]="isSubmitting || !form.title || !form.director || !form.language || !form.rating"
+                  class="px-5 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            {{ isSubmitting ? 'Ajout en cours...' : 'Ajouter au catalogue' }}
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
