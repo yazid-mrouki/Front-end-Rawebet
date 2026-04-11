@@ -4,6 +4,7 @@ import { SignUpComponent } from './pages/auth/sign-up/sign-up.component';
 import { HomeComponent } from './pages/home/home.component';
 import { EventsComponent } from './pages/events/events.component';
 import { FilmsComponent } from './pages/films/films.component';
+import { CinemasComponent } from './pages/cinemas/cinemas.component';          // ← NOUVEAU
 import { TicketsComponent } from './pages/tickets/tickets.component';
 import { ClubsComponent } from './pages/clubs/clubs.component';
 import { SubscriptionsComponent } from './pages/subscriptions/subscriptions.component';
@@ -20,6 +21,7 @@ import { AdminLayoutComponent } from './admin/admin-layout/admin-layout.componen
 import { AdminDashboardComponent } from './admin/pages/dashboard/admin-dashboard.component';
 import { AdminEventsComponent } from './admin/pages/events/admin-events.component';
 import { AdminFilmsComponent } from './admin/pages/films/admin-films.component';
+import { AdminCinemasComponent } from './admin/pages/cinemas/admin-cinemas.component'; // ← NOUVEAU
 import { AdminTicketsComponent } from './admin/pages/tickets/admin-tickets.component';
 import { AdminClubsComponent } from './admin/pages/clubs/admin-clubs.component';
 import { AdminSubscriptionsComponent } from './admin/pages/subscriptions/admin-subscriptions.component';
@@ -42,6 +44,7 @@ export const routes: Routes = [
   { path: 'home', component: HomeComponent },
   { path: 'events', component: EventsComponent },
   { path: 'films', component: FilmsComponent },
+  { path: 'cinemas', component: CinemasComponent },                            // ← NOUVEAU
   { path: 'tickets', component: TicketsComponent },
   { path: 'clubs', component: ClubsComponent },
   { path: 'subscriptions', component: SubscriptionsComponent },
@@ -63,35 +66,25 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-
       { path: 'dashboard', component: AdminDashboardComponent },
-
       { path: 'events', component: AdminEventsComponent },
-
       { path: 'films', component: AdminFilmsComponent },
-
+      { path: 'cinemas', component: AdminCinemasComponent },                   // ← NOUVEAU
       { path: 'tickets', component: AdminTicketsComponent },
-
       { path: 'clubs', component: AdminClubsComponent },
-
       { path: 'subscriptions', component: AdminSubscriptionsComponent },
-
       {
         path: 'users',
         component: AdminUsersComponent,
         canActivate: [permissionGuard(['ADMIN_MANAGE'])],
       },
-
       {
         path: 'loyalty',
         component: AdminLoyaltyComponent,
         canActivate: [permissionGuard(['FIDELITY_UPDATE'])],
       },
-
       { path: 'logistics', component: AdminLogisticsComponent },
-
       { path: 'feedback', component: AdminFeedbackComponent },
-
       { path: 'notifications', component: AdminNotificationsComponent },
     ],
   },

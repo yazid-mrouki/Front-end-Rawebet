@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../../core/services/user.service';
@@ -27,25 +27,27 @@ export class AdminLayoutComponent implements OnInit {
   adminEmail = '';
   adminRoleLabel = 'Super Admin';
 
-  constructor(private userService: UserService, private auth: AuthService) {
-    this.adminName = this.auth.getCurrentUserName() || 'Super Admin';
-    this.adminEmail = this.auth.getCurrentUserEmail();
-    this.adminRoleLabel = this.getAdminRoleLabel();
-  }
+constructor(private userService: UserService, private auth: AuthService, private cdr: ChangeDetectorRef) {
+  // Ne pas calculer adminRoleLabel ici — le faire dans ngOnInit
+  this.adminName = this.auth.getCurrentUserName() || 'Super Admin';
+  this.adminEmail = this.auth.getCurrentUserEmail();
+  this.adminRoleLabel = this.getAdminRoleLabel();
+}
 
-  private readonly allMenuItems: AdminMenuItem[] = [
-    { label: 'Dashboard', icon: '📊', route: '/admin/dashboard', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_FORMATION'] },
-    { label: 'Events', icon: '🎭', route: '/admin/events', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
-    { label: 'Films', icon: '🎬', route: '/admin/films', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
-    { label: 'Tickets', icon: '🎟️', route: '/admin/tickets', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
-    { label: 'Clubs', icon: '👥', route: '/admin/clubs', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
-    { label: 'Subscriptions', icon: '💳', route: '/admin/subscriptions', roles: ['SUPER_ADMIN'] },
-    { label: 'Users', icon: '👤', route: '/admin/users', permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
-    { label: 'Loyalty', icon: '⭐', route: '/admin/loyalty', permissions: ['FIDELITY_UPDATE'], roles: ['SUPER_ADMIN'] },
-    { label: 'Logistics', icon: '📦', route: '/admin/logistics', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
-    { label: 'Feedback', icon: '💬', route: '/admin/feedback', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
-    { label: 'Notifications', icon: '🔔', route: '/admin/notifications', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_FORMATION'] },
-  ];
+private readonly allMenuItems: AdminMenuItem[] = [
+  { label: 'Dashboard',     icon: '📊', route: '/admin/dashboard',     roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_FORMATION'] },
+  { label: 'Events',        icon: '🎭', route: '/admin/events',         roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
+  { label: 'Films',         icon: '🎬', route: '/admin/films',          roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+  { label: 'Cinémas',       icon: '🏛️', route: '/admin/cinemas',        roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] }, // ← NOUVEAU
+  { label: 'Tickets',       icon: '🎟️', route: '/admin/tickets',        roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
+  { label: 'Clubs',         icon: '👥', route: '/admin/clubs',          roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+  { label: 'Subscriptions', icon: '💳', route: '/admin/subscriptions',  roles: ['SUPER_ADMIN'] },
+  { label: 'Users',         icon: '👤', route: '/admin/users',          permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
+  { label: 'Loyalty',       icon: '⭐', route: '/admin/loyalty',        permissions: ['FIDELITY_UPDATE'], roles: ['SUPER_ADMIN'] },
+  { label: 'Logistics',     icon: '📦', route: '/admin/logistics',      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+  { label: 'Feedback',      icon: '💬', route: '/admin/feedback',       roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
+  { label: 'Notifications', icon: '🔔', route: '/admin/notifications',  roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_FORMATION'] },
+];
 
   get menuItems(): AdminMenuItem[] {
     const roles = this.auth.getRoles();
@@ -60,17 +62,19 @@ export class AdminLayoutComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
-    setTimeout(() => {
-      this.userService.getMe().subscribe({
-        next: (u) => {
-          this.adminName = u.nom || this.adminName;
-          this.adminEmail = u.email || this.adminEmail;
-          this.adminRoleLabel = this.getAdminRoleLabel();
-        }
-      });
-    }, 0);
-  }
+ngOnInit() {
+  // Wrap dans setTimeout pour éviter ExpressionChangedAfterItHasBeenCheckedError
+  setTimeout(() => {
+    this.userService.getMe().subscribe({
+      next: (u: any) => {
+        this.adminName = u.nom || u.fullName || u.name || u.username || this.adminName;
+        this.adminEmail = u.email || this.adminEmail;
+        this.adminRoleLabel = this.getAdminRoleLabel();
+        this.cdr.detectChanges();
+      }
+    });
+  }, 0);
+}
 
   private getAdminRoleLabel(): string {
     const roles = this.auth.getRoles();
