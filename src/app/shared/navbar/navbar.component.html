@@ -1,109 +1,115 @@
-<nav class="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
+<nav class="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-md shadow-sm">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between h-16 items-center">
-
-      <!-- Logo -->
+    <div class="flex h-16 items-center justify-between">
       <a routerLink="/home" class="flex items-center gap-3 group">
-        <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-          <span class="text-white font-bold text-lg">R</span>
+        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+          <span class="text-lg font-bold text-white">R</span>
         </div>
-        <span class="font-serif text-xl font-bold text-primary group-hover:text-primary-light transition-colors">Rawebet</span>
+        <span class="font-serif text-xl font-bold text-primary transition-colors group-hover:text-primary-light">Rawebet</span>
       </a>
 
-      <!-- Desktop Nav -->
       <div class="hidden lg:flex items-center gap-1">
-        <a routerLink="/home" routerLinkActive="text-primary bg-primary/5" class="px-4 py-2 rounded-lg text-gray-700 hover:text-primary hover:bg-primary/5 font-medium text-sm transition-all">Home</a>
+        <a routerLink="/home" routerLinkActive="text-primary bg-primary/5" class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Home</a>
+        <a *ngIf="isAuthenticated()" routerLink="/tickets" routerLinkActive="text-primary bg-primary/5" class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Reserver</a>
 
-        <!-- Management Dropdown -->
         <div class="relative" *ngIf="isAdmin()">
-          <button (click)="toggleManagement()" class="px-4 py-2 rounded-lg text-gray-700 hover:text-primary hover:bg-primary/5 font-medium text-sm transition-all flex items-center gap-1">
+          <button (click)="toggleManagement()" class="flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
             Management
-            <svg class="w-4 h-4 transition-transform" [class.rotate-180]="managementDropdown" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <svg class="w-4 h-4 transition-transform" [class.rotate-180]="managementDropdown" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
           </button>
-          <div *ngIf="managementDropdown" class="absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in">
-            <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Events & Entertainment</div>
-            <a routerLink="/events" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 hover:bg-primary/5 text-gray-700 hover:text-primary transition-colors">
-              <span class="text-lg">🎭</span> <span>Events</span>
+
+          <div *ngIf="managementDropdown" class="absolute left-0 mt-2 w-64 rounded-xl border border-gray-100 bg-white py-2 shadow-xl animate-fade-in">
+            <div class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Events & Entertainment</div>
+            <a routerLink="/events" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">
+              <span>Events</span>
             </a>
-            <a routerLink="/films" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 hover:bg-primary/5 text-gray-700 hover:text-primary transition-colors">
-              <span class="text-lg">🎬</span> <span>Films & Premieres</span>
+            <a routerLink="/films" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">
+              <span>Films & Premieres</span>
             </a>
-            <a routerLink="/tickets" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 hover:bg-primary/5 text-gray-700 hover:text-primary transition-colors">
-              <span class="text-lg">🎟️</span> <span>Tickets</span>
+            <a routerLink="/tickets" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">
+              <span>Tickets</span>
             </a>
-            <div class="border-t border-gray-100 my-1"></div>
-            <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Community</div>
-            <a routerLink="/clubs" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 hover:bg-primary/5 text-gray-700 hover:text-primary transition-colors">
-              <span class="text-lg">👥</span> <span>Clubs</span>
+            <div class="my-1 border-t border-gray-100"></div>
+            <div class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Community</div>
+            <a routerLink="/clubs" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">
+              <span>Clubs</span>
             </a>
-            <a routerLink="/subscriptions" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 hover:bg-primary/5 text-gray-700 hover:text-primary transition-colors">
-              <span class="text-lg">💳</span> <span>Subscriptions</span>
+            <a routerLink="/subscriptions" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">
+              <span>Subscriptions</span>
             </a>
-            <a routerLink="/loyalty" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 hover:bg-primary/5 text-gray-700 hover:text-primary transition-colors">
-              <span class="text-lg">⭐</span> <span>Loyalty Cards</span>
+            <a routerLink="/loyalty" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">
+              <span>Loyalty Cards</span>
             </a>
-            <div class="border-t border-gray-100 my-1"></div>
-            <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Operations</div>
-            <a routerLink="/logistics" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 hover:bg-primary/5 text-gray-700 hover:text-primary transition-colors">
-              <span class="text-lg">📦</span> <span>Logistics & Materials</span>
+            <div class="my-1 border-t border-gray-100"></div>
+            <div class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Operations</div>
+            <a routerLink="/logistics" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">
+              <span>Logistics & Materials</span>
             </a>
           </div>
         </div>
 
-        <a routerLink="/feedback" routerLinkActive="text-primary bg-primary/5" class="px-4 py-2 rounded-lg text-gray-700 hover:text-primary hover:bg-primary/5 font-medium text-sm transition-all">Feedback</a>
-        <a routerLink="/notifications" routerLinkActive="text-primary bg-primary/5" class="px-4 py-2 rounded-lg text-gray-700 hover:text-primary hover:bg-primary/5 font-medium text-sm transition-all relative">
-          🔔
-          <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
+        <a *ngIf="isAuthenticated()" routerLink="/feedback" routerLinkActive="text-primary bg-primary/5" class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Feedback</a>
+        <a routerLink="/notifications" routerLinkActive="text-primary bg-primary/5" class="relative rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
+          Notifications
+          <span class="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white">3</span>
         </a>
       </div>
 
-      <!-- Right side actions -->
       <div class="hidden lg:flex items-center gap-3">
-        <!-- Profile Dropdown -->
         <div class="relative" *ngIf="isAuthenticated()">
-          <button (click)="toggleProfile()" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
-            <div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-              <span class="text-primary font-semibold text-sm">{{ userName.charAt(0) || 'U' }}</span>
+          <button (click)="toggleProfile()" class="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-gray-50">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+              <span class="text-sm font-semibold text-primary">{{ userName.charAt(0) || 'U' }}</span>
             </div>
             <span class="text-sm font-medium text-dark">{{ userName || 'Mon compte' }}</span>
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
           </button>
-          <div *ngIf="profileDropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in">
-            <a routerLink="/profile" (click)="closeDropdowns()" class="block px-4 py-2.5 hover:bg-primary/5 text-gray-700 hover:text-primary transition-colors">👤 My Profile</a>
-            <a routerLink="/loyalty" (click)="closeDropdowns()" class="block px-4 py-2.5 hover:bg-primary/5 text-gray-700 hover:text-primary transition-colors">⭐ Loyalty Card</a>
-            <a routerLink="/tickets" (click)="closeDropdowns()" class="block px-4 py-2.5 hover:bg-primary/5 text-gray-700 hover:text-primary transition-colors">🎟️ My Tickets</a>
-            <div class="border-t border-gray-100 my-1"></div>
-            <button (click)="logout()" class="w-full text-left px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors">🚪 Sign Out</button>
+
+          <div *ngIf="profileDropdown" class="absolute right-0 mt-2 w-48 rounded-xl border border-gray-100 bg-white py-2 shadow-xl animate-fade-in">
+            <a routerLink="/profile" (click)="closeDropdowns()" class="block px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">My Profile</a>
+            <a routerLink="/loyalty" (click)="closeDropdowns()" class="block px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">Loyalty Card</a>
+            <a routerLink="/tickets" (click)="closeDropdowns()" class="block px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">My Tickets</a>
+            <div class="my-1 border-t border-gray-100"></div>
+            <button (click)="logout()" class="w-full px-4 py-2.5 text-left text-red-600 transition-colors hover:bg-red-50">Sign Out</button>
           </div>
         </div>
-        <a *ngIf="!isAuthenticated()" routerLink="/auth/sign-in" class="px-4 py-2 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary-light transition-all">Sign In</a>
+
+        <a *ngIf="!isAuthenticated()" routerLink="/auth/sign-in" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-all hover:bg-primary-light">Sign In</a>
       </div>
 
-      <!-- Mobile Hamburger -->
-      <button (click)="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100">
-        <svg *ngIf="!mobileMenuOpen" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
-        <svg *ngIf="mobileMenuOpen" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      <button (click)="toggleMobileMenu()" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100 lg:hidden">
+        <svg *ngIf="!mobileMenuOpen" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
+        </svg>
+        <svg *ngIf="mobileMenuOpen" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
       </button>
     </div>
   </div>
 
-  <!-- Mobile Menu -->
-  <div *ngIf="mobileMenuOpen" class="lg:hidden bg-white border-t border-gray-100 animate-fade-in">
-    <div class="px-4 py-3 space-y-1">
-      <a routerLink="/home" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700 font-medium">🏠 Home</a>
-      <a routerLink="/events" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">🎭 Events</a>
-      <a routerLink="/films" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">🎬 Films</a>
-      <a routerLink="/tickets" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">🎟️ Tickets</a>
-      <a routerLink="/clubs" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">👥 Clubs</a>
-      <a routerLink="/subscriptions" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">💳 Subscriptions</a>
-      <a routerLink="/loyalty" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">⭐ Loyalty</a>
-      <a routerLink="/logistics" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">📦 Logistics</a>
-      <a routerLink="/feedback" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">💬 Feedback</a>
-      <a routerLink="/notifications" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">🔔 Notifications</a>
-      <a *ngIf="isAuthenticated()" routerLink="/profile" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg hover:bg-primary/5 text-gray-700">👤 Profile</a>
+  <div *ngIf="mobileMenuOpen" class="animate-fade-in border-t border-gray-100 bg-white lg:hidden">
+    <div class="space-y-1 px-4 py-3">
+      <a routerLink="/home" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 font-medium text-gray-700 hover:bg-primary/5">Home</a>
+      <a *ngIf="isAuthenticated()" routerLink="/tickets" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Reserver</a>
+      <a routerLink="/events" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Events</a>
+      <a routerLink="/films" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Films</a>
+      <a *ngIf="isAuthenticated()" routerLink="/tickets" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Tickets</a>
+      <a routerLink="/clubs" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Clubs</a>
+      <a routerLink="/subscriptions" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Subscriptions</a>
+      <a routerLink="/loyalty" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Loyalty</a>
+      <a routerLink="/logistics" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Logistics</a>
+      <a *ngIf="isAuthenticated()" routerLink="/feedback" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Feedback</a>
+      <a routerLink="/notifications" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Notifications</a>
+      <a *ngIf="isAuthenticated()" routerLink="/profile" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Profile</a>
+
       <div class="border-t border-gray-100 pt-2">
-        <a *ngIf="!isAuthenticated()" routerLink="/auth/sign-in" (click)="toggleMobileMenu()" class="block px-4 py-2.5 rounded-lg bg-primary text-white text-center font-medium">Sign In</a>
-        <button *ngIf="isAuthenticated()" (click)="logout(); toggleMobileMenu()" class="w-full text-left px-4 py-2.5 rounded-lg bg-primary text-white text-center font-medium">Sign Out</button>
+        <a *ngIf="!isAuthenticated()" routerLink="/auth/sign-in" (click)="toggleMobileMenu()" class="block rounded-lg bg-primary px-4 py-2.5 text-center font-medium text-white">Sign In</a>
+        <button *ngIf="isAuthenticated()" (click)="logout(); toggleMobileMenu()" class="w-full rounded-lg bg-primary px-4 py-2.5 text-center font-medium text-white">Sign Out</button>
       </div>
     </div>
   </div>
