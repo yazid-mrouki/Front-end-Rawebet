@@ -44,6 +44,12 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
 
   wsConnected = false;
 
+  // Typing indicator
+  typingLabel = '';
+  private typingTimeout!: ReturnType<typeof setTimeout>;
+  private typingThrottleTimeout!: ReturnType<typeof setTimeout>;
+  private typingSub!: Subscription;
+
   private wsSub!: Subscription;
   private wsConnSub!: Subscription;
   private expiryTimeout!: ReturnType<typeof setTimeout>;
@@ -141,6 +147,17 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
             }
             this.cdr.detectChanges();
           });
+
+          this.typingSub = this.wsService.typing$.subscribe((username) => {
+            if (username === this.currentUsername) return;
+            this.typingLabel = `${username} est en train d'écrire…`;
+            this.cdr.detectChanges();
+            clearTimeout(this.typingTimeout);
+            this.typingTimeout = setTimeout(() => {
+              this.typingLabel = '';
+              this.cdr.detectChanges();
+            }, 3000);
+          });
         }
 
         this.startExpiryTimeout();
@@ -226,6 +243,17 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     }
   }
 
+  onTyping(): void {
+    if (!this.isLoggedIn || !this.session || !this.wsConnected) return;
+    // Throttle : envoie au plus 1 événement toutes les 2s
+    if (this.typingThrottleTimeout) return;
+    this.wsService.sendTyping(this.session.id);
+    this.typingThrottleTimeout = setTimeout(() => {
+      clearTimeout(this.typingThrottleTimeout);
+      (this as any).typingThrottleTimeout = null;
+    }, 2000);
+  }
+
   sendMessage(): void {
     if (!this.isLoggedIn) {
       this.showLoginPopup = true;
@@ -268,8 +296,11 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.wsSub?.unsubscribe();
     this.wsConnSub?.unsubscribe();
+    this.typingSub?.unsubscribe();
     this.wsService.disconnect();
     clearTimeout(this.expiryTimeout);
+    clearTimeout(this.typingTimeout);
+    clearTimeout(this.typingThrottleTimeout);
     clearInterval(this.countdownInterval);
   }
 }

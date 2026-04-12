@@ -11,12 +11,14 @@ export class ChatWebSocketService implements OnDestroy {
   private client!: Client;
   private messageSubject = new Subject<ChatMessage>();
   private connectedSubject = new BehaviorSubject<boolean>(false);
+  private typingSubject = new Subject<string>();
 
   // Compteur pour ignorer les callbacks d'anciens clients (race condition)
   private connectionId = 0;
 
   messages$ = this.messageSubject.asObservable();
   connected$ = this.connectedSubject.asObservable();
+  typing$ = this.typingSubject.asObservable();
 
   constructor(private ngZone: NgZone) {}
 
@@ -41,6 +43,14 @@ export class ChatWebSocketService implements OnDestroy {
             if (this.connectionId !== id) return;
             const message: ChatMessage = JSON.parse(frame.body);
             this.ngZone.run(() => this.messageSubject.next(message));
+          }
+        );
+        this.client.subscribe(
+          `/topic/chat/${chatSessionId}/typing`,
+          (frame: IMessage) => {
+            if (this.connectionId !== id) return;
+            const event: { username: string } = JSON.parse(frame.body);
+            this.ngZone.run(() => this.typingSubject.next(event.username));
           }
         );
         this.ngZone.run(() => this.connectedSubject.next(true));
@@ -82,6 +92,14 @@ export class ChatWebSocketService implements OnDestroy {
       body: JSON.stringify({ content }),
     });
     return true;
+  }
+
+  sendTyping(chatSessionId: number): void {
+    if (!this.client?.connected) return;
+    this.client.publish({
+      destination: `/app/chat/${chatSessionId}/typing`,
+      body: '{}',
+    });
   }
 
   disconnect(): void {

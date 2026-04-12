@@ -110,6 +110,18 @@
         </div>
       </div>
 
+      <!-- Typing indicator -->
+      <div *ngIf="typingLabel" class="flex justify-start">
+        <div class="bg-white text-gray-400 text-xs italic rounded-2xl rounded-tl-sm px-4 py-2 shadow-sm border border-gray-100 flex items-center gap-2">
+          <span class="flex gap-0.5">
+            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+          </span>
+          {{ typingLabel }}
+        </div>
+      </div>
+
     </div>
 
     <!-- C2 — Bouton flottant nouveaux messages -->
@@ -136,7 +148,7 @@
         [(ngModel)]="newMessage"
         (keydown)="onKeyEnter($event)"
         (focus)="onInputFocus()"
-        (input)="autoResize($event)"
+        (input)="autoResize($event); onTyping()"
         [placeholder]="isLoggedIn ? 'Écrivez un message...' : 'Connectez-vous pour participer'"
         [readonly]="!isLoggedIn"
         rows="1"
