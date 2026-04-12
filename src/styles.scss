@@ -48,3 +48,16 @@ select,
 textarea {
   font: inherit;
 }
+
+/* ── Chat layout : hauteur fixe uniquement quand le chat est rejoint ── */
+app-chat-room.chat-active {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px); /* 64px = h-16 navbar */
+  overflow: hidden;
+}
+
+app-chat-room.chat-active > * {
+  flex: 1;
+  min-height: 0;
+}
