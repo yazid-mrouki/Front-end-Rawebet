@@ -43,6 +43,7 @@ export class AdminLayoutComponent implements OnInit {
     { label: 'Subscriptions', icon: '💳', route: '/admin/subscriptions', roles: ['SUPER_ADMIN'] },
     { label: 'Users', icon: '👤', route: '/admin/users', permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
     { label: 'Loyalty', icon: '⭐', route: '/admin/loyalty', permissions: ['FIDELITY_UPDATE'], roles: ['SUPER_ADMIN'] },
+    { label: 'Role', icon: '🛡️', route: '/admin/roles', permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
     { label: 'Logistics', icon: '📦', route: '/admin/logistics', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
     { label: 'Feedback', icon: '💬', route: '/admin/feedback', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
     { label: 'Notifications', icon: '🔔', route: '/admin/notifications', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'] },

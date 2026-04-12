@@ -25,55 +25,46 @@
       </div>
     </div>
 
-    <div class="grid lg:grid-cols-2 gap-8">
-      <!-- Profile Info -->
-      <div class="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 class="font-serif text-xl font-bold text-dark mb-6">Account Information</h3>
-        <form (ngSubmit)="onSubmit()" class="space-y-5">
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-6 md:p-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
-            <input type="text" name="fullName" [(ngModel)]="user.fullName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
+            <h3 class="font-serif text-2xl font-bold text-dark">Section Profil</h3>
+            <p class="text-sm text-gray-500 mt-1">Informations principales de votre compte.</p>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-            <input type="email" name="email" [(ngModel)]="user.email" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
+          <div class="flex items-center gap-2">
+            <button type="button" (click)="openEditProfileModal()" class="px-4 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-light transition-colors">
+              Modifier infos
+            </button>
+            <button type="button" (click)="openChangePasswordModal()" class="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors">
+              Changer mot de passe
+            </button>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
-            <input type="tel" name="phone" [(ngModel)]="user.phone" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+            <p class="text-xs uppercase tracking-wide text-gray-400">Nom complet</p>
+            <p class="text-base font-semibold text-dark mt-1">{{ user.fullName || '-' }}</p>
           </div>
-          <button type="submit" class="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors text-sm">Save Changes</button>
-          <p *ngIf="error" class="text-red-500 text-sm">{{ error }}</p>
-          <p *ngIf="success" class="text-green-600 text-sm">{{ success }}</p>
-        </form>
+          <div class="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+            <p class="text-xs uppercase tracking-wide text-gray-400">Email</p>
+            <p class="text-base font-semibold text-dark mt-1">{{ user.email || '-' }}</p>
+          </div>
+          <div class="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+            <p class="text-xs uppercase tracking-wide text-gray-400">Téléphone</p>
+            <p class="text-base font-semibold text-dark mt-1">{{ user.phone || '-' }}</p>
+          </div>
+          <div class="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+            <p class="text-xs uppercase tracking-wide text-gray-400">Fidélité</p>
+            <p class="text-base font-semibold text-dark mt-1">{{ user.tier || 'SILVER' }} · {{ user.points || 0 }} pts</p>
+          </div>
+        </div>
+
+        <p *ngIf="error" class="text-red-500 text-sm mt-4">{{ error }}</p>
+        <p *ngIf="success" class="text-green-600 text-sm mt-4">{{ success }}</p>
       </div>
 
-      <!-- Change Password -->
-      <div class="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 class="font-serif text-xl font-bold text-dark mb-6">Change Password</h3>
-        <form (ngSubmit)="changePassword()" class="space-y-5">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Current Password</label>
-            <input type="password" name="oldPassword" [(ngModel)]="passwordForm.oldPassword" required
-              class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">New Password</label>
-            <input type="password" name="newPassword" [(ngModel)]="passwordForm.newPassword" required
-              class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Confirm New Password</label>
-            <input type="password" name="confirmPassword" [(ngModel)]="passwordForm.confirmPassword" required
-              class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
-          </div>
-          <button type="submit" class="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors text-sm">Change Password</button>
-          <p *ngIf="passwordError" class="text-red-500 text-sm">{{ passwordError }}</p>
-          <p *ngIf="passwordSuccess" class="text-green-600 text-sm">{{ passwordSuccess }}</p>
-        </form>
-      </div>
-
-      <!-- Quick Links -->
       <div class="space-y-4">
         <a routerLink="/loyalty" class="flex items-center gap-4 bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-lg transition-all group">
           <div class="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">⭐</div>
@@ -110,11 +101,67 @@
         <div class="bg-white rounded-2xl p-5 border border-gray-100">
           <h4 class="font-semibold text-dark mb-3">Danger Zone</h4>
           <div class="flex gap-3">
-            <button class="px-4 py-2 border border-gray-200 text-gray-600 rounded-xl text-xs font-medium hover:bg-gray-50">Change Password</button>
+            <button type="button" (click)="openChangePasswordModal()" class="px-4 py-2 border border-gray-200 text-gray-600 rounded-xl text-xs font-medium hover:bg-gray-50">Change Password</button>
             <button class="px-4 py-2 border border-red-200 text-red-600 rounded-xl text-xs font-medium hover:bg-red-50">Delete Account</button>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div *ngIf="showEditProfileModal" class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+    <div class="w-full max-w-xl bg-white rounded-2xl border border-gray-100 shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-serif text-xl font-bold text-dark">Modifier mes informations</h3>
+        <button type="button" (click)="closeEditProfileModal()" class="text-gray-400 hover:text-gray-600">✕</button>
+      </div>
+      <form (ngSubmit)="onSubmit()" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+          <input type="text" name="fullName" [(ngModel)]="editDraft.fullName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+          <input type="email" name="email" [(ngModel)]="editDraft.email" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
+          <input type="tel" name="phone" [(ngModel)]="editDraft.phone" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
+        </div>
+        <div class="flex justify-end gap-2">
+          <button type="button" (click)="closeEditProfileModal()" class="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50">Annuler</button>
+          <button type="submit" class="px-4 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div *ngIf="showChangePasswordModal" class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+    <div class="w-full max-w-xl bg-white rounded-2xl border border-gray-100 shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-serif text-xl font-bold text-dark">Changer le mot de passe</h3>
+        <button type="button" (click)="closeChangePasswordModal()" class="text-gray-400 hover:text-gray-600">✕</button>
+      </div>
+      <form (ngSubmit)="changePassword()" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Current Password</label>
+          <input type="password" name="oldPassword" [(ngModel)]="passwordForm.oldPassword" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">New Password</label>
+          <input type="password" name="newPassword" [(ngModel)]="passwordForm.newPassword" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Confirm New Password</label>
+          <input type="password" name="confirmPassword" [(ngModel)]="passwordForm.confirmPassword" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm" />
+        </div>
+        <p *ngIf="passwordError" class="text-red-500 text-sm">{{ passwordError }}</p>
+        <p *ngIf="passwordSuccess" class="text-green-600 text-sm">{{ passwordSuccess }}</p>
+        <div class="flex justify-end gap-2">
+          <button type="button" (click)="closeChangePasswordModal()" class="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50">Annuler</button>
+          <button type="submit" class="px-4 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors">Changer</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

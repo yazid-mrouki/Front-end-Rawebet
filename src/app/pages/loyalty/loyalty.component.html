@@ -8,9 +8,7 @@
 
   <div class="max-w-7xl mx-auto px-6 py-10">
 
-    <div *ngIf="loading" class="text-center py-20 text-gray-400">Chargement...</div>
-
-    <ng-container *ngIf="!loading && carte">
+    <ng-container *ngIf="carte; else loyaltySkeleton">
       <!-- Loyalty Card -->
       <div class="bg-gradient-to-br from-dark to-primary rounded-3xl p-8 text-white mb-10 max-w-2xl relative overflow-hidden">
         <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
@@ -58,10 +56,11 @@
         </div>
 
         <!-- Récompenses disponibles -->
-        <div class="bg-white rounded-2xl border border-gray-100 p-6">
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 min-h-[280px]">
           <h3 class="font-serif text-xl font-bold text-dark mb-4">Récompenses</h3>
           <div *ngIf="redeemMessage" class="mb-3 p-3 bg-green-50 text-green-700 rounded-xl text-sm">{{ redeemMessage }}</div>
           <div *ngIf="redeemError" class="mb-3 p-3 bg-red-50 text-red-600 rounded-xl text-sm">{{ redeemError }}</div>
+          <div *ngIf="loadingRewards" class="text-xs text-gray-400 mb-3">Chargement des récompenses...</div>
           <div class="space-y-3">
             <div *ngFor="let r of rewards" class="p-3 bg-gray-50 rounded-xl flex items-center justify-between">
               <div>
@@ -74,7 +73,7 @@
               </button>
             </div>
             <!-- Fallback si l'API rewards renvoie juste les noms (RewardType enum) -->
-            <ng-container *ngIf="rewards.length === 0">
+            <ng-container *ngIf="!loadingRewards && rewards.length === 0">
               <div class="p-3 bg-gray-50 rounded-xl flex items-center justify-between">
                 <div><div class="text-sm font-semibold text-dark">Séance gratuite</div><div class="text-xs text-gray-400">200 pts</div></div>
                 <button (click)="redeem('CINEMA_FREE')" class="px-3 py-1.5 bg-primary text-white text-xs rounded-lg hover:bg-primary-light">Utiliser</button>
@@ -92,8 +91,9 @@
         </div>
 
         <!-- Historique -->
-        <div class="bg-white rounded-2xl border border-gray-100 p-6">
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 min-h-[280px]">
           <h3 class="font-serif text-xl font-bold text-dark mb-4">Historique</h3>
+          <div *ngIf="loadingHistory" class="text-xs text-gray-400 mb-3">Chargement de l'historique...</div>
           <div class="space-y-3">
             <div *ngFor="let item of history" class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
               <div>
@@ -104,7 +104,7 @@
                 {{ formatPoints(item.points) }}
               </span>
             </div>
-            <div *ngIf="history.length === 0" class="text-center text-gray-400 text-sm py-4">Aucune activité pour l'instant</div>
+            <div *ngIf="!loadingHistory && history.length === 0" class="text-center text-gray-400 text-sm py-4">Aucune activité pour l'instant</div>
           </div>
         </div>
       </div>
@@ -132,5 +132,47 @@
         </div>
       </div>
     </ng-container>
+
+    <ng-template #loyaltySkeleton>
+      <div class="bg-white rounded-3xl border border-gray-100 p-8 mb-10 max-w-2xl animate-pulse">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-xl bg-gray-200"></div>
+          <div class="space-y-2">
+            <div class="h-4 w-40 bg-gray-200 rounded"></div>
+            <div class="h-5 w-52 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+        <div class="h-8 w-44 bg-gray-200 rounded mb-4"></div>
+        <div class="h-3 w-full bg-gray-200 rounded-full mb-2"></div>
+        <div class="h-3 w-64 bg-gray-200 rounded"></div>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-8">
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 min-h-[280px] animate-pulse">
+          <div class="h-6 w-24 bg-gray-200 rounded mb-6"></div>
+          <div class="space-y-3">
+            <div class="h-14 bg-gray-100 rounded-xl"></div>
+            <div class="h-14 bg-gray-100 rounded-xl"></div>
+            <div class="h-14 bg-gray-100 rounded-xl"></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 min-h-[280px] animate-pulse">
+          <div class="h-6 w-28 bg-gray-200 rounded mb-6"></div>
+          <div class="space-y-3">
+            <div class="h-14 bg-gray-100 rounded-xl"></div>
+            <div class="h-14 bg-gray-100 rounded-xl"></div>
+            <div class="h-14 bg-gray-100 rounded-xl"></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-100 p-6 min-h-[280px] animate-pulse">
+          <div class="h-6 w-24 bg-gray-200 rounded mb-6"></div>
+          <div class="space-y-3">
+            <div class="h-14 bg-gray-100 rounded-xl"></div>
+            <div class="h-14 bg-gray-100 rounded-xl"></div>
+            <div class="h-14 bg-gray-100 rounded-xl"></div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
   </div>
 </div>

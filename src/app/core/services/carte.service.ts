@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { of, tap } from 'rxjs';
 import {
   CarteFideliteResponse,
   FidelityHistoryResponse,
@@ -14,11 +15,22 @@ import {
 @Injectable({ providedIn: 'root' })
 export class CarteService {
   private api = environment.apiUrl;
+  private cachedCarte: CarteFideliteResponse | null = null;
+  private cachedHistory: FidelityHistoryResponse[] | null = null;
+  private cachedRewards: any[] | null = null;
 
   constructor(private http: HttpClient) {}
 
   getMaCarte() {
-    return this.http.get<CarteFideliteResponse>(`${this.api}/carte/me`);
+    if (this.cachedCarte) {
+      return of(this.cachedCarte);
+    }
+
+    return this.http.get<CarteFideliteResponse>(`${this.api}/carte/me`).pipe(
+      tap((carte) => {
+        this.cachedCarte = carte;
+      }),
+    );
   }
 
   getDashboard() {
@@ -26,11 +38,27 @@ export class CarteService {
   }
 
   getHistory() {
-    return this.http.get<FidelityHistoryResponse[]>(`${this.api}/carte/history`);
+    if (this.cachedHistory) {
+      return of(this.cachedHistory);
+    }
+
+    return this.http.get<FidelityHistoryResponse[]>(`${this.api}/carte/history`).pipe(
+      tap((history) => {
+        this.cachedHistory = history || [];
+      }),
+    );
   }
 
   getRewards() {
-    return this.http.get<any[]>(`${this.api}/carte/rewards`);
+    if (this.cachedRewards) {
+      return of(this.cachedRewards);
+    }
+
+    return this.http.get<any[]>(`${this.api}/carte/rewards`).pipe(
+      tap((rewards) => {
+        this.cachedRewards = rewards || [];
+      }),
+    );
   }
 
   redeemReward(reward: string) {
@@ -64,5 +92,11 @@ export class CarteService {
       {},
       { responseType: 'text' },
     );
+  }
+
+  clearCache() {
+    this.cachedCarte = null;
+    this.cachedHistory = null;
+    this.cachedRewards = null;
   }
 }

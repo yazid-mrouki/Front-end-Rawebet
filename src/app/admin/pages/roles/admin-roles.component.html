@@ -1,0 +1,207 @@
+<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+  <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <h1 class="font-serif text-2xl font-bold text-dark">Gestion des rôles</h1>
+      <p class="text-sm text-gray-400 mt-1">Créer, modifier et supprimer les rôles avec leurs permissions.</p>
+    </div>
+    <button
+      type="button"
+      (click)="openCreateRole()"
+      class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+    >
+      Create role
+    </button>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-gray-100 p-6 space-y-4 max-w-5xl shadow-sm">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div>
+        <h3 class="font-semibold text-dark">Rôles existants</h3>
+        <p class="text-xs text-gray-400 mt-1">Chaque ligne affiche le rôle, ses permissions et les actions possibles.</p>
+      </div>
+      <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">{{ roles.length }} rôles</span>
+    </div>
+
+    <div *ngIf="rolesLoading" class="text-sm text-gray-400 py-6 text-center">Chargement des rôles...</div>
+
+    <div *ngIf="!rolesLoading" class="overflow-x-auto border border-gray-200 rounded-2xl">
+      <table class="w-full text-sm bg-white">
+        <thead>
+          <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+            <th class="text-left px-4 py-3 font-semibold">Rôle</th>
+            <th class="text-left px-4 py-3 font-semibold">Permissions</th>
+            <th class="text-right px-4 py-3 font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let role of roles" class="border-t border-gray-100 hover:bg-gray-50/60">
+            <td class="px-4 py-3">
+              <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-semibold">{{ role.name }}</span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex flex-wrap gap-2">
+                <span *ngFor="let permission of role.permissions" class="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-[11px] font-medium">
+                  {{ permission }}
+                </span>
+                <span *ngIf="!role.permissions.length" class="text-xs text-gray-400">Aucune permission</span>
+              </div>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex justify-end gap-2">
+                <button
+                  (click)="openEditRole(role)"
+                  [disabled]="role.name === 'SUPER_ADMIN'"
+                  class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Modifier
+                </button>
+                <button
+                  (click)="deleteRole(role)"
+                  [disabled]="role.name === 'SUPER_ADMIN'"
+                  class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Supprimer
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="roles.length === 0">
+            <td colspan="3" class="px-4 py-10 text-center text-gray-400">Aucun rôle trouvé.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-gray-100 p-6 space-y-4 max-w-5xl shadow-sm">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div>
+        <h3 class="font-semibold text-dark">Matrice CRUD par module</h3>
+        <p class="text-xs text-gray-400 mt-1">Lecture seule pour vérifier rapidement quelles permissions existent par module.</p>
+      </div>
+    </div>
+
+    <div *ngIf="permissionsLoading" class="text-sm text-gray-400 py-6 text-center">Chargement de la matrice...</div>
+
+    <div *ngIf="!permissionsLoading" class="overflow-x-auto border border-gray-200 rounded-2xl">
+      <table class="w-full text-sm bg-white">
+        <thead>
+          <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+            <th class="text-left px-4 py-3 font-semibold">CRUD</th>
+            <th class="text-center px-4 py-3 font-semibold">Cinema</th>
+            <th class="text-center px-4 py-3 font-semibold">Club</th>
+            <th class="text-center px-4 py-3 font-semibold">Event</th>
+            <th class="text-center px-4 py-3 font-semibold">Fidelity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of crudRows" class="border-t border-gray-100 hover:bg-gray-50/60">
+            <td class="px-4 py-3 font-semibold text-dark">{{ row.label }}</td>
+            <td class="px-4 py-3 text-center">
+              <span class="inline-flex min-w-20 justify-center rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="getCellStyle(row.cinema)">{{ getCellPermission(row, 'cinema') }}</span>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <span class="inline-flex min-w-20 justify-center rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="getCellStyle(row.club)">{{ getCellPermission(row, 'club') }}</span>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <span class="inline-flex min-w-20 justify-center rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="getCellStyle(row.event)">{{ getCellPermission(row, 'event') }}</span>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <span class="inline-flex min-w-20 justify-center rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="getCellStyle(row.fidelity)">{{ getCellPermission(row, 'fidelity') }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div *ngIf="showEditRoleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div class="w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div>
+          <h3 class="font-semibold text-dark">Modifier le rôle</h3>
+          <p class="text-xs text-gray-400 mt-1">Ajuste le nom et les permissions de ce rôle.</p>
+        </div>
+        <button type="button" (click)="closeEditRole()" class="text-gray-400 hover:text-gray-600">✕</button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <input
+          [(ngModel)]="editingRole.name"
+          class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none focus:border-primary"
+          placeholder="Nom du rôle"
+        />
+
+        <div class="border border-gray-200 rounded-xl p-3">
+          <p class="text-xs text-gray-500 mb-2">Permissions du rôle</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-72 overflow-y-auto">
+            <label *ngFor="let permission of permissions" class="flex items-center gap-2 text-xs text-gray-700">
+              <input
+                type="checkbox"
+                [checked]="editingRole.permissions.includes(permission.name)"
+                (change)="toggleEditPermission(permission.name, $any($event.target).checked)"
+              />
+              <span>{{ permission.name }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+          <button (click)="closeEditRole()" class="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50">
+            Annuler
+          </button>
+          <button (click)="saveRoleUpdate()" [disabled]="creating" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60">
+            {{ creating ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showCreateRoleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div class="w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div>
+          <h3 class="font-semibold text-dark">Créer un rôle</h3>
+          <p class="text-xs text-gray-400 mt-1">Même style que le modal de modification, mais pour un nouveau rôle.</p>
+        </div>
+        <button type="button" (click)="closeCreateRole()" class="text-gray-400 hover:text-gray-600">✕</button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <input
+          [(ngModel)]="roleForm.name"
+          class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none focus:border-primary"
+          placeholder="Nom du rôle"
+        />
+
+        <div class="border border-gray-200 rounded-xl p-3">
+          <p class="text-xs text-gray-500 mb-2">Permissions</p>
+          <div *ngIf="permissionsLoading" class="text-xs text-gray-400">Chargement des permissions...</div>
+
+          <div *ngIf="!permissionsLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-72 overflow-y-auto">
+            <label *ngFor="let permission of permissions" class="flex items-center gap-2 text-xs text-gray-700">
+              <input
+                type="checkbox"
+                [value]="permission.name"
+                [checked]="roleForm.permissions.includes(permission.name)"
+                (change)="onPermissionToggle(permission.name, $any($event.target).checked)"
+              />
+              <span>{{ permission.name }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+          <button (click)="closeCreateRole()" class="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50">
+            Annuler
+          </button>
+          <button (click)="createCustomRole()" [disabled]="creating" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60">
+            {{ creating ? 'Création...' : 'Créer rôle' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -16,7 +16,9 @@ export class LoyaltyComponent implements OnInit {
   rewards: any[] = [];
   redeemMessage = '';
   redeemError = '';
-  loading = true;
+  loadingCard = true;
+  loadingHistory = true;
+  loadingRewards = true;
   transferForm = { toUserId: null as number | null, points: null as number | null };
   transferMessage = '';
   transferError = '';
@@ -34,16 +36,42 @@ export class LoyaltyComponent implements OnInit {
   }
 
   loadDashboard() {
-    this.loading = true;
-    this.carteService.getDashboard().subscribe({
-      next: (dashboard) => {
-        this.carte = dashboard.carte;
-        this.history = dashboard.history || [];
-        this.rewards = dashboard.rewards || [];
-        this.loading = false;
+    this.loadingHistory = true;
+    this.loadingRewards = true;
+    this.loadingCard = true;
+
+    // 1) Fast path: render the loyalty card as soon as possible.
+    this.carteService.getMaCarte().subscribe({
+      next: (carte) => {
+        this.carte = carte;
+        this.loadingCard = false;
       },
       error: () => {
-        this.loading = false;
+        this.loadingCard = false;
+      },
+    });
+
+    // 2) Load history independently so a slow endpoint doesn't block the full page.
+    this.carteService.getHistory().subscribe({
+      next: (history) => {
+        this.history = history || [];
+        this.loadingHistory = false;
+      },
+      error: () => {
+        this.history = [];
+        this.loadingHistory = false;
+      },
+    });
+
+    // 3) Load rewards independently for responsive UX.
+    this.carteService.getRewards().subscribe({
+      next: (rewards) => {
+        this.rewards = rewards || [];
+        this.loadingRewards = false;
+      },
+      error: () => {
+        this.rewards = [];
+        this.loadingRewards = false;
       },
     });
   }
@@ -71,6 +99,7 @@ export class LoyaltyComponent implements OnInit {
     this.carteService.redeemReward(rewardType).subscribe({
       next: (res) => {
         this.redeemMessage = res.message;
+        this.carteService.clearCache();
         this.loadDashboard();
       },
       error: (err) => this.redeemError = err?.error?.message || 'Points insuffisants.'
@@ -86,6 +115,7 @@ export class LoyaltyComponent implements OnInit {
       next: () => {
         this.transferMessage = 'Transfert effectué avec succès.';
         this.transferForm = { toUserId: null, points: null };
+        this.carteService.clearCache();
         this.loadDashboard();
       },
       error: (err) => this.transferError = err?.error?.message || 'Transfert impossible.'

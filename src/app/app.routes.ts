@@ -25,6 +25,7 @@ import { AdminClubComponent } from './admin/pages/club/admin-club.component';
 import { AdminSubscriptionsComponent } from './admin/pages/subscriptions/admin-subscriptions.component';
 import { AdminUsersComponent } from './admin/pages/users/admin-users.component';
 import { AdminLoyaltyComponent } from './admin/pages/loyalty/admin-loyalty.component';
+import { AdminRolesComponent } from './admin/pages/roles/admin-roles.component';
 import { AdminLogisticsComponent } from './admin/pages/logistics/admin-logistics.component';
 import { AdminFeedbackComponent } from './admin/pages/feedback/admin-feedback.component';
 import { AdminNotificationsComponent } from './admin/pages/notifications/admin-notifications.component';
@@ -93,6 +94,12 @@ export const routes: Routes = [
         path: 'loyalty',
         component: AdminLoyaltyComponent,
         canActivate: [permissionGuard(['FIDELITY_UPDATE'])],
+      },
+
+      {
+        path: 'roles',
+        component: AdminRolesComponent,
+        canActivate: [permissionGuard(['ADMIN_MANAGE'])],
       },
 
       { path: 'logistics', component: AdminLogisticsComponent },

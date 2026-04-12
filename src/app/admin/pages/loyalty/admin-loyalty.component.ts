@@ -1,4 +1,4 @@
-import { ApplicationRef, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CarteService } from '../../../core/services/carte.service';
@@ -40,7 +40,6 @@ export class AdminLoyaltyComponent implements OnInit {
   loadingData = false;
 
   constructor(
-    private appRef: ApplicationRef,
     private carteService: CarteService,
     private userService: UserService,
     private auth: AuthService,
@@ -51,12 +50,6 @@ export class AdminLoyaltyComponent implements OnInit {
     this.currentUserId = this.auth.getCurrentUserId();
     this.loadData();
     this.loadUsers();
-    this.refreshView();
-  }
-
-  private refreshView() {
-    this.cdr.detectChanges();
-    Promise.resolve().then(() => this.appRef.tick());
   }
 
   loadUsers() {
@@ -64,33 +57,57 @@ export class AdminLoyaltyComponent implements OnInit {
       next: (users) => {
         this.users = users || [];
         this.applyTopClientFilter();
-        this.refreshView();
+        if (!this.loadingData && this.topClients.length === 0) {
+          this.loadTopClients();
+        }
+        this.cdr.detectChanges();
       },
       error: () => {
         this.users = [];
         this.applyTopClientFilter();
-        this.refreshView();
+        this.cdr.detectChanges();
       },
     });
   }
 
   loadData() {
     this.loadingData = true;
-    this.carteService.getAdminOverview().subscribe({
-      next: ({ stats, topClients }) => {
-        this.stats = stats;
-        this.tiers[0].members = stats.totalVip || 0;
-        this.tiers[1].members = stats.totalGold || 0;
-        this.tiers[2].members = stats.totalSilver || 0;
+    this.carteService.getAdminOverview()
+      .pipe(finalize(() => {
+        this.loadingData = false;
+      }))
+      .subscribe({
+        next: ({ stats, topClients }) => {
+          this.stats = stats;
+          this.tiers[0].members = stats.totalVip || 0;
+          this.tiers[1].members = stats.totalGold || 0;
+          this.tiers[2].members = stats.totalSilver || 0;
+          this.topClients = topClients || [];
+          this.applyTopClientFilter();
+
+          if (this.topClients.length === 0) {
+            this.loadTopClients();
+          }
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.topClients = [];
+          this.loadTopClients();
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  private loadTopClients() {
+    this.carteService.getTop(10).subscribe({
+      next: (topClients) => {
         this.topClients = topClients || [];
         this.applyTopClientFilter();
-        this.loadingData = false;
-        this.refreshView();
+        this.cdr.detectChanges();
       },
       error: () => {
         this.topClients = [];
-        this.loadingData = false;
-        this.refreshView();
+        this.cdr.detectChanges();
       },
     });
   }
@@ -128,7 +145,6 @@ export class AdminLoyaltyComponent implements OnInit {
     this.selectedUser = null;
     this.addPointsForm.target = '';
     this.addPointsError = '';
-    this.refreshView();
   }
 
   onTargetInput(value: string) {
@@ -212,13 +228,11 @@ export class AdminLoyaltyComponent implements OnInit {
     }
 
     this.addPointsLoading = true;
-    this.refreshView();
 
     this.carteService
       .addPoints(userId, points)
       .pipe(finalize(() => {
         this.addPointsLoading = false;
-        this.refreshView();
       }))
       .subscribe({
         next: () => {
@@ -228,11 +242,9 @@ export class AdminLoyaltyComponent implements OnInit {
           this.addPointsMessage = `✅ +${points} points ajoutés à ${displayLabel}.`;
           this.addPointsForm = { target: '', points: null };
           this.selectedUser = null;
-          this.refreshView();
         },
         error: (err) => {
           this.addPointsError = err?.error?.message || "Impossible d'ajouter les points.";
-          this.refreshView();
         },
       });
   }

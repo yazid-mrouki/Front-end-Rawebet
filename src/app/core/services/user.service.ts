@@ -38,4 +38,12 @@ export class UserService {
   createUserByAdmin(body: { nom: string; email: string; password: string; roles: string[] }) {
     return this.http.post<any>(`${this.api}/users/add-with-role`, body);
   }
+
+  updateUserRoles(id: number, roles: string[]) {
+    return this.http.put<UserResponse>(`${this.api}/users/${id}/roles`, { roles });
+  }
+
+  deleteUser(id: number) {
+    return this.http.delete<void>(`${this.api}/users/delete/${id}`);
+  }
 }

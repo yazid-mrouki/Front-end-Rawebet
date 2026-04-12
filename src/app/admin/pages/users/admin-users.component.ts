@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { UserService } from '../../../core/services/user.service';
 import { UserResponse } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { RbacService } from '../../../core/services/rbac.service';
+import { RoleResponse } from '../../../core/models/rbac.model';
 
 interface AdminUserViewModel {
   id: number;
@@ -32,12 +34,16 @@ export class AdminUsersComponent implements OnInit {
 
   showAddAdminForm = false;
   newAdminForm = { nom: '', email: '', password: '', role: [] as string[] };
+  editingUserId: number | null = null;
+  editRoles: string[] = [];
   addAdminMessage = '';
   addAdminError = '';
   pageMessage = '';
   pageError = '';
 
-  availableRoles = ['ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'];
+  availableRoles: string[] = ['ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'];
+  editableRoleOptions: string[] = ['CLIENT', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'];
+  roleFilterOptions: string[] = ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB', 'CLIENT'];
   currentUserId: number | null = null;
 
   users: AdminUserViewModel[] = [];
@@ -45,12 +51,34 @@ export class AdminUsersComponent implements OnInit {
   constructor(
     private userService: UserService,
     private auth: AuthService,
+    private rbacService: RbacService,
     private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
     this.currentUserId = this.auth.getCurrentUserId();
     this.loadUsers();
+    this.loadRoles();
+  }
+
+  loadRoles() {
+    this.rbacService.getRoles().subscribe({
+      next: (roles: RoleResponse[]) => {
+        const roleNames = (roles || [])
+          .map((role) => (role.name || '').toUpperCase())
+          .filter((roleName) => !!roleName)
+          .sort((a, b) => a.localeCompare(b));
+
+        this.roleFilterOptions = roleNames;
+        this.editableRoleOptions = roleNames.filter((roleName) => roleName !== 'SUPER_ADMIN');
+        this.availableRoles = this.editableRoleOptions.filter((roleName) => roleName !== 'CLIENT');
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        // Keep static fallbacks if role loading fails.
+      },
+    });
   }
 
   loadUsers() {
@@ -121,6 +149,81 @@ export class AdminUsersComponent implements OnInit {
 
   canUnban(user: AdminUserViewModel): boolean {
     return !user.isSuperAdmin && user.status === 'Suspended';
+  }
+
+  canEditRoles(user: AdminUserViewModel): boolean {
+    return !user.isSuperAdmin;
+  }
+
+  canDeleteUser(user: AdminUserViewModel): boolean {
+    return !user.isCurrentUser && !user.isSuperAdmin;
+  }
+
+  startRoleEdit(user: AdminUserViewModel) {
+    if (!this.canEditRoles(user)) return;
+    this.pageMessage = '';
+    this.pageError = '';
+    this.editingUserId = user.id;
+    this.editRoles = [...user.roles];
+  }
+
+  cancelRoleEdit() {
+    this.editingUserId = null;
+    this.editRoles = [];
+  }
+
+  saveRoleEdit(user: AdminUserViewModel) {
+    if (this.editingUserId !== user.id) return;
+    if (!this.editRoles.length) {
+      this.pageError = 'Sélectionne au moins un rôle.';
+      return;
+    }
+
+    const roles = [...new Set(this.editRoles.map((role) => role.toUpperCase()))];
+    this.actionLoadingId = user.id;
+    this.pageMessage = '';
+    this.pageError = '';
+
+    this.userService.updateUserRoles(user.id, roles).subscribe({
+      next: (updated: UserResponse) => {
+        user.roles = updated.roles || roles;
+        user.roleLabel = user.roles.join(', ') || 'CLIENT';
+        user.isSuperAdmin = user.roles.includes('SUPER_ADMIN');
+        this.pageMessage = `Rôles mis à jour pour ${user.name}.`;
+        this.actionLoadingId = null;
+        this.cancelRoleEdit();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.pageError = err?.error?.message || 'Mise à jour des rôles impossible.';
+        this.actionLoadingId = null;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  deleteUser(user: AdminUserViewModel) {
+    if (!this.canDeleteUser(user)) return;
+    const confirmed = confirm(`Supprimer définitivement ${user.name} (${user.email}) ?`);
+    if (!confirmed) return;
+
+    this.actionLoadingId = user.id;
+    this.pageMessage = '';
+    this.pageError = '';
+
+    this.userService.deleteUser(user.id).subscribe({
+      next: () => {
+        this.users = this.users.filter((u) => u.id !== user.id);
+        this.pageMessage = `${user.name} a été supprimé.`;
+        this.actionLoadingId = null;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.pageError = err?.error?.message || 'Suppression impossible.';
+        this.actionLoadingId = null;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   banUser(user: AdminUserViewModel) {

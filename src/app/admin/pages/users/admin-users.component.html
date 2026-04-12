@@ -34,7 +34,7 @@
     <input [(ngModel)]="searchQuery" type="text" placeholder="Rechercher par nom ou email..." class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary" />
     <select [(ngModel)]="selectedRole" class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-600">
       <option value="all">Tous les rôles</option>
-      <option *ngFor="let role of ['SUPER_ADMIN','ADMIN_CINEMA','ADMIN_EVENT','ADMIN_CLUB','CLIENT']" [value]="role">{{ role }}</option>
+      <option *ngFor="let role of roleFilterOptions" [value]="role">{{ role }}</option>
     </select>
   </div>
 
@@ -71,7 +71,14 @@
               </div>
             </td>
             <td class="px-4 py-4">
-              <span [class]="getRoleClass(user.roleLabel)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ user.roleLabel }}</span>
+              <ng-container *ngIf="editingUserId !== user.id; else editRolesTpl">
+                <span [class]="getRoleClass(user.roleLabel)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ user.roleLabel }}</span>
+              </ng-container>
+              <ng-template #editRolesTpl>
+                <select multiple [(ngModel)]="editRoles" class="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs h-24">
+                  <option *ngFor="let role of editableRoleOptions" [value]="role">{{ role }}</option>
+                </select>
+              </ng-template>
             </td>
             <td class="px-4 py-4 text-xs font-semibold" [ngClass]="getTierColor(user.loyaltyLevel)">{{ user.loyaltyLevel }}</td>
             <td class="px-4 py-4 text-xs text-gray-600">{{ user.loyaltyPoints }} pts</td>
@@ -79,8 +86,12 @@
               <span [class]="getStatusClass(user.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ user.status }}</span>
             </td>
             <td class="px-4 py-4 text-right space-x-2">
+              <button *ngIf="editingUserId !== user.id && canEditRoles(user)" (click)="startRoleEdit(user)" [disabled]="actionLoadingId === user.id" class="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-semibold hover:bg-indigo-100 disabled:opacity-60">Modifier rôles</button>
+              <button *ngIf="editingUserId === user.id" (click)="saveRoleEdit(user)" [disabled]="actionLoadingId === user.id" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 disabled:opacity-60">{{ actionLoadingId === user.id ? '...' : 'Enregistrer' }}</button>
+              <button *ngIf="editingUserId === user.id" (click)="cancelRoleEdit()" [disabled]="actionLoadingId === user.id" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 disabled:opacity-60">Annuler</button>
               <button *ngIf="canBan(user)" (click)="banUser(user)" [disabled]="actionLoadingId === user.id" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 disabled:opacity-60">{{ actionLoadingId === user.id ? '...' : 'Bannir' }}</button>
               <button *ngIf="canUnban(user)" (click)="unbanUser(user)" [disabled]="actionLoadingId === user.id" class="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg text-xs font-semibold hover:bg-green-100 disabled:opacity-60">{{ actionLoadingId === user.id ? '...' : 'Débannir' }}</button>
+              <button *ngIf="editingUserId !== user.id && canDeleteUser(user)" (click)="deleteUser(user)" [disabled]="actionLoadingId === user.id" class="px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-xs font-semibold hover:bg-rose-100 disabled:opacity-60">Supprimer</button>
               <span *ngIf="!canBan(user) && !canUnban(user)" class="text-[11px] text-gray-400">Aucune action</span>
             </td>
           </tr>
