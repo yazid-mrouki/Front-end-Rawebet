@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, Inject, PLATFORM_ID, ChangeDetectorRef, HostBinding, NgZone } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -7,7 +7,7 @@ import { ChatSessionService } from '../../services/chat-session.service';
 import { ChatWebSocketService } from '../../services/chat-websocket.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ChatSession } from '../../models/chat-session.model';
-import { ChatMessage } from '../../models/chat-message.model';
+import { ChatMessage, MessagePage, SessionReactions, UnsendEvent } from '../../models/chat-message.model';
 
 @Component({
   selector: 'app-chat-room',
@@ -17,6 +17,9 @@ import { ChatMessage } from '../../models/chat-message.model';
   styleUrls: ['./chat-room.component.scss']
 })
 export class ChatRoomComponent implements OnInit, OnDestroy {
+
+  // Quand le chat est actif, le composant host occupe exactement la hauteur dispo
+  @HostBinding('class.chat-active') get chatActive() { return this.joined; }
 
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
 
@@ -33,26 +36,47 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   errorMessage = '';
   sessionExpired = false;
 
-  // C2 — Scroll intelligent
+  // Scroll
   isAtBottom = true;
   showScrollButton = false;
   newMessageCount = 0;
 
-  // C3 — Countdown
+  // Countdown
   timeRemainingLabel = '';
-  private countdownInterval!: ReturnType<typeof setInterval>;
+  private countdownInterval: ReturnType<typeof setInterval> | null = null;
 
   wsConnected = false;
 
-  // Typing indicator
+  // Typing
   typingLabel = '';
-  private typingTimeout!: ReturnType<typeof setTimeout>;
-  private typingThrottleTimeout!: ReturnType<typeof setTimeout>;
+  private typingTimeout: ReturnType<typeof setTimeout> | null = null;
+  private typingThrottleTimeout: ReturnType<typeof setTimeout> | null = null;
   private typingSub!: Subscription;
+
+  // Réactions : messageId → { counts: {emoji→count}, users: {emoji→[name]} }
+  reactions: Record<number, SessionReactions> = {};
+  activePickerMsgId: number | null = null;
+  activeTooltipKey: string | null = null; // "msgId:emoji"
+  readonly EMOJIS = ['👍', '❤️', '😂', '😮', '😢'];
+  private reactionSub!: Subscription;
+  private unsendSub!: Subscription;
+  private editSub!: Subscription;
+
+  // Unsend / Edit
+  activeMenuMsgId: number | null = null;   // menu contextuel ouvert
+  confirmDelete: { msg: ChatMessage; forEveryone: boolean } | null = null;
+  editingMsgId: number | null = null;       // message en cours d'édition
+  editContent = '';                         // contenu de l'input d'édition
+
+  // Pagination
+  currentPage = 0;
+  readonly PAGE_SIZE = 20;
+  hasMore = false;
+  loadingMore = false;
 
   private wsSub!: Subscription;
   private wsConnSub!: Subscription;
-  private expiryTimeout!: ReturnType<typeof setTimeout>;
+  private expiryTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private sessionService: ChatSessionService,
@@ -61,41 +85,28 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef,
+    private ngZone: NgZone,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
-  get isLoggedIn(): boolean {
-    return this.auth.isAuthenticated();
-  }
-
-  get currentUsername(): string {
-    return this.auth.getCurrentUserName();
-  }
+  get isLoggedIn(): boolean { return this.auth.isAuthenticated(); }
+  get currentUsername(): string { return this.auth.getCurrentUserName(); }
 
   ngOnInit(): void {
-    if (!isPlatformBrowser(this.platformId)) return; // garde SSR
-
+    if (!isPlatformBrowser(this.platformId)) return;
     const code = this.route.snapshot.paramMap.get('code');
-    if (code) {
-      this.codeInput = code;
-      this.joinChat();
-    }
+    if (code) { this.codeInput = code; this.joinChat(); }
   }
 
   joinChat(): void {
     const code = this.codeInput.trim();
     if (!code) return;
-
-    // Si l'URL n'a pas encore le code, on navigue vers /chat/join/{code}.
-    // Le nouveau composant instancié par la route lira le param et rappellera joinChat().
     if (!this.route.snapshot.paramMap.get('code')) {
       this.router.navigate(['/chat/join', code]);
       return;
     }
-
     this.loading = true;
     this.errorMessage = '';
-
     this.sessionService.joinByCode(code).subscribe({
       next: (session) => {
         if (!session.active) {
@@ -118,45 +129,57 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   private loadHistoryAndConnect(): void {
     if (!this.session) return;
 
-    this.sessionService.getMessages(this.session.id).subscribe({
-      next: (messages) => {
-        this.messages = messages;
+    this.sessionService.getMessages(this.session.id, 0, this.PAGE_SIZE).subscribe({
+      next: (page: MessagePage) => {
+        this.messages = page.messages;
+        this.currentPage = 0;
+        this.hasMore = page.hasMore;
         this.loading = false;
         this.joined = true;
         this.cdr.detectChanges();
-
         setTimeout(() => this.scrollToBottom(), 0);
 
-        if (isPlatformBrowser(this.platformId)) { // WebSocket = browser uniquement
+        // Chargement initial des réactions
+        this.sessionService.getReactions(this.session!.id).subscribe({
+          next: (r) => { this.reactions = r; this.cdr.detectChanges(); },
+          error: () => console.warn('[Reactions] Chargement initial échoué')
+        });
+
+        if (isPlatformBrowser(this.platformId)) {
           const token = this.auth.getToken();
           this.wsService.connect(this.session!.id, token);
 
-          this.wsConnSub = this.wsService.connected$.subscribe((connected) => {
+          this.wsConnSub = this.wsService.connected$.subscribe(connected => {
             this.wsConnected = connected;
             this.cdr.detectChanges();
           });
 
-          this.wsSub = this.wsService.messages$.subscribe((msg) => {
-            console.log('[Chat] message reçu via subscription', msg);
+          this.wsSub = this.wsService.messages$.subscribe(msg => {
             this.messages.push(msg);
-            if (this.isAtBottom) {
-              setTimeout(() => this.scrollToBottom(), 0);
-            } else {
-              this.newMessageCount++;
-              this.showScrollButton = true;
-            }
+            if (this.isAtBottom) setTimeout(() => this.scrollToBottom(), 0);
+            else { this.newMessageCount++; this.showScrollButton = true; }
             this.cdr.detectChanges();
           });
 
-          this.typingSub = this.wsService.typing$.subscribe((username) => {
+          this.typingSub = this.wsService.typing$.subscribe(username => {
             if (username === this.currentUsername) return;
             this.typingLabel = `${username} est en train d'écrire…`;
             this.cdr.detectChanges();
-            clearTimeout(this.typingTimeout);
+            if (this.typingTimeout !== null) { clearTimeout(this.typingTimeout); this.typingTimeout = null; }
             this.typingTimeout = setTimeout(() => {
               this.typingLabel = '';
               this.cdr.detectChanges();
-            }, 3000);
+            }, 10000);
+          });
+
+          // Réactions temps réel : mise à jour directe de la map
+          this.reactionSub = this.wsService.reaction$.subscribe(event => {
+            console.log('[Reaction] Mise à jour reçue :', event);
+            this.reactions[event.messageId] = {
+              counts: event.counts,
+              users: event.users
+            };
+            this.cdr.detectChanges();
           });
         }
 
@@ -171,14 +194,183 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     });
   }
 
-  // C2 — Tracking du scroll
+  // ── Pagination ─────────────────────────────────────────────────────────────
+
+  loadMoreMessages(): void {
+    if (this.loadingMore || !this.hasMore || !this.session) return;
+    this.loadingMore = true;
+    const nextPage = this.currentPage + 1;
+
+    // Mémoriser la hauteur avant ajout pour éviter le saut de scroll
+    const container = this.messagesContainer?.nativeElement as HTMLElement;
+    const scrollHeightBefore = container?.scrollHeight ?? 0;
+
+    this.sessionService.getMessages(this.session.id, nextPage, this.PAGE_SIZE).subscribe({
+      next: (page: MessagePage) => {
+        // Insérer les messages anciens en tête du tableau
+        this.messages = [...page.messages, ...this.messages];
+        this.currentPage = nextPage;
+        this.hasMore = page.hasMore;
+        this.loadingMore = false;
+        this.cdr.detectChanges();
+
+        // Rétablir la position de scroll pour que l'utilisateur ne saute pas
+        if (container) {
+          const added = container.scrollHeight - scrollHeightBefore;
+          container.scrollTop = added;
+        }
+      },
+      error: () => {
+        this.loadingMore = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // ── Réactions ──────────────────────────────────────────────────────────────
+
+  togglePicker(msgId: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (!this.isLoggedIn) { this.showLoginPopup = true; return; }
+    this.activeTooltipKey = null;
+    this.activePickerMsgId = this.activePickerMsgId === msgId ? null : msgId;
+  }
+
+  onReact(msgId: number, emoji: string, event: MouseEvent): void {
+    event.stopPropagation();
+    if (!this.isLoggedIn || !this.session || !this.wsConnected) return;
+
+    // ── Mise à jour optimiste ──────────────────────────────────────────────
+    const current = this.reactions[msgId] ?? { counts: {}, users: {} };
+    const counts = { ...current.counts };
+    const users = Object.fromEntries(
+      Object.entries(current.users ?? {}).map(([e, arr]) => [e, [...arr]])
+    );
+    const username = this.currentUsername;
+
+    // Chercher si l'user avait déjà réagi sur ce message
+    let previousEmoji: string | null = null;
+    for (const [e, names] of Object.entries(users)) {
+      if (names.includes(username)) { previousEmoji = e; break; }
+    }
+
+    if (previousEmoji) {
+      // Retirer l'ancienne réaction
+      users[previousEmoji] = users[previousEmoji].filter(n => n !== username);
+      counts[previousEmoji] = Math.max(0, (counts[previousEmoji] ?? 1) - 1);
+      if (counts[previousEmoji] === 0) {
+        delete counts[previousEmoji];
+        delete users[previousEmoji];
+      }
+    }
+
+    if (previousEmoji !== emoji) {
+      // Ajouter la nouvelle réaction
+      counts[emoji] = (counts[emoji] ?? 0) + 1;
+      users[emoji] = [...(users[emoji] ?? []), username];
+    }
+    // (si même emoji → toggle off déjà fait ci-dessus, on n'ajoute pas)
+
+    this.reactions = { ...this.reactions, [msgId]: { counts, users } };
+    this.activePickerMsgId = null;
+    this.activeTooltipKey = null;
+    this.cdr.detectChanges();
+    // ── Fin mise à jour optimiste ─────────────────────────────────────────
+
+    this.wsService.sendReaction(this.session.id, msgId, emoji);
+  }
+
+  getReactionEntries(msgId: number): { emoji: string; count: number; names: string[] }[] {
+    const data = this.reactions[msgId];
+    if (!data?.counts) return [];
+    return Object.entries(data.counts)
+      .filter(([, count]) => count > 0)
+      .map(([emoji, count]) => ({
+        emoji,
+        count,
+        names: data.users?.[emoji] ?? []
+      }));
+  }
+
+  toggleTooltip(key: string, event: MouseEvent): void {
+    event.stopPropagation();
+    // Fermer le picker si ouvert
+    this.activePickerMsgId = null;
+    this.activeTooltipKey = this.activeTooltipKey === key ? null : key;
+  }
+
+  // ── Unsend / Edit ──────────────────────────────────────────────────────────
+
+  toggleMenu(msgId: number, event: MouseEvent): void {
+    event.stopPropagation();
+    this.activeMenuMsgId = this.activeMenuMsgId === msgId ? null : msgId;
+    this.activePickerMsgId = null;
+    this.activeTooltipKey = null;
+  }
+
+  confirmUnsend(msg: ChatMessage, forEveryone: boolean, event: MouseEvent): void {
+    event.stopPropagation();
+    this.activeMenuMsgId = null;
+    this.confirmDelete = { msg, forEveryone };
+  }
+
+  cancelDelete(): void {
+    this.confirmDelete = null;
+  }
+
+  executeDelete(): void {
+    if (!this.confirmDelete || !this.session) return;
+    const { msg, forEveryone } = this.confirmDelete;
+    this.confirmDelete = null;
+
+    if (forEveryone) {
+      msg.deleted = true;
+      msg.content = '';
+    } else {
+      this.messages = this.messages.filter(m => m.id !== msg.id);
+    }
+    this.cdr.detectChanges();
+    this.wsService.sendUnsend(this.session.id, msg.id, forEveryone);
+  }
+
+  startEdit(msg: ChatMessage, event: MouseEvent): void {
+    event.stopPropagation();
+    this.editingMsgId = msg.id;
+    this.editContent = msg.content;
+    this.activeMenuMsgId = null;
+    this.cdr.detectChanges();
+  }
+
+  cancelEdit(): void {
+    this.editingMsgId = null;
+    this.editContent = '';
+  }
+
+  confirmEdit(msg: ChatMessage): void {
+    if (!this.session || !this.editContent.trim() || this.editContent.trim() === msg.content) {
+      this.cancelEdit();
+      return;
+    }
+    // Optimiste
+    msg.content = this.editContent.trim();
+    msg.edited = true;
+    this.editingMsgId = null;
+    this.editContent = '';
+    this.cdr.detectChanges();
+    this.wsService.sendEdit(this.session.id, msg.id, msg.content);
+  }
+
+  closeAll(): void {
+    this.activePickerMsgId = null;
+    this.activeTooltipKey = null;
+  }
+
+  // ── Scroll ─────────────────────────────────────────────────────────────────
+
   onMessagesScroll(event: Event): void {
     const el = event.target as HTMLElement;
     this.isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-    if (this.isAtBottom) {
-      this.showScrollButton = false;
-      this.newMessageCount = 0;
-    }
+    if (this.isAtBottom) { this.showScrollButton = false; this.newMessageCount = 0; }
   }
 
   scrollToLatest(): void {
@@ -194,7 +386,8 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     } catch {}
   }
 
-  // C3 — Countdown
+  // ── Countdown ──────────────────────────────────────────────────────────────
+
   private startCountdown(): void {
     this.updateCountdown();
     this.countdownInterval = setInterval(() => this.updateCountdown(), 60000);
@@ -204,71 +397,59 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     if (!this.session) return;
     const remaining = Math.max(0, new Date(this.session.endTime).getTime() - Date.now());
     const minutes = Math.ceil(remaining / 60000);
-    if (minutes <= 0) {
-      this.timeRemainingLabel = 'Session terminée';
-    } else if (minutes < 60) {
-      this.timeRemainingLabel = `${minutes} min restante${minutes > 1 ? 's' : ''}`;
-    } else {
-      const h = Math.floor(minutes / 60);
-      const m = minutes % 60;
+    if (minutes <= 0) this.timeRemainingLabel = 'Session terminée';
+    else if (minutes < 60) this.timeRemainingLabel = `${minutes} min restante${minutes > 1 ? 's' : ''}`;
+    else {
+      const h = Math.floor(minutes / 60), m = minutes % 60;
       this.timeRemainingLabel = m > 0 ? `${h}h${m}min` : `${h}h`;
     }
   }
 
-  // C4 — Auto-resize textarea
   autoResize(event: Event): void {
     const el = event.target as HTMLTextAreaElement;
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }
 
-  // Bug 7 — setTimeout exact (pas setInterval)
   private startExpiryTimeout(): void {
     if (!this.session) return;
     const delay = new Date(this.session.endTime).getTime() - Date.now();
+
+    const expire = () => {
+      this.ngZone.run(() => {
+        this.sessionExpired = true;
+        this.wsService.disconnect();
+        this.cdr.detectChanges();
+      });
+    };
+
     if (delay <= 0) {
-      this.sessionExpired = true;
-      this.wsService.disconnect();
+      // Laisser Angular rendre le template (joined=true) avant de marquer expired
+      setTimeout(expire, 0);
       return;
     }
-    this.expiryTimeout = setTimeout(() => {
-      this.sessionExpired = true;
-      this.wsService.disconnect();
-    }, delay);
+    this.expiryTimeout = setTimeout(expire, delay);
   }
 
   onInputFocus(): void {
-    if (!this.isLoggedIn) {
-      this.showLoginPopup = true;
-    }
+    if (!this.isLoggedIn) this.showLoginPopup = true;
   }
 
   onTyping(): void {
     if (!this.isLoggedIn || !this.session || !this.wsConnected) return;
-    // Throttle : envoie au plus 1 événement toutes les 2s
-    if (this.typingThrottleTimeout) return;
+    if (this.typingThrottleTimeout !== null) return;
     this.wsService.sendTyping(this.session.id);
     this.typingThrottleTimeout = setTimeout(() => {
-      clearTimeout(this.typingThrottleTimeout);
-      (this as any).typingThrottleTimeout = null;
+      this.typingThrottleTimeout = null;
     }, 2000);
   }
 
   sendMessage(): void {
-    if (!this.isLoggedIn) {
-      this.showLoginPopup = true;
-      return;
-    }
+    if (!this.isLoggedIn) { this.showLoginPopup = true; return; }
     const content = this.newMessage.trim();
-    console.log('sendMessage appelé', content);
-    console.log('session', this.session);
-    console.log('wsConnected', this.wsConnected);
     if (!content || !this.session) return;
     const sent = this.wsService.sendMessage(this.session.id, content);
-    console.log('résultat envoi', sent);
-    if (sent) {
-      this.newMessage = '';
-    }
+    if (sent) this.newMessage = '';
   }
 
   onKeyEnter(event: KeyboardEvent): void {
@@ -278,11 +459,8 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     }
   }
 
-  closeLoginPopup(): void {
-    this.showLoginPopup = false;
-  }
+  closeLoginPopup(): void { this.showLoginPopup = false; }
 
-  // C1 — returnUrl pour redirect post-login
   goToLogin(): void {
     this.router.navigate(['/auth/sign-in'], {
       queryParams: { returnUrl: `/chat/join/${this.codeInput}` }
@@ -297,10 +475,13 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     this.wsSub?.unsubscribe();
     this.wsConnSub?.unsubscribe();
     this.typingSub?.unsubscribe();
+    this.reactionSub?.unsubscribe();
+    this.unsendSub?.unsubscribe();
+    this.editSub?.unsubscribe();
     this.wsService.disconnect();
-    clearTimeout(this.expiryTimeout);
-    clearTimeout(this.typingTimeout);
-    clearTimeout(this.typingThrottleTimeout);
-    clearInterval(this.countdownInterval);
+    clearTimeout(this.expiryTimeout ?? undefined);
+    clearTimeout(this.typingTimeout ?? undefined);
+    clearTimeout(this.typingThrottleTimeout ?? undefined);
+    clearInterval(this.countdownInterval ?? undefined);
   }
 }

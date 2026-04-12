@@ -14,12 +14,16 @@ import { filter } from 'rxjs/operators';
 })
 export class App {
   showLayout = true;
+  showFooter = true;
 
   constructor(private router: Router) {
     this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd)
     ).subscribe(event => {
-      this.showLayout = !event.url.startsWith('/auth') && !event.url.startsWith('/admin');
+      const hiddenRoutes = ['/auth', '/admin'];
+      const footerRoutes = ['/auth', '/admin', '/chat'];
+      this.showLayout = !hiddenRoutes.some(r => event.url.startsWith(r));
+      this.showFooter = !footerRoutes.some(r => event.url.startsWith(r));
     });
   }
 }
