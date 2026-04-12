@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ClubMemberService } from '../../services/club-member.service';
@@ -24,7 +24,7 @@ export class ClubMembersComponent implements OnInit {
 
   showLeaveConfirm = false;
 
-  constructor(private memberService: ClubMemberService) {}
+  constructor(private memberService: ClubMemberService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.loadMembers();
@@ -33,8 +33,8 @@ export class ClubMembersComponent implements OnInit {
 
   loadMembers(): void {
     this.memberService.getAllMembers().subscribe({
-      next: (data) => { this.members = data; this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (data) => { this.members = data; this.loading = false; this.cdr.detectChanges(); },
+      error: () => { this.loading = false; this.cdr.detectChanges(); }
     });
   }
 
@@ -77,12 +77,14 @@ export class ClubMembersComponent implements OnInit {
     this.memberService.leaveClub().subscribe({
       next: () => {
         this.leaveLoading = false;
+        this.cdr.detectChanges();
         this.showSuccess('You have left the club.');
         this.loadMembers();
         this.loadMyMembership();
       },
       error: (err) => {
         this.leaveLoading = false;
+        this.cdr.detectChanges();
         this.showError(err?.error?.error || 'Failed to leave club.');
       }
     });

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -46,7 +46,8 @@ export class ClubAdminComponent implements OnInit {
   constructor(
     private joinRequestService: ClubJoinRequestService,
     private memberService: ClubMemberService,
-    private eventService: ClubEventService
+    private eventService: ClubEventService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -65,8 +66,9 @@ export class ClubAdminComponent implements OnInit {
         this.members = members;
         this.events = events;
         this.globalLoading = false;
+        this.cdr.detectChanges();
       },
-      error: () => { this.globalLoading = false; }
+      error: () => { this.globalLoading = false; this.cdr.detectChanges(); }
     });
   }
 
@@ -170,15 +172,17 @@ export class ClubAdminComponent implements OnInit {
       next: () => {
         this.eventFormLoading = false;
         this.showEventFormSuccess('Event created successfully!');
-        this.eventService.getEvents().subscribe(e => this.events = e);
+        this.eventService.getEvents().subscribe(e => { this.events = e; this.cdr.detectChanges(); });
         setTimeout(() => {
           this.showEventForm = false;
           this.eventFormSuccess = null;
+          this.cdr.detectChanges();
         }, 1500);
       },
       error: (err) => {
         this.eventFormError = err?.error?.error || 'Failed to create event.';
         this.eventFormLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ClubJoinRequestService } from '../../services/club-join-request.service';
+import { ClubJoinRequest } from '../../models/club-join-request.model';
 import { ClubNavComponent } from '../../components/club-nav/club-nav.component';
 
 @Component({
@@ -19,24 +20,31 @@ export class ClubJoinComponent implements OnInit {
   success = false;
   error: string | null = null;
 
-  /** true si une demande est déjà en cours (PENDING) */
-  alreadyPending = false;
+  // ✅ CL1 — Stocke la demande complète au lieu d'un simple boolean
+  myRequest: ClubJoinRequest | null = null;
+  requestLoaded = false;
 
   constructor(private joinRequestService: ClubJoinRequestService) {}
 
   ngOnInit(): void {
-    // Vérifie si l'utilisateur a déjà une demande en attente
     this.joinRequestService.getMyRequest().subscribe({
       next: (req) => {
-        if (req && req.status === 'PENDING') {
-          this.alreadyPending = true;
-        }
+        this.myRequest = req;
+        this.requestLoaded = true;
       },
       error: () => {
-        // Pas de demande existante — état normal
+        // 404 → aucune demande existante, afficher le formulaire
+        this.myRequest = null;
+        this.requestLoaded = true;
       }
     });
   }
+
+  // ✅ CL1 — Getters pour les différents états
+  get isPending(): boolean { return this.myRequest?.status === 'PENDING'; }
+  get isApproved(): boolean { return this.myRequest?.status === 'APPROVED'; }
+  get isRejected(): boolean { return this.myRequest?.status === 'REJECTED'; }
+  get showForm(): boolean { return this.requestLoaded && !this.success && !this.myRequest; }
 
   submit(): void {
     if (!this.motivation.trim() || this.loading) return;

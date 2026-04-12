@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ClubParticipationService } from '../../services/club-participation.service';
@@ -21,7 +21,7 @@ export class ClubParticipationsComponent implements OnInit {
 
   cancelTargetId: number | null = null;
 
-  constructor(private participationService: ClubParticipationService) {}
+  constructor(private participationService: ClubParticipationService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.loadReservations();
@@ -30,8 +30,8 @@ export class ClubParticipationsComponent implements OnInit {
   loadReservations(): void {
     this.loading = true;
     this.participationService.myReservations().subscribe({
-      next: (data) => { this.reservations = data; this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (data) => { this.reservations = data; this.loading = false; this.cdr.detectChanges(); },
+      error: () => { this.loading = false; this.cdr.detectChanges(); }
     });
   }
 

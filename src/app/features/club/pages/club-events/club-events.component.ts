@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ClubEventService } from '../../services/club-event.service';
 import { ClubParticipationService } from '../../services/club-participation.service';
 import { ClubMemberService } from '../../services/club-member.service';
@@ -17,10 +19,9 @@ type EventFilter = 'upcoming' | 'past';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, ClubNavComponent],
   templateUrl: './club-events.component.html',
-  styleUrls: ['./club-events.component.scss']
+  styleUrls: ['./club-events.component.scss'],
 })
 export class ClubEventsComponent implements OnInit {
-
   events: ClubEvent[] = [];
   reservations: ClubParticipation[] = [];
   myMembership: ClubMember | null = null;
@@ -30,13 +31,13 @@ export class ClubEventsComponent implements OnInit {
   success: string | null = null;
 
   filter: EventFilter = 'upcoming';
-
   places: { [key: number]: number } = {};
 
   constructor(
     private eventService: ClubEventService,
     private participationService: ClubParticipationService,
-    private memberService: ClubMemberService
+    private memberService: ClubMemberService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -44,82 +45,71 @@ export class ClubEventsComponent implements OnInit {
   }
 
   loadAll(): void {
+    this.loading = true;
     this.error = null;
     this.success = null;
-    this.loadEvents();
-    this.loadReservations();
-    this.loadMembership();
-  }
 
-  loadEvents(): void {
-    this.loading = true;
-    this.eventService.getEvents().subscribe({
-      next: (data) => {
-        this.events = data;
+    forkJoin({
+      events: this.eventService.getEvents(),
+      reservations: this.participationService
+        .myReservations()
+        .pipe(catchError(() => of([] as ClubParticipation[]))),
+      membership: this.memberService.getMyMembership().pipe(catchError(() => of(null))),
+    }).subscribe({
+      next: ({ events, reservations, membership }) => {
+        this.events = events;
+        this.reservations = reservations;
+        this.myMembership = membership;
         this.loading = false;
-        data.forEach(e => {
+        events.forEach((e) => {
           if (!this.places[e.id]) this.places[e.id] = 1;
         });
+        this.cdr.detectChanges();
       },
       error: () => {
         this.showError('Failed to load events');
         this.loading = false;
-      }
+        this.cdr.detectChanges();
+      },
     });
   }
-
-  loadReservations(): void {
-    this.participationService.myReservations().subscribe({
-      next: (data) => { this.reservations = data; },
-      error: () => { this.reservations = []; }
-    });
-  }
-
-  loadMembership(): void {
-    this.memberService.getMyMembership().subscribe({
-      next: (data) => { this.myMembership = data; },
-      error: () => { this.myMembership = null; }
-    });
-  }
-
-  // ── Filtre upcoming / past ─────────────────────────────────
 
   get filteredEvents(): ClubEvent[] {
     const now = new Date();
     if (this.filter === 'upcoming') {
-      return this.events.filter(e => new Date(e.eventDate) >= now);
+      return this.events.filter((e) => new Date(e.eventDate) >= now);
     }
-    return this.events.filter(e => new Date(e.eventDate) < now);
+    return this.events.filter((e) => new Date(e.eventDate) < now);
   }
 
   get upcomingCount(): number {
-    return this.events.filter(e => new Date(e.eventDate) >= new Date()).length;
+    return this.events.filter((e) => new Date(e.eventDate) >= new Date()).length;
   }
 
   get pastCount(): number {
-    return this.events.filter(e => new Date(e.eventDate) < new Date()).length;
+    return this.events.filter((e) => new Date(e.eventDate) < new Date()).length;
   }
 
   setFilter(f: EventFilter): void {
     this.filter = f;
   }
 
-  // ── Alertes auto-dismiss ───────────────────────────────────
-
   private showSuccess(msg: string): void {
     this.success = msg;
-    setTimeout(() => { this.success = null; }, 4000);
+    setTimeout(() => {
+      this.success = null;
+    }, 4000);
   }
 
   private showError(msg: string): void {
     this.error = msg;
-    setTimeout(() => { this.error = null; }, 6000);
+    setTimeout(() => {
+      this.error = null;
+    }, 6000);
   }
 
-  // ── Réservation ───────────────────────────────────────────
-
   alreadyReserved(eventId: number): boolean {
-    return this.reservations.some(r => r.eventId === eventId && r.status === 'CONFIRMED');
+    return this.reservations.some((r) => r.eventId === eventId && r.status === 'CONFIRMED');
   }
 
   reserve(eventId: number): void {
@@ -142,7 +132,7 @@ export class ClubEventsComponent implements OnInit {
       },
       error: (err) => {
         this.showError(err?.error?.error || 'Reservation failed. Please try again.');
-      }
+      },
     });
   }
 
