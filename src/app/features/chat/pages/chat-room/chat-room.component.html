@@ -50,16 +50,14 @@
           <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse inline-block"></span>
           Chat en direct
         </span>
-        <span class="text-xs text-gray-400">
-          Se termine à {{ session.endTime | date:'HH:mm' }}
-        </span>
+        <!-- C3 — countdown -->
+        <span class="text-xs text-gray-400">{{ timeRemainingLabel }}</span>
         <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-mono">
           Code : {{ session.code }}
         </span>
       </div>
     </div>
 
-    <!-- Badge utilisateur -->
     <div *ngIf="isLoggedIn" class="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-xl">
       <div class="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold">
         {{ currentUsername.charAt(0).toUpperCase() }}
@@ -76,37 +74,56 @@
     Cette session de chat est terminée. Vous êtes en mode lecture.
   </div>
 
-  <!-- Messages -->
-  <div #messagesContainer class="flex-1 overflow-y-auto px-4 py-6 space-y-3">
+  <!-- WebSocket déconnecté -->
+  <div *ngIf="!wsConnected && !sessionExpired" class="bg-red-50 border-b border-red-200 px-6 py-2 flex items-center justify-center gap-2 text-sm text-red-600 font-medium">
+    <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse inline-block"></span>
+    Connexion au chat perdue — reconnexion en cours…
+  </div>
 
-    <!-- Message vide -->
-    <div *ngIf="messages.length === 0" class="text-center text-gray-400 text-sm mt-16">
-      <div class="text-4xl mb-3">🎬</div>
-      <p>Aucun message pour l'instant.</p>
-      <p class="text-xs mt-1">Soyez le premier à réagir !</p>
-    </div>
+  <!-- Messages + bouton scroll (C2) -->
+  <div class="relative flex-1 overflow-hidden">
 
-    <!-- Chaque message -->
-    <div *ngFor="let msg of messages"
-         [class]="isMyMessage(msg) ? 'flex justify-end' : 'flex justify-start'">
+    <div #messagesContainer
+         (scroll)="onMessagesScroll($event)"
+         class="h-full overflow-y-auto px-4 py-6 space-y-3">
 
-      <div [class]="isMyMessage(msg)
-        ? 'bg-primary text-white rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-xs lg:max-w-md shadow-sm'
-        : 'bg-white text-dark rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-xs lg:max-w-md shadow-sm border border-gray-100'">
-
-        <!-- Nom expéditeur (seulement pour les autres) -->
-        <p *ngIf="!isMyMessage(msg)" class="text-xs font-semibold mb-1"
-           [class]="isMyMessage(msg) ? 'text-white/70' : 'text-primary'">
-          {{ msg.username }}
-        </p>
-
-        <p class="text-sm leading-relaxed">{{ msg.content }}</p>
-
-        <p class="text-xs mt-1 opacity-60 text-right">
-          {{ msg.createdAt | date:'HH:mm' }}
-        </p>
+      <div *ngIf="messages.length === 0" class="text-center text-gray-400 text-sm mt-16">
+        <div class="text-4xl mb-3">🎬</div>
+        <p>Aucun message pour l'instant.</p>
+        <p class="text-xs mt-1">Soyez le premier à réagir !</p>
       </div>
+
+      <div *ngFor="let msg of messages"
+           [class]="isMyMessage(msg) ? 'flex justify-end' : 'flex justify-start'">
+
+        <div [class]="isMyMessage(msg)
+          ? 'bg-primary text-white rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-xs lg:max-w-md shadow-sm'
+          : 'bg-white text-dark rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-xs lg:max-w-md shadow-sm border border-gray-100'">
+
+          <p *ngIf="!isMyMessage(msg)" class="text-xs font-semibold mb-1 text-primary">
+            {{ msg.username }}
+          </p>
+          <p class="text-sm leading-relaxed">{{ msg.content }}</p>
+          <p class="text-xs mt-1 opacity-60 text-right">
+            {{ msg.createdAt | date:'HH:mm' }}
+          </p>
+        </div>
+      </div>
+
     </div>
+
+    <!-- C2 — Bouton flottant nouveaux messages -->
+    <button *ngIf="showScrollButton"
+            (click)="scrollToLatest()"
+            class="absolute bottom-4 right-4 bg-primary text-white rounded-full w-11 h-11 flex items-center justify-center shadow-lg hover:bg-primary-light transition-all">
+      <span *ngIf="newMessageCount > 0"
+            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+        {{ newMessageCount > 9 ? '9+' : newMessageCount }}
+      </span>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
 
   </div>
 
@@ -114,13 +131,16 @@
   <div class="bg-white border-t border-gray-100 px-4 py-4">
 
     <div *ngIf="!sessionExpired" class="flex items-end gap-3">
+      <!-- C4 — auto-resize -->
       <textarea
         [(ngModel)]="newMessage"
         (keydown)="onKeyEnter($event)"
         (focus)="onInputFocus()"
+        (input)="autoResize($event)"
         [placeholder]="isLoggedIn ? 'Écrivez un message...' : 'Connectez-vous pour participer'"
         [readonly]="!isLoggedIn"
         rows="1"
+        style="overflow-y: hidden; max-height: 120px;"
         class="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-primary focus:outline-none transition-colors"
         [class.cursor-pointer]="!isLoggedIn"
         [class.bg-gray-50]="!isLoggedIn"
@@ -128,7 +148,7 @@
 
       <button
         (click)="sendMessage()"
-        [disabled]="!isLoggedIn || !newMessage.trim()"
+        [disabled]="!isLoggedIn || !newMessage.trim() || !wsConnected"
         class="w-11 h-11 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-primary-light transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0">
         <svg class="w-5 h-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
