@@ -71,6 +71,31 @@
       </div>
     </div>
 
+    <!-- Bouton résumé IA (visible uniquement quand session terminée) -->
+    <div *ngIf="sessionExpired" class="relative z-10 px-8 pb-4">
+      <button (click)="generateSummary(); $event.stopPropagation()"
+              [disabled]="summaryLoading"
+              class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all
+                     bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 disabled:opacity-50">
+        <span *ngIf="!summaryLoading">✨ Résumer la discussion</span>
+        <span *ngIf="summaryLoading" class="flex items-center gap-2">
+          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+          </svg>
+          Génération en cours…
+        </span>
+      </button>
+
+      <!-- Carte résumé -->
+      <div *ngIf="summary" (click)="$event.stopPropagation()" class="mt-4 bg-white/10 border border-white/20 rounded-xl p-4 max-h-64 overflow-y-auto">
+        <p class="text-white/60 text-xs font-semibold uppercase tracking-wide mb-2">✨ Résumé IA</p>
+        <p class="text-white/90 text-sm leading-relaxed whitespace-pre-line">{{ summary }}</p>
+      </div>
+
+      <p *ngIf="summaryError" class="mt-2 text-red-300 text-xs text-center">{{ summaryError }}</p>
+    </div>
+
     <!-- Profil utilisateur en bas -->
     <div class="relative z-10 p-8 border-t border-white/10">
       <div *ngIf="isLoggedIn" class="flex items-center gap-3">
@@ -177,15 +202,25 @@
 
               <!-- Bulle -->
               <div>
+                <!-- Message bot Cinéphile -->
+                <div *ngIf="msg.username === '🎬 RawaBot'"
+                     class="bg-gradient-to-br from-dark to-primary text-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-md max-w-xs lg:max-w-md border border-primary/30">
+                  <p class="text-xs font-bold mb-1.5 text-accent flex items-center gap-1">
+                    🎬 RawaBot <span class="text-white/40 font-normal">· Assistant IA</span>
+                  </p>
+                  <p class="text-sm leading-relaxed">{{ msg.content }}</p>
+                  <p class="text-xs mt-1.5 opacity-50 text-right">{{ msg.createdAt | date:'HH:mm' }}</p>
+                </div>
+
                 <!-- Message supprimé pour tous -->
-                <div *ngIf="msg.deleted"
+                <div *ngIf="msg.username !== '🎬 RawaBot' && msg.deleted"
                      class="flex items-center gap-1.5 text-gray-400 text-sm italic px-4 py-3 bg-gray-100 rounded-2xl border border-gray-200">
                   <span>🚫</span>
                   <span>Message supprimé</span>
                 </div>
 
                 <!-- Mode édition inline -->
-                <div *ngIf="!msg.deleted && editingMsgId === msg.id" class="flex flex-col gap-2 min-w-48">
+                <div *ngIf="msg.username !== '🎬 RawaBot' && !msg.deleted && editingMsgId === msg.id" class="flex flex-col gap-2 min-w-48">
                   <textarea
                     [(ngModel)]="editContent"
                     (keydown.enter)="$event.preventDefault(); confirmEdit(msg)"
@@ -206,7 +241,7 @@
                 </div>
 
                 <!-- Contenu normal -->
-                <div *ngIf="!msg.deleted && editingMsgId !== msg.id"
+                <div *ngIf="msg.username !== '🎬 RawaBot' && !msg.deleted && editingMsgId !== msg.id"
                      [class]="isMyMessage(msg)
                        ? 'bg-primary text-white rounded-2xl rounded-br-sm px-4 py-3 shadow-sm'
                        : 'bg-white text-dark rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm border border-gray-100'">
@@ -244,7 +279,7 @@
                 </div>
 
                 <!-- Menu contextuel (mes messages seulement) -->
-                <div *ngIf="isMyMessage(msg) && !msg.deleted" class="relative">
+                <div *ngIf="isMyMessage(msg) && !msg.deleted && msg.username !== '🎬 RawaBot'" class="relative">
                   <button (click)="toggleMenu(msg.id, $event)"
                     class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center text-xs transition-all"
                     [class.bg-gray-200]="activeMenuMsgId === msg.id">
@@ -357,7 +392,7 @@
           (keydown)="onKeyEnter($event)"
           (focus)="onInputFocus()"
           (input)="autoResize($event); onTyping()"
-          [placeholder]="isLoggedIn ? 'Partagez votre ressenti…' : 'Connectez-vous pour participer'"
+          [placeholder]="isLoggedIn ? 'Partagez votre ressenti… ou tapez @rawabot pour poser une question sur le film' : 'Connectez-vous pour participer'"
           [readonly]="!isLoggedIn"
           rows="1"
           style="overflow-y: hidden; max-height: 120px;"
