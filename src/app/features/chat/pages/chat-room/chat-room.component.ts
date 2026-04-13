@@ -8,6 +8,7 @@ import { ChatWebSocketService } from '../../services/chat-websocket.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ChatSession } from '../../models/chat-session.model';
 import { ChatMessage, MessagePage, SessionReactions, UnsendEvent } from '../../models/chat-message.model';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-chat-room',
@@ -65,6 +66,12 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   // Unsend / Edit
   activeMenuMsgId: number | null = null;   // menu contextuel ouvert
   confirmDelete: { msg: ChatMessage; forEveryone: boolean } | null = null;
+
+  // Résumé IA
+  summary = '';
+  summaryLoading = false;
+  summaryError = '';
+  private readonly CLAUDE_API_KEY = environment.claudeApiKey;
   editingMsgId: number | null = null;       // message en cours d'édition
   editContent = '';                         // contenu de l'input d'édition
 
@@ -109,14 +116,8 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.sessionService.joinByCode(code).subscribe({
       next: (session) => {
-        if (!session.active) {
-          this.errorMessage = 'Cette session de chat est terminée.';
-          this.loading = false;
-          this.cdr.detectChanges();
-          return;
-        }
         this.session = session;
-        this.loadHistoryAndConnect();
+        this.loadHistoryAndConnect(session.active === false);
       },
       error: () => {
         this.errorMessage = 'Code invalide. Vérifiez le code affiché dans la salle.';
@@ -126,7 +127,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadHistoryAndConnect(): void {
+  private loadHistoryAndConnect(alreadyExpired = false): void {
     if (!this.session) return;
 
     this.sessionService.getMessages(this.session.id, 0, this.PAGE_SIZE).subscribe({
@@ -136,6 +137,15 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
         this.hasMore = page.hasMore;
         this.loading = false;
         this.joined = true;
+        if (alreadyExpired) {
+          // Décaler d'un tick pour laisser Angular rendre le template d'abord
+          setTimeout(() => {
+            this.ngZone.run(() => {
+              this.sessionExpired = true;
+              this.cdr.detectChanges();
+            });
+          }, 0);
+        }
         this.cdr.detectChanges();
         setTimeout(() => this.scrollToBottom(), 0);
 
@@ -297,6 +307,54 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     // Fermer le picker si ouvert
     this.activePickerMsgId = null;
     this.activeTooltipKey = this.activeTooltipKey === key ? null : key;
+  }
+
+  // ── Résumé IA ─────────────────────────────────────────────────────────────────
+
+  async generateSummary(): Promise<void> {
+    if (this.summaryLoading || !this.session) return;
+    this.summaryLoading = true;
+    this.summaryError = '';
+    this.summary = '';
+    this.cdr.detectChanges();
+
+    try {
+      // Construire le texte des messages
+      const messagesText = this.messages
+        .filter(m => !m.deleted)
+        .map(m => `${m.username} : ${m.content}`)
+        .join('\n');
+
+      const prompt = `Tu es un assistant cinéphile expert. Voici les messages d'une discussion en temps réel sur le film "${this.session!.name}".
+Résume en français les points clés débattus, les opinions exprimées et les moments forts de la discussion en 5-8 phrases maximum. Sois concis et engageant.
+
+Messages :
+${messagesText}`;
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': this.CLAUDE_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1024,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      const data = await response.json();
+      this.summary = data.content?.[0]?.text ?? 'Aucun résumé généré.';
+    } catch (err) {
+      this.summaryError = 'Erreur lors de la génération du résumé.';
+      console.error('[Summary] Erreur:', err);
+    } finally {
+      this.summaryLoading = false;
+      this.cdr.detectChanges();
+    }
   }
 
   // ── Unsend / Edit ──────────────────────────────────────────────────────────
