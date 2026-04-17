@@ -18,10 +18,9 @@ type Tab = 'requests' | 'members' | 'events';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, ClubNavComponent],
   templateUrl: './club-admin.component.html',
-  styleUrls: ['./club-admin.component.scss']
+  styleUrls: ['./club-admin.component.scss'],
 })
 export class ClubAdminComponent implements OnInit {
-
   activeTab: Tab = 'requests';
   globalLoading = true;
 
@@ -47,7 +46,7 @@ export class ClubAdminComponent implements OnInit {
     private joinRequestService: ClubJoinRequestService,
     private memberService: ClubMemberService,
     private eventService: ClubEventService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -59,7 +58,7 @@ export class ClubAdminComponent implements OnInit {
     forkJoin({
       requests: this.joinRequestService.getPendingRequests(),
       members: this.memberService.getAllMembers(),
-      events: this.eventService.getEvents()
+      events: this.eventService.getEvents(),
     }).subscribe({
       next: ({ requests, members, events }) => {
         this.pendingRequests = requests;
@@ -68,7 +67,10 @@ export class ClubAdminComponent implements OnInit {
         this.globalLoading = false;
         this.cdr.detectChanges();
       },
-      error: () => { this.globalLoading = false; this.cdr.detectChanges(); }
+      error: () => {
+        this.globalLoading = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -82,17 +84,23 @@ export class ClubAdminComponent implements OnInit {
 
   private showRequestSuccess(msg: string): void {
     this.requestSuccess = msg;
-    setTimeout(() => { this.requestSuccess = null; }, 4000);
+    setTimeout(() => {
+      this.requestSuccess = null;
+    }, 4000);
   }
 
   private showRequestError(msg: string): void {
     this.requestError = msg;
-    setTimeout(() => { this.requestError = null; }, 6000);
+    setTimeout(() => {
+      this.requestError = null;
+    }, 6000);
   }
 
   private showEventFormSuccess(msg: string): void {
     this.eventFormSuccess = msg;
-    setTimeout(() => { this.eventFormSuccess = null; }, 4000);
+    setTimeout(() => {
+      this.eventFormSuccess = null;
+    }, 4000);
   }
 
   // ── Demandes ──────────────────────────────────────────────
@@ -107,7 +115,7 @@ export class ClubAdminComponent implements OnInit {
         this.showRequestSuccess('Request approved — member added.');
         forkJoin({
           requests: this.joinRequestService.getPendingRequests(),
-          members: this.memberService.getAllMembers()
+          members: this.memberService.getAllMembers(),
         }).subscribe(({ requests, members }) => {
           this.pendingRequests = requests;
           this.members = members;
@@ -116,12 +124,16 @@ export class ClubAdminComponent implements OnInit {
       error: (err) => {
         this.actionLoadingId = null;
         this.showRequestError(err?.error?.error || 'Approval failed.');
-      }
+      },
     });
   }
 
-  confirmReject(id: number): void { this.rejectTargetId = id; }
-  abortReject(): void { this.rejectTargetId = null; }
+  confirmReject(id: number): void {
+    this.rejectTargetId = id;
+  }
+  abortReject(): void {
+    this.rejectTargetId = null;
+  }
 
   reject(id: number): void {
     this.rejectTargetId = null;
@@ -132,23 +144,23 @@ export class ClubAdminComponent implements OnInit {
       next: () => {
         this.actionLoadingId = null;
         this.showRequestSuccess('Request rejected.');
-        this.joinRequestService.getPendingRequests().subscribe(r => this.pendingRequests = r);
+        this.joinRequestService.getPendingRequests().subscribe((r) => (this.pendingRequests = r));
       },
       error: (err) => {
         this.actionLoadingId = null;
         this.showRequestError(err?.error?.error || 'Rejection failed.');
-      }
+      },
     });
   }
 
   // ── Membres ───────────────────────────────────────────────
 
   get activeMembers(): ClubMember[] {
-    return this.members.filter(m => m.status === 'ACTIVE');
+    return this.members.filter((m) => m.status === 'ACTIVE');
   }
 
   get leftMembers(): ClubMember[] {
-    return this.members.filter(m => m.status === 'LEFT');
+    return this.members.filter((m) => m.status === 'LEFT');
   }
 
   // ── Événements ────────────────────────────────────────────
@@ -168,22 +180,28 @@ export class ClubAdminComponent implements OnInit {
     this.eventFormLoading = true;
     this.eventFormError = null;
     this.eventFormSuccess = null;
+
     this.eventService.createEvent(this.eventForm).subscribe({
-      next: () => {
+      next: (created) => {
+        this.events = [...this.events, created]; // ajout direct sans second appel HTTP
         this.eventFormLoading = false;
         this.showEventFormSuccess('Event created successfully!');
-        this.eventService.getEvents().subscribe(e => { this.events = e; this.cdr.detectChanges(); });
         setTimeout(() => {
           this.showEventForm = false;
           this.eventFormSuccess = null;
-          this.cdr.detectChanges();
+          this.eventForm = {
+            title: '',
+            description: '',
+            eventDate: '',
+            maxPlaces: 1,
+            posterUrl: '',
+          };
         }, 1500);
       },
       error: (err) => {
         this.eventFormError = err?.error?.error || 'Failed to create event.';
         this.eventFormLoading = false;
-        this.cdr.detectChanges();
-      }
+      },
     });
   }
 

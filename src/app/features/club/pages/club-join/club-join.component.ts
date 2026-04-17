@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ClubJoinRequestService } from '../../services/club-join-request.service';
-import { ClubJoinRequest } from '../../models/club-join-request.model';
 import { ClubNavComponent } from '../../components/club-nav/club-nav.component';
 
 @Component({
@@ -20,31 +19,22 @@ export class ClubJoinComponent implements OnInit {
   success = false;
   error: string | null = null;
 
-  // ✅ CL1 — Stocke la demande complète au lieu d'un simple boolean
-  myRequest: ClubJoinRequest | null = null;
-  requestLoaded = false;
+  alreadyPending = false;
 
-  constructor(private joinRequestService: ClubJoinRequestService) {}
+  constructor(
+    private joinRequestService: ClubJoinRequestService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.joinRequestService.getMyRequest().subscribe({
       next: (req) => {
-        this.myRequest = req;
-        this.requestLoaded = true;
+        if (req && req.status === 'PENDING') this.alreadyPending = true;
+        this.cdr.detectChanges();
       },
-      error: () => {
-        // 404 → aucune demande existante, afficher le formulaire
-        this.myRequest = null;
-        this.requestLoaded = true;
-      }
+      error: () => { this.cdr.detectChanges(); }
     });
   }
-
-  // ✅ CL1 — Getters pour les différents états
-  get isPending(): boolean { return this.myRequest?.status === 'PENDING'; }
-  get isApproved(): boolean { return this.myRequest?.status === 'APPROVED'; }
-  get isRejected(): boolean { return this.myRequest?.status === 'REJECTED'; }
-  get showForm(): boolean { return this.requestLoaded && !this.success && !this.myRequest; }
 
   submit(): void {
     if (!this.motivation.trim() || this.loading) return;
@@ -55,10 +45,12 @@ export class ClubJoinComponent implements OnInit {
       next: () => {
         this.loading = false;
         this.success = true;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.error = err?.error?.error || 'Failed to submit request. Please try again.';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }

@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ClubMemberService } from '../../services/club-member.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ClubMember } from '../../models/club-member.model';
 import { ClubNavComponent } from '../../components/club-nav/club-nav.component';
 
@@ -24,7 +25,15 @@ export class ClubMembersComponent implements OnInit {
 
   showLeaveConfirm = false;
 
-  constructor(private memberService: ClubMemberService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private memberService: ClubMemberService,
+    public auth: AuthService,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  get isClubAdmin(): boolean {
+    return this.auth.isSuperAdmin() || this.auth.hasPermission('CLUB_MANAGE');
+  }
 
   ngOnInit(): void {
     this.loadMembers();
@@ -39,8 +48,12 @@ export class ClubMembersComponent implements OnInit {
   }
 
   loadMyMembership(): void {
+    if (!this.auth.isAuthenticated() || this.isClubAdmin) {
+      this.myMembership = null;
+      return;
+    }
     this.memberService.getMyMembership().subscribe({
-      next: (data) => { this.myMembership = data; },
+      next: (data) => { this.myMembership = data; this.cdr.detectChanges(); },
       error: () => { this.myMembership = null; }
     });
   }
@@ -53,7 +66,10 @@ export class ClubMembersComponent implements OnInit {
     return this.members.filter(m => m.status === 'LEFT');
   }
 
-  // ── Alertes auto-dismiss ───────────────────────────────────
+  // ✅ AJOUTÉ
+  get removedMembers(): ClubMember[] {
+    return this.members.filter(m => m.status === 'REMOVED');
+  }
 
   private showSuccess(msg: string): void {
     this.success = msg;
@@ -65,8 +81,6 @@ export class ClubMembersComponent implements OnInit {
     setTimeout(() => { this.error = null; }, 6000);
   }
 
-  // ── Leave club ─────────────────────────────────────────────
-
   confirmLeave(): void { this.showLeaveConfirm = true; }
   cancelLeave(): void { this.showLeaveConfirm = false; }
 
@@ -77,14 +91,12 @@ export class ClubMembersComponent implements OnInit {
     this.memberService.leaveClub().subscribe({
       next: () => {
         this.leaveLoading = false;
-        this.cdr.detectChanges();
         this.showSuccess('You have left the club.');
         this.loadMembers();
         this.loadMyMembership();
       },
       error: (err) => {
         this.leaveLoading = false;
-        this.cdr.detectChanges();
         this.showError(err?.error?.error || 'Failed to leave club.');
       }
     });

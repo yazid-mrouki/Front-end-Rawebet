@@ -25,7 +25,14 @@ export class ClubParticipationService {
 
   }
 
-  cancel(id:number): Observable<void>{
+  updateReservation(id: number, places: number): Observable<ClubParticipation> {
+    return this.http.put<ClubParticipation>(
+      `${this.apiUrl}/${id}?places=${places}`,
+      {}
+    );
+  }
+
+  cancel(id: number): Observable<void> {
 
     return this.http.delete<void>(
       `${this.apiUrl}/${id}`

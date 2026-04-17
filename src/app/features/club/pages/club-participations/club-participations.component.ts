@@ -1,5 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ClubParticipationService } from '../../services/club-participation.service';
 import { ClubParticipation } from '../../models/club-participation.model';
@@ -8,7 +9,7 @@ import { ClubNavComponent } from '../../components/club-nav/club-nav.component';
 @Component({
   selector: 'app-club-participations',
   standalone: true,
-  imports: [CommonModule, RouterModule, ClubNavComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ClubNavComponent],
   templateUrl: './club-participations.component.html',
   styleUrls: ['./club-participations.component.scss']
 })
@@ -21,7 +22,17 @@ export class ClubParticipationsComponent implements OnInit {
 
   cancelTargetId: number | null = null;
 
-  constructor(private participationService: ClubParticipationService, private cdr: ChangeDetectorRef) {}
+  // Edit
+  editTargetId: number | null = null;
+  editPlaces = 1;
+  editLoading = false;
+  editError: string | null = null;
+  editMaxPlaces = 0;
+
+  constructor(
+    private participationService: ClubParticipationService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.loadReservations();
@@ -42,7 +53,17 @@ export class ClubParticipationsComponent implements OnInit {
   confirmCancel(id: number): void { this.cancelTargetId = id; }
   abortCancel(): void { this.cancelTargetId = null; }
 
-  // ── Alertes auto-dismiss ───────────────────────────────────
+  confirmEdit(r: ClubParticipation): void {
+    this.editTargetId = r.id;
+    this.editPlaces = r.reservedPlaces;
+    this.editMaxPlaces = r.remainingPlaces;
+    this.editError = null;
+  }
+  abortEdit(): void {
+    this.editTargetId = null;
+    this.editPlaces = 1;
+    this.editError = null;
+  }
 
   private showSuccess(msg: string): void {
     this.success = msg;
@@ -66,6 +87,28 @@ export class ClubParticipationsComponent implements OnInit {
       },
       error: (err) => {
         this.showError(err?.error?.error || 'Cancellation failed.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  updateReservation(): void {
+    if (this.editTargetId === null || this.editPlaces < 1) return;
+    this.editLoading = true;
+    this.editError = null;
+
+    this.participationService.updateReservation(this.editTargetId, this.editPlaces).subscribe({
+      next: () => {
+        this.editLoading = false;
+        this.editTargetId = null;
+        this.editError = null;
+        this.showSuccess('Reservation updated successfully.');
+        this.loadReservations();
+      },
+      error: (err) => {
+        this.editLoading = false;
+        this.editError = err?.error?.error || 'Not enough places available.';
+        this.cdr.detectChanges();
       }
     });
   }
