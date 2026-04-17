@@ -28,7 +28,7 @@
            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
           Events
         </a>
-        <a *ngIf="isAuthenticated()" routerLink="/club" routerLinkActive="text-primary bg-primary/5"
+        <a routerLink="/club" routerLinkActive="text-primary bg-primary/5"
            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
           Club
         </a>
@@ -133,7 +133,7 @@
       <a routerLink="/films" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Films</a>
       <a routerLink="/cinemas" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Cinémas</a>
       <a routerLink="/events" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Events</a>
-      <a *ngIf="isAuthenticated()" routerLink="/club" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Club</a>
+      <a routerLink="/club" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Club</a>
       <a *ngIf="isAuthenticated()" routerLink="/tickets" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Réserver</a>
       <a routerLink="/subscriptions" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Subscriptions</a>
       <a routerLink="/loyalty" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Loyalty</a>

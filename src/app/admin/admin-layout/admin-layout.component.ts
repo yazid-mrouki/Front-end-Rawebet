@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../../core/services/user.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -28,16 +28,23 @@ export class AdminLayoutComponent implements OnInit {
 
   constructor(
     private userService: UserService,
-    private auth: AuthService,
+    public auth: AuthService,
+    private router: Router,
     private cdr: ChangeDetectorRef
   ) {
     this.adminName = this.auth.getCurrentUserName() || 'Super Admin';
     this.adminEmail = this.auth.getCurrentUserEmail();
     this.adminRoleLabel = this.getAdminRoleLabel();
+
+    // Redirige ADMIN_CLUB directement vers /admin/club
+    const roles = this.auth.getRoles();
+    if (roles.includes('ADMIN_CLUB') && !roles.includes('SUPER_ADMIN')) {
+      this.router.navigate(['/admin/club']);
+    }
   }
 
   private readonly allMenuItems: AdminMenuItem[] = [
-    { label: 'Dashboard',     icon: '📊', route: '/admin/dashboard',   roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'] },
+    { label: 'Dashboard',     icon: '📊', route: '/admin/dashboard',   roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
     { label: 'Events',        icon: '🎭', route: '/admin/events',       roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
     { label: 'Films',         icon: '🎬', route: '/admin/films',        roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
     { label: 'Cinémas',       icon: '🏛️', route: '/admin/cinemas',      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
@@ -50,7 +57,7 @@ export class AdminLayoutComponent implements OnInit {
     { label: 'Role',          icon: '🛡️', route: '/admin/roles',        permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
     { label: 'Logistics',     icon: '📦', route: '/admin/logistics',    roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
     { label: 'Feedback',      icon: '💬', route: '/admin/feedback',     roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
-    { label: 'Notifications', icon: '🔔', route: '/admin/notifications', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'] },
+    { label: 'Notifications', icon: '🔔', route: '/admin/notifications', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
   ];
 
   get menuItems(): AdminMenuItem[] {

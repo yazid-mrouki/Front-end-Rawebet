@@ -29,6 +29,9 @@ html {
 }
 
 body {
+  overflow-x: hidden;
+}
+body {
   font-family: 'Manrope', sans-serif;
   background-color: var(--color-surface);
   color: #1a1a2e;
