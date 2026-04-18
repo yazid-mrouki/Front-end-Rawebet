@@ -9,6 +9,7 @@ export interface ChatMessage {
   deleted: boolean;
   edited: boolean;
   editedAt?: string;
+  spoiler: boolean;
 }
 
 export interface UnsendEvent {

@@ -44,6 +44,11 @@ export class AdminChatComponent implements OnInit {
     });
   }
 
+  // ✅ Helper pour éviter les problèmes de type 0/1 vs false/true venant de MySQL
+  isActive(session: ChatSession): boolean {
+    return session.active === true || (session.active as any) === 1;
+  }
+
   closeSession(sessionId: number): void {
     this.chatService.closeSession(sessionId).subscribe({
       next: () => {
@@ -57,8 +62,8 @@ export class AdminChatComponent implements OnInit {
   }
 
   openRestartModal(session: ChatSession): void {
-    this.restartSessionId = session.seanceId;
     this.restartName = session.name;
+    this.restartSessionId = session.seanceId;
     this.restartDuration = 120;
     this.showRestartModal = true;
   }
