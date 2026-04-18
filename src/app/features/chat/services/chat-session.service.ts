@@ -53,4 +53,9 @@ export class ChatSessionService {
       { params: { name, durationMinutes: durationMinutes.toString() } }
     );
   }
+
+  // Soft delete admin — met deleted = true en base, invisible pour tous les users
+  adminDeleteMessage(messageId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/messages/${messageId}/admin`);
+  }
 }

@@ -1,16 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { ChatSessionService } from '../../../features/chat/services/chat-session.service';
 import { ChatSession } from '../../../features/chat/models/chat-session.model';
 
 @Component({
   selector: 'app-admin-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './admin-chat.component.html'
 })
-export class AdminChatComponent implements OnInit {
+export class AdminChatComponent implements OnInit, OnDestroy {
 
   sessions: ChatSession[] = [];
   loading = false;
@@ -22,31 +23,54 @@ export class AdminChatComponent implements OnInit {
   restartName = '';
   restartDuration = 120;
 
-  constructor(private chatService: ChatSessionService) {}
+  private timerInterval: any;
+
+  constructor(
+    private chatService: ChatSessionService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.loadSessions();
+    // ✅ BUG 3 CORRIGÉ : timer qui se rafraîchit chaque seconde
+    this.timerInterval = setInterval(() => {
+      this.cdr.detectChanges();
+    }, 1000);
+  }
+
+  ngOnDestroy(): void {
+    // ✅ Nettoyage du timer pour éviter les memory leaks
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+    }
   }
 
   loadSessions(): void {
     this.loading = true;
     this.chatService.getAllSessions().subscribe({
       next: (sessions: ChatSession[]) => {
-        this.sessions = sessions.sort((a: ChatSession, b: ChatSession) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+        // ✅ BUG 2 CORRIGÉ : tri robuste si createdAt est null (données SQL statiques)
+        this.sessions = sessions.sort((a: ChatSession, b: ChatSession) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        });
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.errorMessage = 'Impossible de charger les sessions.';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
-  // ✅ Helper pour éviter les problèmes de type 0/1 vs false/true venant de MySQL
+  // ✅ BUG 1 CORRIGÉ : vérifie aussi endTime localement, pas seulement le flag active
   isActive(session: ChatSession): boolean {
-    return session.active === true || (session.active as any) === 1;
+    const activeFlag = session.active === true || (session.active as any) === 1;
+    if (!activeFlag) return false;
+    return new Date(session.endTime).getTime() > Date.now();
   }
 
   closeSession(sessionId: number): void {

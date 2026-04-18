@@ -47,7 +47,9 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-50">
-        <tr *ngFor="let session of sessions" class="hover:bg-gray-50 transition-colors">
+        <tr *ngFor="let session of sessions"
+          class="hover:bg-gray-50 transition-colors cursor-pointer"
+          [routerLink]="['/admin/chat', session.id]">
 
           <!-- Nom séance -->
           <td class="px-6 py-4">
@@ -88,7 +90,7 @@
           </td>
 
           <!-- Actions -->
-          <td class="px-6 py-4">
+          <td class="px-6 py-4" (click)="$event.stopPropagation()">
             <div class="flex items-center justify-end gap-2">
               <button *ngIf="isActive(session)"
                 (click)="closeSession(session.id)"

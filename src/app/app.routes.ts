@@ -32,6 +32,7 @@ import { AdminLogisticsComponent } from './admin/pages/logistics/admin-logistics
 import { AdminFeedbackComponent } from './admin/pages/feedback/admin-feedback.component';
 import { AdminNotificationsComponent } from './admin/pages/notifications/admin-notifications.component';
 import { AdminChatComponent } from './admin/pages/chat/admin-chat.component';
+import { AdminChatDetailComponent } from './admin/pages/chat/admin-chat-detail.component';
 import { adminGuard } from './core/guards/admin.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 
@@ -91,7 +92,6 @@ export const routes: Routes = [
         component: AdminLoyaltyComponent,
         canActivate: [permissionGuard(['FIDELITY_UPDATE'])],
       },
-
       {
         path: 'roles',
         component: AdminRolesComponent,
@@ -101,6 +101,7 @@ export const routes: Routes = [
       { path: 'feedback', component: AdminFeedbackComponent },
       { path: 'notifications', component: AdminNotificationsComponent },
       { path: 'chat', component: AdminChatComponent },
+      { path: 'chat/:id', component: AdminChatDetailComponent },
     ],
   },
 
