@@ -5,6 +5,12 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { ChatMessage, ReactionEvent, UnsendEvent } from '../models/chat-message.model';
 import { environment } from '../../../../environments/environment';
 
+// ✅ Interface pour l'événement spoiler
+export interface SpoilerEvent {
+  messageId: number;
+  isSpoiler: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ChatWebSocketService implements OnDestroy {
 
@@ -15,6 +21,7 @@ export class ChatWebSocketService implements OnDestroy {
   private reactionSubject  = new Subject<ReactionEvent>();
   private unsendSubject    = new Subject<UnsendEvent>();
   private editSubject      = new Subject<ChatMessage>();
+  private spoilerSubject   = new Subject<SpoilerEvent>(); // ✅ nouveau
 
   private connectionId = 0;
 
@@ -24,6 +31,7 @@ export class ChatWebSocketService implements OnDestroy {
   reaction$  = this.reactionSubject.asObservable();
   unsend$    = this.unsendSubject.asObservable();
   edit$      = this.editSubject.asObservable();
+  spoiler$   = this.spoilerSubject.asObservable(); // ✅ nouveau
 
   constructor(private ngZone: NgZone) {}
 
@@ -65,6 +73,12 @@ export class ChatWebSocketService implements OnDestroy {
         this.client.subscribe(`/topic/chat/${chatSessionId}/edit`, (frame: IMessage) => {
           if (this.connectionId !== id) return;
           this.ngZone.run(() => this.editSubject.next(JSON.parse(frame.body)));
+        });
+
+        // ✅ Nouveau topic spoiler
+        this.client.subscribe(`/topic/chat/${chatSessionId}/spoiler`, (frame: IMessage) => {
+          if (this.connectionId !== id) return;
+          this.ngZone.run(() => this.spoilerSubject.next(JSON.parse(frame.body)));
         });
 
         this.ngZone.run(() => this.connectedSubject.next(true));
