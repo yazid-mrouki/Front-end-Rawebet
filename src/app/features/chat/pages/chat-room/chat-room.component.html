@@ -333,17 +333,29 @@
     <!-- ✅ Zone de saisie — EN DEHORS de la zone messages -->
     <div class="flex-shrink-0 bg-white border-t border-gray-100 px-6 py-4">
       <div *ngIf="!sessionExpired" class="flex items-end gap-3">
-        <textarea [(ngModel)]="newMessage"
-          (keydown)="onKeyEnter($event)"
-          (focus)="onInputFocus()"
-          (input)="autoResize($event); onTyping()"
-          [placeholder]="isLoggedIn ? 'Partagez votre ressenti… ou tapez @rawabot pour poser une question sur le film' : 'Connectez-vous pour participer'"
-          [readonly]="!isLoggedIn"
-          rows="1"
-          style="overflow-y: hidden; max-height: 120px;"
-          class="flex-1 resize-none border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 transition-all bg-gray-50 focus:bg-white"
-          [class.cursor-pointer]="!isLoggedIn">
-        </textarea>
+        <!-- ✅ BUG 3 CORRIGÉ : suggestion @rawabot -->
+        <div class="flex-1 relative">
+          <div *ngIf="showBotSuggestion"
+            class="absolute bottom-full mb-2 left-0 bg-dark text-white rounded-xl shadow-xl px-4 py-2.5 flex items-center gap-3 cursor-pointer hover:bg-primary transition-all z-10 whitespace-nowrap"
+            (click)="insertBotMention(); $event.stopPropagation()">
+            <span class="text-lg">🎬</span>
+            <div>
+              <p class="text-xs font-bold">@rawabot</p>
+              <p class="text-xs opacity-60">Poser une question sur le film</p>
+            </div>
+          </div>
+          <textarea #messageInput [(ngModel)]="newMessage"
+            (keydown)="onKeyEnter($event)"
+            (focus)="onInputFocus()"
+            (input)="autoResize($event); onTyping()"
+            [placeholder]="isLoggedIn ? 'Partagez votre ressenti… ou tapez @rawabot pour poser une question sur le film' : 'Connectez-vous pour participer'"
+            [readonly]="!isLoggedIn"
+            rows="1"
+            style="overflow-y: hidden; max-height: 120px;"
+            class="w-full resize-none border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 transition-all bg-gray-50 focus:bg-white"
+            [class.cursor-pointer]="!isLoggedIn">
+          </textarea>
+        </div>
         <button (click)="sendMessage()" [disabled]="!isLoggedIn || !newMessage.trim() || !wsConnected"
           class="w-11 h-11 bg-primary text-white rounded-2xl flex items-center justify-center hover:bg-primary-light transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 shadow-sm">
           <svg class="w-5 h-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">

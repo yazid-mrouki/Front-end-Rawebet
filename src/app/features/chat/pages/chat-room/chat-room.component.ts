@@ -21,6 +21,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
 
   @HostBinding('class.chat-active') get chatActive() { return this.joined; }
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
+  @ViewChild('messageInput') messageInput!: ElementRef;
 
   session: ChatSession | null = null;
   messages: ChatMessage[] = [];
@@ -57,7 +58,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   private reactionSub!: Subscription;
   private unsendSub!: Subscription;
   private editSub!: Subscription;
-  private spoilerSub!: Subscription; // ✅ nouveau
+  private spoilerSub!: Subscription;
 
   activeMenuMsgId: number | null = null;
   confirmDelete: { msg: ChatMessage; forEveryone: boolean } | null = null;
@@ -73,6 +74,9 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
   readonly PAGE_SIZE = 20;
   hasMore = false;
   loadingMore = false;
+
+  // ✅ BUG 3 CORRIGÉ : autocomplétion @rawabot
+  showBotSuggestion = false;
 
   private wsSub!: Subscription;
   private wsConnSub!: Subscription;
@@ -181,6 +185,28 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
               users: event.users
             };
             this.cdr.detectChanges();
+          });
+
+          // ✅ BUG 2 CORRIGÉ : subscription unsend manquante — propage la suppression aux autres users
+          this.unsendSub = this.wsService.unsend$.subscribe((event: UnsendEvent) => {
+            if (event.forEveryone) {
+              const msg = this.messages.find(m => m.id === event.messageId);
+              if (msg) {
+                msg.deleted = true;
+                msg.content = '';
+                this.cdr.detectChanges();
+              }
+            }
+            // "pour moi" : déjà géré localement dans executeDelete(), pas besoin ici
+          });
+
+          this.editSub = this.wsService.edit$.subscribe((updated: ChatMessage) => {
+            const msg = this.messages.find(m => m.id === updated.id);
+            if (msg) {
+              msg.content = updated.content;
+              msg.edited = true;
+              this.cdr.detectChanges();
+            }
           });
 
           // ✅ Abonnement spoiler — met à jour le message en temps réel
@@ -416,6 +442,42 @@ ${messagesText}`;
   closeAll(): void {
     this.activePickerMsgId = null;
     this.activeTooltipKey = null;
+    this.showBotSuggestion = false;
+  }
+
+  // ── @rawabot autocomplétion ────────────────────────────────────────────────
+
+  // ✅ BUG 3 CORRIGÉ : affiche la suggestion dès que l'utilisateur tape @
+  onTyping(): void {
+    if (!this.isLoggedIn || !this.session || !this.wsConnected) return;
+
+    // Détecte si le message contient @ sans @rawabot complet
+    const val = this.newMessage;
+    const hasAt = val.includes('@');
+    const hasBotComplete = /(@rawabot)/i.test(val);
+    this.showBotSuggestion = hasAt && !hasBotComplete;
+    this.cdr.detectChanges();
+
+    // Throttle typing indicator
+    if (this.typingThrottleTimeout !== null) return;
+    this.wsService.sendTyping(this.session.id);
+    this.typingThrottleTimeout = setTimeout(() => {
+      this.typingThrottleTimeout = null;
+    }, 2000);
+  }
+
+  // ✅ Injecte @rawabot à la place du @ dans le message
+  insertBotMention(): void {
+    const atIndex = this.newMessage.lastIndexOf('@');
+    if (atIndex !== -1) {
+      this.newMessage = this.newMessage.substring(0, atIndex) + '@rawabot ';
+    } else {
+      this.newMessage += '@rawabot ';
+    }
+    this.showBotSuggestion = false;
+    this.cdr.detectChanges();
+    // Remet le focus sur le textarea
+    setTimeout(() => this.messageInput?.nativeElement?.focus(), 0);
   }
 
   // ── Scroll ─────────────────────────────────────────────────────────────────
@@ -487,24 +549,24 @@ ${messagesText}`;
     if (!this.isLoggedIn) this.showLoginPopup = true;
   }
 
-  onTyping(): void {
-    if (!this.isLoggedIn || !this.session || !this.wsConnected) return;
-    if (this.typingThrottleTimeout !== null) return;
-    this.wsService.sendTyping(this.session.id);
-    this.typingThrottleTimeout = setTimeout(() => {
-      this.typingThrottleTimeout = null;
-    }, 2000);
-  }
-
   sendMessage(): void {
     if (!this.isLoggedIn) { this.showLoginPopup = true; return; }
     const content = this.newMessage.trim();
     if (!content || !this.session) return;
     const sent = this.wsService.sendMessage(this.session.id, content);
-    if (sent) this.newMessage = '';
+    if (sent) {
+      this.newMessage = '';
+      this.showBotSuggestion = false;
+    }
   }
 
   onKeyEnter(event: KeyboardEvent): void {
+    // ✅ BUG 1 CORRIGÉ : Tab, ArrowDown ou Entrée sélectionnent la suggestion @rawabot
+    if (this.showBotSuggestion && (event.key === 'Tab' || event.key === 'ArrowDown' || event.key === 'Enter')) {
+      event.preventDefault();
+      this.insertBotMention();
+      return;
+    }
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       this.sendMessage();
@@ -530,7 +592,7 @@ ${messagesText}`;
     this.reactionSub?.unsubscribe();
     this.unsendSub?.unsubscribe();
     this.editSub?.unsubscribe();
-    this.spoilerSub?.unsubscribe(); // ✅ nouveau
+    this.spoilerSub?.unsubscribe();
     this.wsService.disconnect();
     clearTimeout(this.expiryTimeout ?? undefined);
     clearTimeout(this.typingTimeout ?? undefined);
