@@ -53,6 +53,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/films/films.component').then((m) => m.FilmsComponent),
   },
   {
+    path: 'cinemas',
+    loadComponent: () =>
+      import('./pages/cinemas/cinemas.component').then((m) => m.CinemasComponent),
+  },
+  {
     path: 'clubs',
     loadComponent: () => import('./pages/clubs/clubs.component').then((m) => m.ClubsComponent),
   },
@@ -157,6 +162,16 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
       },
 
+      // Cinémas — ADMIN_CINEMA + SUPER_ADMIN
+      {
+        path: 'cinemas',
+        loadComponent: () =>
+          import('./admin/pages/cinemas/admin-cinemas.component').then(
+            (m) => m.AdminCinemasComponent,
+          ),
+        canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
+      },
+
       // Tickets — ADMIN_CINEMA + ADMIN_EVENT + SUPER_ADMIN
       {
         path: 'tickets',
@@ -175,11 +190,31 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['CLUB_MANAGE', 'ADMIN_MANAGE'])],
       },
 
+      // Détail event club — ADMIN_CLUB + SUPER_ADMIN
+      {
+        path: 'club/events/:id',
+        loadComponent: () =>
+          import('./admin/pages/club-event-detail/admin-club-event-detail.component').then(
+            (m) => m.AdminClubEventDetailComponent,
+          ),
+        canActivate: [permissionGuard(['CLUB_MANAGE', 'ADMIN_MANAGE'])],
+      },
+
       // Chat — ADMIN_CINEMA (CINEMA_CREATE) + SUPER_ADMIN (ADMIN_MANAGE)
       {
         path: 'chat',
         loadComponent: () =>
           import('./admin/pages/chat/admin-chat.component').then((m) => m.AdminChatComponent),
+        canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
+      },
+
+      // Détail chat — ADMIN_CINEMA + SUPER_ADMIN
+      {
+        path: 'chat/:id',
+        loadComponent: () =>
+          import('./admin/pages/chat/admin-chat-detail.component').then(
+            (m) => m.AdminChatDetailComponent,
+          ),
         canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
       },
 

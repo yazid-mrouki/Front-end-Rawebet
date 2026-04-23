@@ -28,12 +28,11 @@
       🎟️ My Reservations
     </a>
 
-    <!-- Onglet admin -->
+    <!-- Onglet admin → redirige vers le backoffice -->
     <a *ngIf="isAdmin"
-       routerLink="/club/admin"
-       routerLinkActive="text-primary bg-primary/5 border-b-2 border-primary"
+       routerLink="/admin/club"
        class="flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-semibold text-primary hover:bg-primary/5 transition-colors whitespace-nowrap">
-      ⚙️ Admin
+      ⚙️ Admin Panel
     </a>
 
   </nav>

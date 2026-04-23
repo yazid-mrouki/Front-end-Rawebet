@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ClubMemberService } from '../../services/club-member.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ClubMember } from '../../models/club-member.model';
 import { ClubNavComponent } from '../../components/club-nav/club-nav.component';
 
@@ -24,7 +25,15 @@ export class ClubMembersComponent implements OnInit {
 
   showLeaveConfirm = false;
 
-  constructor(private memberService: ClubMemberService) {}
+  constructor(
+    private memberService: ClubMemberService,
+    public auth: AuthService,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  get isClubAdmin(): boolean {
+    return this.auth.isSuperAdmin() || this.auth.hasPermission('CLUB_MANAGE');
+  }
 
   ngOnInit(): void {
     this.loadMembers();
@@ -33,14 +42,18 @@ export class ClubMembersComponent implements OnInit {
 
   loadMembers(): void {
     this.memberService.getAllMembers().subscribe({
-      next: (data) => { this.members = data; this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (data) => { this.members = data; this.loading = false; this.cdr.detectChanges(); },
+      error: () => { this.loading = false; this.cdr.detectChanges(); }
     });
   }
 
   loadMyMembership(): void {
+    if (!this.auth.isAuthenticated() || this.isClubAdmin) {
+      this.myMembership = null;
+      return;
+    }
     this.memberService.getMyMembership().subscribe({
-      next: (data) => { this.myMembership = data; },
+      next: (data) => { this.myMembership = data; this.cdr.detectChanges(); },
       error: () => { this.myMembership = null; }
     });
   }
@@ -53,7 +66,10 @@ export class ClubMembersComponent implements OnInit {
     return this.members.filter(m => m.status === 'LEFT');
   }
 
-  // ── Alertes auto-dismiss ───────────────────────────────────
+  // ✅ AJOUTÉ
+  get removedMembers(): ClubMember[] {
+    return this.members.filter(m => m.status === 'REMOVED');
+  }
 
   private showSuccess(msg: string): void {
     this.success = msg;
@@ -64,8 +80,6 @@ export class ClubMembersComponent implements OnInit {
     this.error = msg;
     setTimeout(() => { this.error = null; }, 6000);
   }
-
-  // ── Leave club ─────────────────────────────────────────────
 
   confirmLeave(): void { this.showLeaveConfirm = true; }
   cancelLeave(): void { this.showLeaveConfirm = false; }
