@@ -17,6 +17,7 @@ import { filter } from 'rxjs/operators';
 })
 export class App implements OnInit {
   showLayout = true;
+  showFooter = true;
   isGuestMode = false;
   isImpersonating = false;
   impersonationInfo: ImpersonationInfo | null = null;
@@ -29,7 +30,10 @@ export class App implements OnInit {
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe((e) => {
-        this.showLayout = !e.url.startsWith('/auth') && !e.url.startsWith('/admin');
+        const hiddenLayoutRoutes = ['/auth', '/admin'];
+        const hiddenFooterRoutes = ['/auth', '/admin', '/chat'];
+        this.showLayout = !hiddenLayoutRoutes.some((r) => e.url.startsWith(r));
+        this.showFooter = !hiddenFooterRoutes.some((r) => e.url.startsWith(r));
         // Rafraîchir à chaque navigation (le token peut expirer)
         this.isImpersonating = this.impersonation.isImpersonating();
         this.impersonationInfo = this.impersonation.getImpersonationInfo();
