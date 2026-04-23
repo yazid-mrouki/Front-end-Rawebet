@@ -1,128 +1,276 @@
-<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
-  <div>
-    <h1 class="font-serif text-2xl font-bold text-dark">Programme fidélité</h1>
-    <p class="text-sm text-gray-400 mt-1">Vue admin alimentée uniquement par la logique backend.</p>
-  </div>
+<div class="p-6 lg:p-8 min-h-full" style="background: #f8f7f4;">
 
-  <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
-    <div *ngFor="let tier of tiers" class="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg transition-all">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-4 h-4 rounded-full" [ngClass]="tier.color"></div>
-        <h3 class="font-semibold text-dark">{{ tier.name }}</h3>
+  <!-- HEADER -->
+  <div class="flex items-start justify-between mb-8">
+    <div>
+      <div class="flex items-center gap-3 mb-1">
+        <div class="w-8 h-8 bg-yellow-100 rounded-xl flex items-center justify-center text-lg">⭐</div>
+        <h1 class="font-serif text-2xl font-bold text-dark">Programme Fidélité</h1>
       </div>
-      <div class="text-2xl font-bold text-dark">{{ tier.members }}</div>
-      <p class="text-xs text-gray-400 mt-1">{{ tier.min }}+ points requis</p>
-      <p class="text-xs text-gray-500 mt-3 bg-gray-50 rounded-lg p-2">{{ tier.perks }}</p>
+      <p class="text-sm text-gray-400 ml-11">Vue admin — données temps réel depuis le backend.</p>
     </div>
   </div>
 
-  <div class="grid sm:grid-cols-5 gap-4">
-    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
-      <div class="text-2xl font-bold text-dark">{{ stats.totalClients }}</div>
-      <div class="text-xs text-gray-400 mt-1">Total clients</div>
+  <!-- TIER CARDS -->
+  <div class="grid sm:grid-cols-3 gap-5 mb-6">
+
+    <!-- VIP — bordeaux premium -->
+    <div class="relative rounded-2xl overflow-hidden border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+         style="background: linear-gradient(135deg, #1a1a2e, #7b1f27); border-color: rgba(123,31,39,0.4);">
+      <div class="absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-20" style="background: rgba(255,255,255,0.3);"></div>
+      <div class="relative p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">💎</span>
+            <span class="text-base font-bold text-white">VIP</span>
+          </div>
+          <span class="text-3xl font-bold text-white">{{ tiers[0].members }}</span>
+        </div>
+        <p class="text-xs font-semibold mb-3 text-white opacity-60">{{ tiers[0].min }}+ points requis</p>
+        <div class="rounded-xl px-3 py-2 text-xs font-medium text-white opacity-90" style="background: rgba(255,255,255,0.12);">
+          {{ tiers[0].perks }}
+        </div>
+        <p class="text-[10px] mt-3 font-semibold uppercase tracking-widest text-white opacity-40">membres actifs</p>
+      </div>
     </div>
-    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
-      <div class="text-2xl font-bold text-gray-400">{{ stats.totalSilver }}</div>
-      <div class="text-xs text-gray-400 mt-1">Silver</div>
+
+    <!-- Gold — accent du thème -->
+    <div class="relative rounded-2xl overflow-hidden border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+         style="background: linear-gradient(135deg, #92400e, #d99a2d); border-color: rgba(217,154,45,0.4);">
+      <div class="absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-20" style="background: rgba(255,255,255,0.4);"></div>
+      <div class="relative p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🥇</span>
+            <span class="text-base font-bold text-white">Gold</span>
+          </div>
+          <span class="text-3xl font-bold text-white">{{ tiers[1].members }}</span>
+        </div>
+        <p class="text-xs font-semibold mb-3 text-white opacity-60">{{ tiers[1].min }}+ points requis</p>
+        <div class="rounded-xl px-3 py-2 text-xs font-medium text-white opacity-90" style="background: rgba(255,255,255,0.15);">
+          {{ tiers[1].perks }}
+        </div>
+        <p class="text-[10px] mt-3 font-semibold uppercase tracking-widest text-white opacity-40">membres actifs</p>
+      </div>
     </div>
-    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
-      <div class="text-2xl font-bold text-yellow-500">{{ stats.totalGold }}</div>
-      <div class="text-xs text-gray-400 mt-1">Gold</div>
+
+    <!-- Silver — gris argenté -->
+    <div class="relative rounded-2xl overflow-hidden border transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+         style="background: linear-gradient(135deg, #4b5563, #9ca3af); border-color: rgba(107,114,128,0.4);">
+      <div class="absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-20" style="background: rgba(255,255,255,0.3);"></div>
+      <div class="relative p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🥈</span>
+            <span class="text-base font-bold text-white">Silver</span>
+          </div>
+          <span class="text-3xl font-bold text-white">{{ tiers[2].members }}</span>
+        </div>
+        <p class="text-xs font-semibold mb-3 text-white opacity-60">{{ tiers[2].min }}+ points requis</p>
+        <div class="rounded-xl px-3 py-2 text-xs font-medium text-white opacity-90" style="background: rgba(255,255,255,0.15);">
+          {{ tiers[2].perks }}
+        </div>
+        <p class="text-[10px] mt-3 font-semibold uppercase tracking-widest text-white opacity-40">membres actifs</p>
+      </div>
     </div>
-    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
-      <div class="text-2xl font-bold text-purple-500">{{ stats.totalVip }}</div>
-      <div class="text-xs text-gray-400 mt-1">VIP</div>
-    </div>
-    <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center">
-      <div class="text-2xl font-bold text-primary">{{ stats.totalPointsDistribues }}</div>
-      <div class="text-xs text-gray-400 mt-1">Points distribués</div>
+
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
+    <div class="grid grid-cols-2 sm:grid-cols-5 divide-x divide-gray-100">
+      <div class="px-6 py-5 text-center">
+        <div class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">👥 Total</div>
+        <div class="text-3xl font-bold text-dark">{{ stats.totalClients }}</div>
+        <div class="text-xs text-gray-400 mt-1">clients</div>
+      </div>
+      <div class="px-6 py-5 text-center">
+        <div class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">🥈 Silver</div>
+        <div class="text-3xl font-bold text-gray-500">{{ stats.totalSilver }}</div>
+        <div class="text-xs text-gray-400 mt-1">membres</div>
+      </div>
+      <div class="px-6 py-5 text-center">
+        <div class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">🥇 Gold</div>
+        <div class="text-3xl font-bold text-amber-500">{{ stats.totalGold }}</div>
+        <div class="text-xs text-gray-400 mt-1">membres</div>
+      </div>
+      <div class="px-6 py-5 text-center">
+        <div class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">💎 VIP</div>
+        <div class="text-3xl font-bold text-violet-600">{{ stats.totalVip }}</div>
+        <div class="text-xs text-gray-400 mt-1">membres</div>
+      </div>
+      <div class="px-6 py-5 text-center border-l-2 border-primary/20" style="background: rgba(123,31,39,0.04);">
+        <div class="text-xs font-semibold uppercase tracking-widest mb-2" style="color: rgba(123,31,39,0.5);">⚡ Points</div>
+        <div class="text-3xl font-bold text-primary">{{ stats.totalPointsDistribues }}</div>
+        <div class="text-xs mt-1" style="color: rgba(123,31,39,0.4);">distribués</div>
+      </div>
     </div>
   </div>
 
-  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-    <div class="p-6 pb-0">
-      <h3 class="font-semibold text-dark">Top 10 clients</h3>
-      <p class="text-xs text-gray-400 mt-1">Classement réel calculé depuis les cartes fidélité.</p>
-    </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm mt-4">
-        <thead>
-          <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
-            <th class="px-6 py-3">#</th>
-            <th class="px-4 py-3">Nom</th>
-            <th class="px-4 py-3">Email</th>
-            <th class="px-4 py-3">Points</th>
-            <th class="px-4 py-3">Niveau</th>
+  <!-- TOP 10 + AJOUT POINTS -->
+  <div class="grid lg:grid-cols-3 gap-6">
+
+    <!-- Tableau Top 10 -->
+    <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
+        <div>
+          <h3 class="font-serif text-lg font-bold text-dark">Top 10 clients</h3>
+          <p class="text-xs text-gray-400 mt-0.5">Classement par points fidélité</p>
+        </div>
+        <span class="text-2xl">🏆</span>
+      </div>
+
+      <div *ngIf="loadingData" class="flex items-center justify-center py-16 text-gray-400 text-sm gap-2">
+        <div class="w-4 h-4 border-2 border-gray-200 border-t-primary rounded-full animate-spin"></div>
+        Chargement...
+      </div>
+
+      <div *ngIf="!loadingData" class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+          <tr class="text-left text-[10px] text-gray-400 uppercase tracking-widest" style="background: rgba(249,250,251,0.7);">
+            <th class="px-6 py-3 w-14">Rang</th>
+            <th class="px-4 py-3">Client</th>
+            <th class="px-4 py-3 hidden sm:table-cell">Email</th>
+            <th class="px-4 py-3 text-right">Points</th>
+            <th class="px-4 py-3 text-center">Niveau</th>
           </tr>
-        </thead>
-        <tbody>
-          <tr *ngIf="loadingData" class="border-b border-gray-50">
-            <td colspan="5" class="px-6 py-8 text-center text-gray-400">Chargement...</td>
-          </tr>
-          <tr *ngFor="let client of topClients; let i = index; trackBy: trackByTop" class="border-b border-gray-50 hover:bg-gray-50/50">
-            <td class="px-6 py-4 text-gray-400 text-xs">{{ i + 1 }}</td>
-            <td class="px-4 py-4 font-medium text-dark text-xs">{{ client.nom }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ client.email }}</td>
-            <td class="px-4 py-4 font-bold text-accent text-xs">{{ client.points }} pts</td>
-            <td class="px-4 py-4 text-xs">
-              <span class="px-2 py-1 rounded-full text-xs font-medium"
-                    [class.bg-gray-100]="client.level === 'SILVER'"
-                    [class.bg-yellow-100]="client.level === 'GOLD'"
-                    [class.bg-purple-100]="client.level === 'VIP'">{{ client.level }}</span>
+          </thead>
+          <tbody>
+          <ng-container *ngFor="let client of topClients; let i = index; trackBy: trackByTop">
+            <tr class="border-t border-gray-50 transition-colors hover:bg-gray-50/50"
+                [style.background]="i === 0 ? 'rgba(254,243,199,0.4)' : ''">
+
+              <td class="px-6 py-4">
+                <span *ngIf="i === 0" class="text-xl">🥇</span>
+                <span *ngIf="i === 1" class="text-xl">🥈</span>
+                <span *ngIf="i === 2" class="text-xl">🥉</span>
+                <span *ngIf="i > 2" class="text-xs font-semibold text-gray-400"># {{ i + 1 }}</span>
+              </td>
+
+              <td class="px-4 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 text-white"
+                       [style.background]="client.level === 'VIP' ? 'linear-gradient(135deg,#7c3aed,#4c1d95)' :
+                                             client.level === 'GOLD' ? 'linear-gradient(135deg,#d97706,#92400e)' :
+                                             '#9ca3af'">
+                    {{ client.nom.charAt(0).toUpperCase() }}
+                  </div>
+                  <span class="font-semibold text-dark text-sm">{{ client.nom }}</span>
+                </div>
+              </td>
+
+              <td class="px-4 py-4 text-gray-400 text-xs hidden sm:table-cell">{{ client.email }}</td>
+
+              <td class="px-4 py-4 text-right">
+                  <span class="font-bold text-sm"
+                        [class.text-violet-600]="client.level === 'VIP'"
+                        [class.text-amber-500]="client.level === 'GOLD'"
+                        [class.text-gray-500]="client.level === 'SILVER'">
+                    {{ client.points }}
+                  </span>
+                <span class="text-gray-400 text-xs ml-1">pts</span>
+              </td>
+
+              <td class="px-4 py-4 text-center">
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
+                        [class.bg-violet-100]="client.level === 'VIP'"
+                        [class.text-violet-700]="client.level === 'VIP'"
+                        [class.bg-amber-100]="client.level === 'GOLD'"
+                        [class.text-amber-700]="client.level === 'GOLD'"
+                        [class.bg-gray-100]="client.level === 'SILVER'"
+                        [class.text-gray-600]="client.level === 'SILVER'">
+                    {{ client.level === 'VIP' ? '💎' : client.level === 'GOLD' ? '🥇' : '🥈' }}
+                    {{ client.level }}
+                  </span>
+              </td>
+            </tr>
+          </ng-container>
+
+          <tr *ngIf="topClients.length === 0">
+            <td colspan="5" class="px-6 py-16 text-center">
+              <div class="text-3xl mb-3">📊</div>
+              <p class="text-sm font-semibold text-gray-500">Aucune donnée disponible</p>
             </td>
           </tr>
-          <tr *ngIf="!loadingData && topClients.length === 0">
-            <td colspan="5" class="px-6 py-8 text-center text-gray-400">Aucune donnée disponible.</td>
-          </tr>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
 
-  <div class="bg-white rounded-2xl border border-gray-100 p-6">
-    <h3 class="font-semibold text-dark mb-4">➕ Ajouter des points manuellement</h3>
-    <div *ngIf="addPointsMessage" class="mb-3 p-3 bg-green-50 text-green-700 rounded-xl text-sm">{{ addPointsMessage }}</div>
-    <div *ngIf="addPointsError" class="mb-3 p-3 bg-red-50 text-red-600 rounded-xl text-sm">{{ addPointsError }}</div>
-    <div class="flex gap-4 items-end flex-col md:flex-row">
-      <div class="flex-1 w-full relative">
-        <label class="block text-xs font-medium text-gray-600 mb-1">Utilisateur</label>
-        <div class="flex items-center gap-2">
-          <input
-            type="text"
-            [(ngModel)]="addPointsForm.target"
-            (ngModelChange)="onTargetInput($event)"
-            [readonly]="!!selectedUser"
-            [disabled]="addPointsLoading"
-            [placeholder]="selectedUser ? 'Client sélectionné' : 'Nom ou email'"
-            class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-primary readonly:bg-gray-50 readonly:text-gray-500 disabled:bg-gray-50 disabled:text-gray-400"
-          />
-          <button *ngIf="selectedUser" type="button" (click)="clearSelectedUser()" [disabled]="addPointsLoading" class="shrink-0 px-3 py-2 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60">
-            Modifier client
-          </button>
-        </div>
-        <div *ngIf="!selectedUser && addPointsForm.target && matchingUsers.length > 0" class="absolute z-10 mt-2 w-full max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
-          <button
-            *ngFor="let user of matchingUsers"
-            type="button"
-            (click)="selectUser(user)"
-            class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50"
-          >
-            <span class="min-w-0">
-              <span class="block truncate font-medium text-dark">{{ user.nom }}</span>
-              <span class="block truncate text-xs text-gray-400">{{ user.email }}</span>
-            </span>
-            <span class="shrink-0 rounded-full bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-600">#{{ user.id }}</span>
-          </button>
+    <!-- Ajout de points -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-5 border-b border-gray-50">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl flex items-center justify-center text-base" style="background: rgba(123,31,39,0.1);">➕</div>
+          <div>
+            <h3 class="font-serif text-base font-bold text-dark">Ajouter des points</h3>
+            <p class="text-xs text-gray-400 mt-0.5">Attribution manuelle</p>
+          </div>
         </div>
       </div>
-      <div class="flex-1 w-full">
-        <label class="block text-xs font-medium text-gray-600 mb-1">Points à ajouter</label>
-        <input type="number" [(ngModel)]="addPointsForm.points" (ngModelChange)="onPointsInput()" [disabled]="addPointsLoading" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-primary disabled:bg-gray-50 disabled:text-gray-400" />
+
+      <div class="p-6 space-y-4">
+        <div *ngIf="addPointsMessage" class="flex items-center gap-2 p-3 bg-green-50 text-green-700 rounded-xl text-xs font-medium">
+          <span>✓</span> {{ addPointsMessage }}
+        </div>
+        <div *ngIf="addPointsError" class="flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-medium">
+          <span>⚠️</span> {{ addPointsError }}
+        </div>
+
+        <div class="relative">
+          <label class="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Client</label>
+          <div class="flex items-center gap-2">
+            <input
+              type="text"
+              [(ngModel)]="addPointsForm.target"
+              (ngModelChange)="onTargetInput($event)"
+              [readonly]="!!selectedUser"
+              [disabled]="addPointsLoading"
+              [placeholder]="selectedUser ? 'Client sélectionné ✓' : 'Nom ou email...'"
+              class="w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-colors"
+              [class.border-green-200]="!!selectedUser"
+              [class.bg-green-50]="!!selectedUser"
+              [class.border-gray-200]="!selectedUser"
+            />
+            <button *ngIf="selectedUser" type="button" (click)="clearSelectedUser()"
+                    class="shrink-0 px-3 py-2.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+              ✕
+            </button>
+          </div>
+
+          <div *ngIf="!selectedUser && addPointsForm.target && matchingUsers.length > 0"
+               class="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl">
+            <button *ngFor="let user of matchingUsers" type="button" (click)="selectUser(user)"
+                    class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50 border-b last:border-b-0 border-gray-50 transition-colors">
+              <span class="min-w-0">
+                <span class="block truncate font-semibold text-dark text-sm">{{ user.nom }}</span>
+                <span class="block truncate text-xs text-gray-400">{{ user.email }}</span>
+              </span>
+              <span class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-500">#{{ user.id }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Points à ajouter</label>
+          <input type="number" [(ngModel)]="addPointsForm.points" (ngModelChange)="onPointsInput()"
+                 [disabled]="addPointsLoading"
+                 placeholder="Ex: 100"
+                 class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none transition-colors disabled:bg-gray-50 disabled:text-gray-400" />
+        </div>
+
+        <button (click)="addPoints()" [disabled]="addPointsLoading"
+                class="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          <span *ngIf="addPointsLoading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          <span>{{ addPointsLoading ? 'Ajout en cours...' : 'Ajouter les points' }}</span>
+        </button>
+
+        <p class="text-xs text-gray-400 text-center">
+          Les points sont crédités instantanément sur la carte fidélité du client.
+        </p>
       </div>
-      <button (click)="addPoints()" [disabled]="addPointsLoading" class="px-5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-light transition-colors disabled:opacity-60">
-        <span *ngIf="!addPointsLoading">Ajouter</span>
-        <span *ngIf="addPointsLoading">Ajout...</span>
-      </button>
     </div>
+
   </div>
 </div>

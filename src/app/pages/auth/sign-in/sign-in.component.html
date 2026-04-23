@@ -1,5 +1,5 @@
 <div class="min-h-screen flex">
-  <!-- Left panel – Branding -->
+  <!-- Left panel -->
   <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary-light to-accent relative overflow-hidden items-center justify-center">
     <div class="absolute inset-0 opacity-10">
       <div class="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
@@ -12,26 +12,17 @@
       <h1 class="font-serif text-4xl font-bold mb-4">Welcome back to Rawebet</h1>
       <p class="text-white/80 text-lg leading-relaxed">Your unified cultural center platform. Book events, watch films, join clubs — all in one place.</p>
       <div class="mt-10 flex justify-center gap-6 text-white/60 text-sm">
-        <div class="text-center">
-          <div class="text-2xl font-bold text-white">500+</div>
-          <div>Events</div>
-        </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold text-white">10K+</div>
-          <div>Members</div>
-        </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold text-white">50+</div>
-          <div>Clubs</div>
-        </div>
+        <div class="text-center"><div class="text-2xl font-bold text-white">500+</div><div>Events</div></div>
+        <div class="text-center"><div class="text-2xl font-bold text-white">10K+</div><div>Members</div></div>
+        <div class="text-center"><div class="text-2xl font-bold text-white">50+</div><div>Clubs</div></div>
       </div>
     </div>
   </div>
 
-  <!-- Right panel – Form -->
+  <!-- Right panel -->
   <div class="flex-1 flex items-center justify-center p-8 bg-surface">
     <div class="w-full max-w-md">
-      <!-- Mobile Logo -->
+
       <div class="lg:hidden flex items-center gap-3 mb-8">
         <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
           <span class="text-white font-bold text-lg">R</span>
@@ -42,21 +33,72 @@
       <h2 class="font-serif text-3xl font-bold text-dark mb-2">Sign In</h2>
       <p class="text-gray-500 mb-8">Enter your credentials to access your account</p>
 
+      <!-- Incident envoyé -->
+      <div *ngIf="photoSent" class="mb-5 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3">
+        <p class="text-orange-700 text-sm font-medium">
+          🔒 Incident signalé à l'administrateur. Pour débloquer votre accès, contactez le support.
+        </p>
+      </div>
+
+      <!-- BLOC CAMÉRA SÉCURITÉ -->
+      <div *ngIf="showCamera" class="mb-5 rounded-2xl overflow-hidden border-2 border-red-400">
+        <div class="bg-red-500 px-4 py-3 flex items-center gap-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-white animate-pulse"></span>
+          <span class="text-white font-semibold text-sm">Système de sécurité — Capture en cours</span>
+          <span class="ml-auto text-red-100 text-xs">5 tentatives détectées</span>
+        </div>
+        <div class="bg-gray-950 p-3">
+          <p class="text-red-300 text-xs mb-2 text-center">
+            Votre activité suspecte a déclenché le système. Une photo est capturée et envoyée à l'administrateur.
+          </p>
+          <div id="camera-container"
+               class="relative rounded-xl overflow-hidden bg-black"
+               style="min-height: 200px;">
+            <div *ngIf="!cameraReady && !cameraError"
+                 class="absolute inset-0 flex flex-col items-center justify-center gap-2">
+              <div class="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+              <span class="text-red-400 text-xs">Activation de la caméra...</span>
+            </div>
+            <div *ngIf="cameraReady && !photoCapturing"
+                 class="absolute inset-0 pointer-events-none flex items-center justify-center">
+              <div class="w-20 h-20 border-4 border-red-400 rounded-full animate-ping opacity-40"></div>
+            </div>
+          </div>
+          <div *ngIf="photoCapturing"
+               class="mt-2 text-center text-red-400 text-xs font-semibold animate-pulse">
+            📸 Capture en cours...
+          </div>
+          <div *ngIf="cameraError" class="mt-2 text-center text-orange-400 text-xs">{{ cameraError }}</div>
+        </div>
+      </div>
+
+      <!-- Avertissement tentatives -->
+      <div *ngIf="showAttemptWarning && !showCamera"
+           class="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+        <p class="text-amber-700 text-sm">
+          ⚠️ {{ failedAttempts }} tentative(s) échouée(s).
+          Il vous reste <strong>{{ remainingAttempts }}</strong> essai(s) avant activation de la caméra.
+        </p>
+      </div>
+
       <form (ngSubmit)="onSubmit()" class="space-y-5">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
           <input type="email" name="email" [(ngModel)]="model.email" required
-            placeholder="you@example.com"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm" />
+                 placeholder="you@example.com"
+                 [disabled]="photoSent"
+                 class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm disabled:opacity-50" />
         </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
           <div class="relative">
-            <input [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="model.password" required
-              placeholder="••••••••"
-              class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm pr-12" />
-            <button type="button" (click)="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <input [type]="showPassword ? 'text' : 'password'" name="password"
+                   [(ngModel)]="model.password" required placeholder="••••••••"
+                   [disabled]="photoSent"
+                   class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm pr-12 disabled:opacity-50" />
+            <button type="button" (click)="showPassword = !showPassword"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               {{ showPassword ? '🙈' : '👁️' }}
             </button>
           </div>
@@ -70,15 +112,67 @@
           <a routerLink="/auth/forgot-password" class="text-primary hover:text-primary-light font-medium">Forgot password?</a>
         </div>
 
-        <button type="submit" class="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors shadow-lg shadow-primary/20">
+        <button type="submit"
+                [disabled]="photoSent || showCamera"
+                class="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
           Sign In
         </button>
-        <p *ngIf="error" class="text-red-500 text-sm mt-2">{{ error }}</p>
+
+        <p *ngIf="error" class="text-red-500 text-sm p-3 bg-red-50 rounded-xl">{{ error }}</p>
+
+        <div class="relative py-2">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
+          <div class="relative flex justify-center">
+            <span class="bg-surface px-3 text-[11px] uppercase tracking-[0.2em] text-gray-400">or</span>
+          </div>
+        </div>
+
+        <!-- Boutons d'authentification alternative -->
+        <div class="grid grid-cols-1 gap-2">
+
+          <!-- Bouton 1 : Face ID natif (WebAuthn passkey platform) -->
+          <button type="button" (click)="useFaceId()"
+                  [disabled]="passkeyLoading || !supportsPasskey || photoSent"
+                  class="w-full py-3 rounded-xl border border-primary/20 bg-primary/5 text-primary font-semibold hover:bg-primary/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+            {{ passkeyLoading && passkeyMode === 'platform' ? 'Opening Face ID…' : 'Continue with Face ID (this device)' }}
+          </button>
+
+          <!-- Bouton 2 : Passkey cross-device (WebAuthn) -->
+          <button type="button" (click)="usePasskey()"
+                  [disabled]="passkeyLoading || !supportsPasskey || photoSent"
+                  class="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+            {{ passkeyLoading && passkeyMode === 'passkey' ? 'Opening Passkey…' : 'Continue with Passkey (cross-device)' }}
+          </button>
+
+          <!-- Bouton 3 : Face Login webcam (DeepFace custom) -->
+          <button type="button" (click)="openFaceLogin()"
+                  [disabled]="photoSent || showCamera"
+                  class="w-full py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-semibold hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+            </svg>
+            Continue with Webcam Face
+          </button>
+        </div>
+
+        <p *ngIf="!supportsPasskey" class="text-xs text-gray-400 text-center">Your browser does not support passkeys yet.</p>
+        <p *ngIf="passkeyError" class="text-red-500 text-sm">{{ passkeyError }}</p>
       </form>
 
       <div class="mt-6 text-center">
-        <p class="text-gray-500 text-sm">Don't have an account? <a routerLink="/auth/sign-up" class="text-primary font-semibold hover:text-primary-light">Create one</a></p>
+        <p class="text-gray-500 text-sm">Don't have an account?
+          <a routerLink="/auth/sign-up" class="text-primary font-semibold hover:text-primary-light">Create one</a>
+        </p>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Face Login Modal (en dehors du panel, au niveau racine) -->
+<app-face-login-modal
+  *ngIf="showFaceModal"
+  (closed)="onFaceModalClosed()">
+</app-face-login-modal>

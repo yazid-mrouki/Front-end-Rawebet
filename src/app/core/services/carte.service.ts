@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { of, tap } from 'rxjs';
+import { of, tap, scheduled, asyncScheduler } from 'rxjs';
 import {
   CarteFideliteResponse,
   FidelityHistoryResponse,
@@ -10,6 +10,7 @@ import {
   TopClientResponse,
   LoyaltyDashboardResponse,
   LoyaltyAdminOverviewResponse,
+  TransferRecipientResponse,
 } from '../models/carte.model';
 
 @Injectable({ providedIn: 'root' })
@@ -23,9 +24,8 @@ export class CarteService {
 
   getMaCarte() {
     if (this.cachedCarte) {
-      return of(this.cachedCarte);
+      return scheduled(of(this.cachedCarte), asyncScheduler);
     }
-
     return this.http.get<CarteFideliteResponse>(`${this.api}/carte/me`).pipe(
       tap((carte) => {
         this.cachedCarte = carte;
@@ -39,9 +39,8 @@ export class CarteService {
 
   getHistory() {
     if (this.cachedHistory) {
-      return of(this.cachedHistory);
+      return scheduled(of(this.cachedHistory), asyncScheduler);
     }
-
     return this.http.get<FidelityHistoryResponse[]>(`${this.api}/carte/history`).pipe(
       tap((history) => {
         this.cachedHistory = history || [];
@@ -51,9 +50,8 @@ export class CarteService {
 
   getRewards() {
     if (this.cachedRewards) {
-      return of(this.cachedRewards);
+      return scheduled(of(this.cachedRewards), asyncScheduler);
     }
-
     return this.http.get<any[]>(`${this.api}/carte/rewards`).pipe(
       tap((rewards) => {
         this.cachedRewards = rewards || [];
@@ -70,6 +68,13 @@ export class CarteService {
       `${this.api}/carte/transfer?toUserId=${toUserId}&points=${points}`,
       {},
       { responseType: 'text' },
+    );
+  }
+
+  searchTransferRecipients(query: string) {
+    const safeQuery = encodeURIComponent(query.trim());
+    return this.http.get<TransferRecipientResponse[]>(
+      `${this.api}/carte/transfer/recipients?query=${safeQuery}`,
     );
   }
 
