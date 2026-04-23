@@ -45,3 +45,9 @@ export interface LoyaltyAdminOverviewResponse {
   stats: CarteStatsResponse;
   topClients: TopClientResponse[];
 }
+
+export interface TransferRecipientResponse {
+  id: number;
+  nom: string;
+  email: string;
+}

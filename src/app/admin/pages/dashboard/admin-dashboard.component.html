@@ -14,7 +14,8 @@
           <option>This month</option>
           <option>This year</option>
         </select>
-        <button (click)="exportReport()" [disabled]="exportLoading" class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors disabled:opacity-60">
+        <button (click)="exportReport()" [disabled]="exportLoading"
+                class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors disabled:opacity-60">
           {{ exportLoading ? 'Export...' : 'Export Report' }}
         </button>
       </div>
@@ -23,11 +24,87 @@
     </div>
   </div>
 
-  <!-- ═══════════ KPI CARDS ═══════════ -->
+  <!-- ══ LIVE ACTIVITY FEED — bannière flottante ══ -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <!-- Header du feed -->
+    <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+          <span class="text-sm font-semibold text-dark">Live Activity Feed</span>
+        </div>
+        <span *ngIf="liveUnread > 0"
+              class="px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded-full">
+          {{ liveUnread }} nouveau{{ liveUnread > 1 ? 'x' : '' }}
+        </span>
+        <span *ngIf="liveUnread === 0"
+              class="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] font-semibold rounded-full">
+          À jour
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] text-gray-400">{{ filteredCount }} événement{{ filteredCount > 1 ? 's' : '' }}</span>
+        <button (click)="markFeedRead()"
+                class="text-[10px] text-primary hover:text-primary-light font-medium px-2 py-1 rounded-lg hover:bg-primary/5 transition-colors">
+          Tout lu
+        </button>
+        <button (click)="toggleLiveFeed()"
+                class="text-[10px] text-gray-400 hover:text-gray-600 font-medium px-2 py-1 rounded-lg hover:bg-gray-50 transition-colors">
+          {{ showLiveFeed ? 'Réduire ↑' : 'Afficher ↓' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Filtres ── -->
+    <div *ngIf="showLiveFeed" class="flex items-center gap-2 px-5 pt-3 overflow-x-auto">
+      <button *ngFor="let f of filters"
+              (click)="setFilter(f.key)"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-semibold shrink-0 transition-all"
+              [ngClass]="activeFilter === f.key ? f.activeClass : f.class">
+        <span>{{ f.icon }}</span>
+        <span>{{ f.label }}</span>
+        <span *ngIf="f.key !== 'all'"
+              class="ml-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+              [ngClass]="activeFilter === f.key ? 'bg-white/30' : 'bg-gray-100 text-gray-500'">
+          {{ liveActivities | filterByType:f.key }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Scroll horizontal des événements live -->
+    <div *ngIf="showLiveFeed" class="p-4 pt-3">
+      <!-- Aucun événement encore -->
+      <div *ngIf="filteredActivities.length === 0"
+           class="flex items-center gap-3 py-2 text-gray-400 text-xs">
+        <div *ngIf="activeFilter === 'all'"
+             class="w-5 h-5 border-2 border-gray-200 border-t-primary rounded-full animate-spin"></div>
+        <span>{{ activeFilter === 'all' ? 'En attente d\'activité...' : 'Aucun événement dans cette catégorie.' }}</span>
+      </div>
+
+      <!-- Défilement horizontal des cartes -->
+      <div *ngIf="filteredActivities.length > 0"
+           class="flex gap-3 overflow-x-auto pb-1 scrollbar-thin">
+        <div *ngFor="let activity of filteredActivities"
+             class="flex items-start gap-2.5 p-3 rounded-xl border shrink-0 min-w-[220px] max-w-[260px] transition-all"
+             [ngClass]="activity.color">
+          <span class="text-base shrink-0 mt-0.5">{{ activity.icon }}</span>
+          <div class="min-w-0">
+            <p class="text-xs font-semibold truncate">{{ activity.message }}</p>
+            <p *ngIf="activity.detail" class="text-[11px] opacity-70 truncate mt-0.5">{{ activity.detail }}</p>
+            <p class="text-[10px] opacity-50 mt-1">{{ formatTime(activity.timestamp) }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ KPI CARDS ══ -->
   <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-    <div *ngFor="let kpi of kpis" class="bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-lg transition-all group">
+    <div *ngFor="let kpi of kpis"
+         class="bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-lg transition-all group">
       <div class="flex items-center justify-between mb-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-xl" [ngClass]="kpi.color">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-xl"
+             [ngClass]="kpi.color">
           <span class="grayscale-0">{{ kpi.icon }}</span>
         </div>
         <span class="text-green-500 text-xs font-semibold bg-green-50 px-2 py-0.5 rounded-full">{{ kpi.change }}</span>
@@ -37,9 +114,29 @@
     </div>
   </div>
 
-  <!-- ═══════════ ROW 2: Revenue Chart + Ticket Distribution ═══════════ -->
+  <!-- ══ ML AI BANNER ══ -->
+  <a routerLink="/admin/ml"
+     class="flex items-center justify-between bg-gradient-to-r from-dark to-gray-800 rounded-2xl p-5 border border-gray-700 hover:from-primary hover:to-primary-light transition-all group cursor-pointer">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🤖</div>
+      <div>
+        <div class="font-bold text-white text-base">Intelligence Artificielle — Rawabet ML</div>
+        <div class="text-white/60 text-xs mt-0.5">Churn · Anomalie · Niveau fidélité · Recommandations · 4 modèles actifs</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="hidden sm:flex items-center gap-4 mr-4">
+        <div class="text-center"><div class="text-white font-bold text-sm">96%</div><div class="text-white/40 text-[10px]">Churn F1</div></div>
+        <div class="text-center"><div class="text-white font-bold text-sm">99%</div><div class="text-white/40 text-[10px]">Anomalie F1</div></div>
+        <div class="text-center"><div class="text-white font-bold text-sm">87%</div><div class="text-white/40 text-[10px]">Reward F1</div></div>
+      </div>
+      <span class="px-4 py-2 bg-white/20 text-white rounded-xl text-sm font-semibold group-hover:bg-white group-hover:text-primary transition-all">Analyser →</span>
+    </div>
+  </a>
+
+  <!-- ══ ROW 2: Revenue Chart + Ticket Distribution ══ -->
   <div class="grid lg:grid-cols-3 gap-6">
-    <!-- Revenue Chart (Bar) -->
+    <!-- Revenue Chart -->
     <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-6">
       <div class="flex items-center justify-between mb-6">
         <div>
@@ -51,13 +148,11 @@
           <button class="px-3 py-1 text-gray-500 rounded-md text-xs font-medium hover:bg-gray-100">Weekly</button>
         </div>
       </div>
-      <!-- Bar chart (CSS-only) -->
       <div class="flex items-end gap-2 h-48">
         <div *ngFor="let m of revenueMonths" class="flex-1 flex flex-col items-center gap-1">
           <div class="text-[10px] font-semibold text-dark">{{ m.value }}%</div>
           <div class="w-full bg-gradient-to-t from-primary to-primary-light rounded-t-lg transition-all duration-500 hover:from-accent hover:to-yellow-400 cursor-pointer"
-            [style.height.%]="m.value">
-          </div>
+               [style.height.%]="m.value"></div>
           <div class="text-[10px] text-gray-400">{{ m.month }}</div>
         </div>
       </div>
@@ -67,9 +162,8 @@
     <div class="bg-white rounded-2xl border border-gray-100 p-6">
       <h3 class="font-semibold text-dark mb-1">Ticket Distribution</h3>
       <p class="text-xs text-gray-400 mb-6">By event category</p>
-      <!-- Donut placeholder -->
       <div class="w-32 h-32 mx-auto mb-6 rounded-full border-[16px] border-blue-500 relative"
-        style="border-color: #3b82f6 #22c55e #a855f6 #d99a2d;">
+           style="border-color: #3b82f6 #22c55e #a855f6 #d99a2d;">
         <div class="absolute inset-0 flex items-center justify-center">
           <div class="text-center">
             <div class="text-lg font-bold text-dark">3,847</div>
@@ -88,8 +182,9 @@
     </div>
   </div>
 
-  <!-- ═══════════ ROW 3: Recent Events Table + Activity Feed ═══════════ -->
+  <!-- ══ ROW 3: Events Table + Live Feed détaillé ══ -->
   <div class="grid lg:grid-cols-5 gap-6">
+
     <!-- Events Table -->
     <div class="lg:col-span-3 bg-white rounded-2xl border border-gray-100 overflow-hidden">
       <div class="p-6 pb-0 flex items-center justify-between">
@@ -102,62 +197,93 @@
       <div class="overflow-x-auto">
         <table class="w-full text-sm mt-4">
           <thead>
-            <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
-              <th class="px-6 py-3 font-medium">Event</th>
-              <th class="px-4 py-3 font-medium">Type</th>
-              <th class="px-4 py-3 font-medium">Date</th>
-              <th class="px-4 py-3 font-medium">Tickets</th>
-              <th class="px-4 py-3 font-medium">Status</th>
-            </tr>
+          <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
+            <th class="px-6 py-3 font-medium">Event</th>
+            <th class="px-4 py-3 font-medium">Type</th>
+            <th class="px-4 py-3 font-medium">Date</th>
+            <th class="px-4 py-3 font-medium">Tickets</th>
+            <th class="px-4 py-3 font-medium">Status</th>
+          </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let e of recentEvents" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-              <td class="px-6 py-3.5">
-                <div class="flex items-center gap-3">
-                  <span class="text-xl">{{ e.emoji }}</span>
-                  <span class="font-medium text-dark">{{ e.name }}</span>
+          <tr *ngFor="let e of recentEvents" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+            <td class="px-6 py-3.5">
+              <div class="flex items-center gap-3">
+                <span class="text-xl">{{ e.emoji }}</span>
+                <span class="font-medium text-dark">{{ e.name }}</span>
+              </div>
+            </td>
+            <td class="px-4 py-3.5 text-gray-500 text-xs">{{ e.type }}</td>
+            <td class="px-4 py-3.5 text-gray-500 text-xs">{{ e.date }}</td>
+            <td class="px-4 py-3.5">
+              <div class="flex items-center gap-2">
+                <div class="w-20 bg-gray-100 rounded-full h-1.5">
+                  <div class="bg-primary rounded-full h-1.5" [style.width.%]="(e.tickets / e.capacity) * 100"></div>
                 </div>
-              </td>
-              <td class="px-4 py-3.5 text-gray-500 text-xs">{{ e.type }}</td>
-              <td class="px-4 py-3.5 text-gray-500 text-xs">{{ e.date }}</td>
-              <td class="px-4 py-3.5">
-                <div class="flex items-center gap-2">
-                  <div class="w-20 bg-gray-100 rounded-full h-1.5">
-                    <div class="bg-primary rounded-full h-1.5" [style.width.%]="(e.tickets / e.capacity) * 100"></div>
-                  </div>
-                  <span class="text-xs text-gray-500">{{ e.tickets }}/{{ e.capacity }}</span>
-                </div>
-              </td>
-              <td class="px-4 py-3.5">
-                <span [class]="getStatusClass(e.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ e.status }}</span>
-              </td>
-            </tr>
+                <span class="text-xs text-gray-500">{{ e.tickets }}/{{ e.capacity }}</span>
+              </div>
+            </td>
+            <td class="px-4 py-3.5">
+              <span [class]="getStatusClass(e.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ e.status }}</span>
+            </td>
+          </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Activity Feed -->
-    <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="font-semibold text-dark">Live Activity</h3>
-        <span class="flex items-center gap-1.5 text-[10px] text-green-500 font-semibold">
-          <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Real-time
+    <!-- ══ Live Feed détaillé avec filtres ══ -->
+    <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+        <div class="flex items-center gap-2">
+          <h3 class="font-semibold text-dark text-sm">Live Activity</h3>
+          <span class="flex items-center gap-1 text-[10px] text-green-500 font-semibold">
+            <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Real-time
+          </span>
+        </div>
+        <span *ngIf="liveUnread > 0"
+              class="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full animate-pulse">
+          {{ liveUnread }}
         </span>
       </div>
-      <div class="space-y-1 max-h-80 overflow-y-auto scrollbar-thin">
-        <div *ngFor="let a of activityFeed" class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors">
-          <div class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-sm shrink-0">{{ a.icon }}</div>
-          <div class="min-w-0">
-            <p class="text-xs text-gray-700 leading-relaxed">{{ a.text }}</p>
-            <p class="text-[10px] text-gray-400 mt-0.5">{{ a.time }}</p>
+
+      <!-- Filtres mini dans le feed détaillé -->
+      <div class="flex gap-1.5 px-4 pt-3 overflow-x-auto">
+        <button *ngFor="let f of filters"
+                (click)="setFilter(f.key)"
+                class="px-2 py-1 rounded-lg border text-[10px] font-semibold shrink-0 transition-all"
+                [ngClass]="activeFilter === f.key ? f.activeClass : f.class">
+          {{ f.icon }} {{ f.label }}
+        </button>
+      </div>
+
+      <div class="divide-y divide-gray-50 max-h-80 overflow-y-auto mt-2">
+        <!-- Pas encore d'activité — spinner seulement pour "Tous" -->
+        <div *ngIf="filteredActivities.length === 0"
+             class="flex flex-col items-center justify-center py-10 text-gray-300">
+          <div *ngIf="activeFilter === 'all'"
+               class="w-8 h-8 border-2 border-gray-200 border-t-primary rounded-full animate-spin mb-3"></div>
+          <p class="text-xs">{{ activeFilter === 'all' ? 'En attente d\'activité...' : 'Aucun événement.' }}</p>
+        </div>
+
+        <!-- Liste des activités live filtrées -->
+        <div *ngFor="let activity of filteredActivities"
+             class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50/50 transition-colors">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 border"
+               [ngClass]="activity.color">
+            {{ activity.icon }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-dark">{{ activity.message }}</p>
+            <p *ngIf="activity.detail" class="text-[11px] text-gray-500 truncate mt-0.5">{{ activity.detail }}</p>
+            <p class="text-[10px] text-gray-300 mt-0.5">{{ formatTime(activity.timestamp) }}</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════ ROW 4: Top Members + Subscriptions + Quick Actions ═══════════ -->
+  <!-- ══ ROW 4: Top Members + Client Tiers + Quick Actions ══ -->
   <div class="grid lg:grid-cols-3 gap-6">
 
     <!-- Top Members -->
@@ -167,7 +293,8 @@
         <a routerLink="/admin/users" class="text-primary text-xs font-semibold hover:text-primary-light">View All →</a>
       </div>
       <div class="space-y-3">
-        <div *ngFor="let m of topMembers; let i = index" class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors">
+        <div *ngFor="let m of topMembers; let i = index"
+             class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition-colors">
           <div class="w-6 text-xs font-bold text-gray-300">#{{ i + 1 }}</div>
           <div class="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center">
             <span class="text-primary font-semibold text-sm">{{ m.avatar }}</span>
@@ -178,10 +305,14 @@
           </div>
           <div class="text-xs text-gray-400">{{ m.events }} events</div>
         </div>
+        <!-- Placeholder si vide -->
+        <div *ngIf="topMembers.length === 0" class="text-center py-6 text-gray-300 text-xs">
+          Chargement...
+        </div>
       </div>
     </div>
 
-    <!-- Client Tier Breakdown -->
+    <!-- Client Tiers -->
     <div class="bg-white rounded-2xl border border-gray-100 p-6">
       <h3 class="font-semibold text-dark mb-1">Client Tiers</h3>
       <p class="text-xs text-gray-400 mb-6">Distribution des clients par niveau fidélité</p>
@@ -203,31 +334,47 @@
     <div class="bg-white rounded-2xl border border-gray-100 p-6">
       <h3 class="font-semibold text-dark mb-4">Quick Actions</h3>
       <div class="grid grid-cols-2 gap-3">
-        <a routerLink="/admin/events" class="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group">
+        <a routerLink="/admin/events"
+           class="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group">
           <span class="text-2xl group-hover:scale-110 transition-transform">🎭</span>
           <span class="text-xs font-medium text-gray-600 group-hover:text-primary">New Event</span>
         </a>
-        <a routerLink="/admin/films" class="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group">
+        <a routerLink="/admin/films"
+           class="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group">
           <span class="text-2xl group-hover:scale-110 transition-transform">🎬</span>
           <span class="text-xs font-medium text-gray-600 group-hover:text-primary">Add Film</span>
         </a>
-        <a routerLink="/admin/users" class="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group">
-          <span class="text-2xl group-hover:scale-110 transition-transform">👤</span>
+        <a routerLink="/admin/users"
+           class="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group">
+          <span class="text-2xl group-hover:scale-110 transition-transform">👥</span>
           <span class="text-xs font-medium text-gray-600 group-hover:text-primary">Manage Users</span>
         </a>
-        <a routerLink="/admin/notifications" class="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group">
-          <span class="text-2xl group-hover:scale-110 transition-transform">📢</span>
+        <a routerLink="/admin/notifications"
+           class="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group">
+          <span class="text-2xl group-hover:scale-110 transition-transform">🔔</span>
           <span class="text-xs font-medium text-gray-600 group-hover:text-primary">Send Notification</span>
         </a>
-        <a routerLink="/admin/logistics" class="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group">
+        <a routerLink="/admin/logistics"
+           class="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group">
           <span class="text-2xl group-hover:scale-110 transition-transform">📦</span>
           <span class="text-xs font-medium text-gray-600 group-hover:text-primary">Logistics</span>
         </a>
-        <a routerLink="/admin/feedback" class="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group">
+        <a routerLink="/admin/feedback"
+           class="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group">
           <span class="text-2xl group-hover:scale-110 transition-transform">📊</span>
           <span class="text-xs font-medium text-gray-600 group-hover:text-primary">Reports</span>
+        </a>
+        <a routerLink="/admin/ml"
+           class="col-span-2 flex items-center gap-3 p-4 bg-dark/5 border border-dark/10 rounded-xl hover:bg-primary/10 hover:border-primary/30 transition-all cursor-pointer group">
+          <span class="text-2xl group-hover:scale-110 transition-transform">🤖</span>
+          <div>
+            <div class="text-xs font-semibold text-dark group-hover:text-primary">Intelligence AI</div>
+            <div class="text-[10px] text-gray-400">Analyser les clients avec le ML</div>
+          </div>
+          <span class="ml-auto text-xs text-gray-400 group-hover:text-primary font-semibold">→</span>
         </a>
       </div>
     </div>
   </div>
+
 </div>

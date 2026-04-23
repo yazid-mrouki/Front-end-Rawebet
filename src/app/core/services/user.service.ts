@@ -1,7 +1,16 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { UserResponse, UpdateProfileRequest, ChangePasswordRequest, RegisterRequest } from '../models/user.model';
+import {
+  UserResponse,
+  UserSummaryResponse,
+  UpdateProfileRequest,
+  ChangePasswordRequest,
+  RegisterRequest,
+  AdminUpdateUserRequest,
+  BanRequest,
+  Page,
+} from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -9,34 +18,47 @@ export class UserService {
 
   constructor(private http: HttpClient) {}
 
-  getMe() { return this.http.get<UserResponse>(`${this.api}/users/me`); }
+  // ── Profil connecté ──────────────────────────────────────────────────
+  getMe() {
+    return this.http.get<UserResponse>(`${this.api}/users/me`);
+  }
 
   updateMe(body: UpdateProfileRequest) {
     return this.http.put<UserResponse>(`${this.api}/users/me/update`, body);
   }
 
+  uploadMyAvatar(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<UserResponse>(`${this.api}/users/me/avatar`, formData);
+  }
+
   changePassword(body: ChangePasswordRequest) {
-    return this.http.put(`${this.api}/users/me/password`, body, {
-      responseType: 'text'
-    });
+    return this.http.put(`${this.api}/users/me/password`, body, { responseType: 'text' });
   }
 
-  getAllUsers() { return this.http.get<UserResponse[]>(`${this.api}/users/all`); }
+  // ── Admin — liste paginée ────────────────────────────────────────────
+  getAllUsers(page = 0, size = 20, sort = 'createdAt', direction = 'desc') {
+    const params = new HttpParams()
+      .set('page', page)
+      .set('size', size)
+      .set('sort', sort)
+      .set('direction', direction);
 
-  banUser(id: number) {
-    return this.http.put(`${this.api}/users/${id}/ban`, {}, {
-      responseType: 'text'
-    });
+    return this.http.get<Page<UserSummaryResponse>>(`${this.api}/users/all`, { params });
   }
 
-  unbanUser(id: number) {
-    return this.http.put(`${this.api}/users/${id}/unban`, {}, {
-      responseType: 'text'
-    });
+  // ── Admin — CRUD ─────────────────────────────────────────────────────
+  getUserById(id: number) {
+    return this.http.get<UserResponse>(`${this.api}/users/get/${id}`);
   }
 
-  createUserByAdmin(body: { nom: string; email: string; password: string; roles: string[] }) {
-    return this.http.post<any>(`${this.api}/users/add-with-role`, body);
+  createUserByAdmin(body: RegisterRequest) {
+    return this.http.post<UserResponse>(`${this.api}/users/add-with-role`, body);
+  }
+
+  updateUserByAdmin(id: number, body: AdminUpdateUserRequest) {
+    return this.http.put<UserResponse>(`${this.api}/users/update/${id}`, body);
   }
 
   updateUserRoles(id: number, roles: string[]) {
@@ -45,5 +67,19 @@ export class UserService {
 
   deleteUser(id: number) {
     return this.http.delete<void>(`${this.api}/users/delete/${id}`);
+  }
+
+  // ── BAN TEMPORAIRE ──────────────────────────────────────────────────
+  /**
+   * Ban avec durée configurable.
+   * @param banUntil  null = ban permanent | date ISO = ban temporaire
+   * @param reason    raison obligatoire
+   */
+  banUser(id: number, request: BanRequest) {
+    return this.http.put<UserResponse>(`${this.api}/users/${id}/ban`, request);
+  }
+
+  unbanUser(id: number) {
+    return this.http.put<UserResponse>(`${this.api}/users/${id}/unban`, {});
   }
 }

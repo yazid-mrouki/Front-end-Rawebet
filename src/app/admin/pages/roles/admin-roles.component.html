@@ -1,207 +1,346 @@
-<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
-  <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+<div class="p-6 lg:p-8 min-h-full space-y-5" style="background:#faf8f5;">
+
+  <!-- Header -->
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <h1 class="font-serif text-2xl font-bold text-dark">Gestion des rôles</h1>
-      <p class="text-sm text-gray-400 mt-1">Créer, modifier et supprimer les rôles avec leurs permissions.</p>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <div style="width:6px;height:6px;background:#d99a2d;border-radius:50%;"></div>
+        <span style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Administration</span>
+      </div>
+      <h1 class="font-serif text-2xl lg:text-3xl font-bold" style="color:#1a1a2e;">Gestion des rôles</h1>
+      <p style="color:#6b7280;font-size:13px;margin-top:3px;">Créer, modifier et supprimer les rôles avec leurs permissions.</p>
     </div>
-    <button
-      type="button"
-      (click)="openCreateRole()"
-      class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
-    >
-      Create role
+    <button type="button" (click)="openCreateRole()"
+            style="padding:10px 20px;background:#7b1f27;color:white;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
+      + Créer un rôle
     </button>
   </div>
 
-  <div class="bg-white rounded-2xl border border-gray-100 p-6 space-y-4 max-w-5xl shadow-sm">
-    <div class="flex items-center justify-between gap-3 flex-wrap">
+  <!-- Messages -->
+  <div *ngIf="roleMessage" style="padding:12px 16px;border-radius:12px;background:#d1fae5;color:#065f46;font-size:13px;border:0.5px solid #a7f3d0;">{{ roleMessage }}</div>
+  <div *ngIf="roleError"   style="padding:12px 16px;border-radius:12px;background:#fee2e2;color:#991b1b;font-size:13px;border:0.5px solid #fecaca;">{{ roleError }}</div>
+
+  <!-- Tableau des rôles -->
+  <div style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;overflow:hidden;">
+    <div style="padding:16px 20px;border-bottom:0.5px solid #f0ece6;display:flex;align-items:center;justify-content:space-between;">
       <div>
-        <h3 class="font-semibold text-dark">Rôles existants</h3>
-        <p class="text-xs text-gray-400 mt-1">Chaque ligne affiche le rôle, ses permissions et les actions possibles.</p>
+        <h3 style="font-weight:700;color:#1a1a2e;font-size:15px;margin:0 0 2px;">Rôles existants</h3>
+        <p style="font-size:12px;color:#9ca3af;margin:0;">Permissions groupées par module</p>
       </div>
-      <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">{{ roles.length }} rôles</span>
+      <span style="font-size:12px;font-weight:600;padding:3px 12px;border-radius:99px;background:#faf8f5;border:0.5px solid #e8e4dd;color:#374151;">
+        {{ roles.length }} rôles
+      </span>
     </div>
 
-    <div *ngIf="rolesLoading" class="text-sm text-gray-400 py-6 text-center">Chargement des rôles...</div>
+    <div *ngIf="rolesLoading" style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Chargement des rôles...</div>
 
-    <div *ngIf="!rolesLoading" class="overflow-x-auto border border-gray-200 rounded-2xl">
-      <table class="w-full text-sm bg-white">
+    <div *ngIf="!rolesLoading" style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead>
-          <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
-            <th class="text-left px-4 py-3 font-semibold">Rôle</th>
-            <th class="text-left px-4 py-3 font-semibold">Permissions</th>
-            <th class="text-right px-4 py-3 font-semibold">Actions</th>
-          </tr>
+        <tr style="background:#faf8f5;border-bottom:0.5px solid #e8e4dd;">
+          <th style="padding:10px 20px;text-align:left;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;width:140px;">Rôle</th>
+          <th style="padding:10px 14px;text-align:center;font-size:11px;color:#e57373;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">🎬 Cinéma</th>
+          <th style="padding:10px 14px;text-align:center;font-size:11px;color:#64b5f6;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">👥 Club</th>
+          <th style="padding:10px 14px;text-align:center;font-size:11px;color:#81c784;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">🎭 Événement</th>
+          <th style="padding:10px 14px;text-align:center;font-size:11px;color:#d99a2d;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">⭐ Fidélité</th>
+          <th style="padding:10px 14px;text-align:right;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Actions</th>
+        </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let role of roles" class="border-t border-gray-100 hover:bg-gray-50/60">
-            <td class="px-4 py-3">
-              <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-semibold">{{ role.name }}</span>
-            </td>
-            <td class="px-4 py-3">
-              <div class="flex flex-wrap gap-2">
-                <span *ngFor="let permission of role.permissions" class="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-[11px] font-medium">
-                  {{ permission }}
-                </span>
-                <span *ngIf="!role.permissions.length" class="text-xs text-gray-400">Aucune permission</span>
-              </div>
-            </td>
-            <td class="px-4 py-3">
-              <div class="flex justify-end gap-2">
-                <button
-                  (click)="openEditRole(role)"
-                  [disabled]="role.name === 'SUPER_ADMIN'"
-                  class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Modifier
-                </button>
-                <button
-                  (click)="deleteRole(role)"
-                  [disabled]="role.name === 'SUPER_ADMIN'"
-                  class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Supprimer
-                </button>
-              </div>
-            </td>
-          </tr>
+        <tr *ngFor="let role of roles" style="border-bottom:0.5px solid #f5f2ee;">
 
-          <tr *ngIf="roles.length === 0">
-            <td colspan="3" class="px-4 py-10 text-center text-gray-400">Aucun rôle trouvé.</td>
-          </tr>
+          <!-- Nom du rôle -->
+          <td style="padding:14px 20px;">
+              <span style="font-size:12px;font-weight:700;padding:4px 12px;border-radius:99px;"
+                    [style]="role.name==='SUPER_ADMIN'
+                      ? 'background:rgba(123,31,39,0.1);color:#7b1f27;border:0.5px solid rgba(123,31,39,0.2);'
+                      : role.name==='CLIENT'
+                      ? 'background:#f0f9ff;color:#0369a1;border:0.5px solid #bae6fd;'
+                      : 'background:#f3f4f6;color:#374151;border:0.5px solid #e5e7eb;'">
+                {{ role.name }}
+              </span>
+          </td>
+
+          <!-- Colonne Cinéma -->
+          <td style="padding:14px;text-align:center;">
+            <div style="display:flex;flex-direction:column;gap:3px;align-items:center;">
+              <ng-container *ngFor="let action of ['CREATE','READ','UPDATE','DELETE']">
+                  <span *ngIf="hasPermission(role, 'CINEMA', action)"
+                        style="font-size:10px;font-weight:600;padding:1px 8px;border-radius:99px;background:rgba(229,115,115,0.12);color:#c62828;white-space:nowrap;">
+                    {{ action }}
+                  </span>
+              </ng-container>
+              <span *ngIf="!hasCategoryPerms(role, 'CINEMA')" style="font-size:11px;color:#d1d5db;">—</span>
+            </div>
+          </td>
+
+          <!-- Colonne Club -->
+          <td style="padding:14px;text-align:center;">
+            <div style="display:flex;flex-direction:column;gap:3px;align-items:center;">
+              <ng-container *ngFor="let action of ['CREATE','READ','UPDATE','DELETE','MANAGE']">
+                  <span *ngIf="hasPermission(role, 'CLUB', action)"
+                        style="font-size:10px;font-weight:600;padding:1px 8px;border-radius:99px;background:rgba(100,181,246,0.15);color:#1565c0;white-space:nowrap;">
+                    {{ action }}
+                  </span>
+              </ng-container>
+              <span *ngIf="!hasCategoryPerms(role, 'CLUB')" style="font-size:11px;color:#d1d5db;">—</span>
+            </div>
+          </td>
+
+          <!-- Colonne Événement -->
+          <td style="padding:14px;text-align:center;">
+            <div style="display:flex;flex-direction:column;gap:3px;align-items:center;">
+              <ng-container *ngFor="let action of ['CREATE','READ','UPDATE','DELETE']">
+                  <span *ngIf="hasPermission(role, 'EVENT', action)"
+                        style="font-size:10px;font-weight:600;padding:1px 8px;border-radius:99px;background:rgba(129,199,132,0.15);color:#2e7d32;white-space:nowrap;">
+                    {{ action }}
+                  </span>
+              </ng-container>
+              <span *ngIf="!hasCategoryPerms(role, 'EVENT')" style="font-size:11px;color:#d1d5db;">—</span>
+            </div>
+          </td>
+
+          <!-- Colonne Fidélité -->
+          <td style="padding:14px;text-align:center;">
+            <div style="display:flex;flex-direction:column;gap:3px;align-items:center;">
+              <ng-container *ngFor="let action of ['CREATE','READ','UPDATE','DELETE']">
+                  <span *ngIf="hasPermission(role, 'FIDELITY', action)"
+                        style="font-size:10px;font-weight:600;padding:1px 8px;border-radius:99px;background:rgba(217,154,45,0.12);color:#b45309;white-space:nowrap;">
+                    {{ action }}
+                  </span>
+              </ng-container>
+              <span *ngIf="!hasCategoryPerms(role, 'FIDELITY')" style="font-size:11px;color:#d1d5db;">—</span>
+            </div>
+          </td>
+
+          <!-- Actions -->
+          <td style="padding:14px;text-align:right;">
+            <div style="display:flex;justify-content:flex-end;gap:6px;">
+              <button (click)="openEditRole(role)"
+                      [disabled]="role.name === 'SUPER_ADMIN'"
+                      style="padding:5px 14px;background:rgba(217,154,45,0.1);color:#b45309;border:0.5px solid rgba(217,154,45,0.3);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;"
+                      [style.opacity]="role.name==='SUPER_ADMIN' ? '0.35' : '1'">
+                Modifier
+              </button>
+              <button (click)="deleteRole(role)"
+                      [disabled]="role.name === 'SUPER_ADMIN'"
+                      style="padding:5px 14px;background:rgba(220,38,38,0.06);color:#991b1b;border:0.5px solid rgba(220,38,38,0.2);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;"
+                      [style.opacity]="role.name==='SUPER_ADMIN' ? '0.35' : '1'">
+                Supprimer
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="roles.length === 0">
+          <td colspan="6" style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Aucun rôle trouvé.</td>
+        </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div class="bg-white rounded-2xl border border-gray-100 p-6 space-y-4 max-w-5xl shadow-sm">
-    <div class="flex items-center justify-between gap-3 flex-wrap">
-      <div>
-        <h3 class="font-semibold text-dark">Matrice CRUD par module</h3>
-        <p class="text-xs text-gray-400 mt-1">Lecture seule pour vérifier rapidement quelles permissions existent par module.</p>
+  <!-- MODAL MODIFIER RÔLE -->
+  <div *ngIf="showEditRoleModal" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);padding:16px;">
+    <div style="background:white;border-radius:18px;width:100%;max-width:680px;overflow:hidden;border:0.5px solid #e8e4dd;max-height:90vh;display:flex;flex-direction:column;">
+
+      <div style="padding:18px 22px;border-bottom:0.5px solid #f0ece6;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <div>
+          <h3 style="font-weight:700;color:#1a1a2e;font-size:16px;margin:0 0 2px;">Modifier le rôle</h3>
+          <p style="font-size:12px;color:#9ca3af;margin:0;">Ajuste le nom et les permissions.</p>
+        </div>
+        <button type="button" (click)="closeEditRole()"
+                style="background:none;border:none;font-size:18px;color:#9ca3af;cursor:pointer;line-height:1;">✕</button>
       </div>
-    </div>
 
-    <div *ngIf="permissionsLoading" class="text-sm text-gray-400 py-6 text-center">Chargement de la matrice...</div>
+      <div style="padding:20px 22px;overflow-y:auto;flex:1;">
+        <input [(ngModel)]="editingRole.name"
+               style="width:100%;padding:9px 12px;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;outline:none;background:#faf8f5;box-sizing:border-box;margin-bottom:16px;"
+               placeholder="Nom du rôle"/>
 
-    <div *ngIf="!permissionsLoading" class="overflow-x-auto border border-gray-200 rounded-2xl">
-      <table class="w-full text-sm bg-white">
-        <thead>
-          <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
-            <th class="text-left px-4 py-3 font-semibold">CRUD</th>
-            <th class="text-center px-4 py-3 font-semibold">Cinema</th>
-            <th class="text-center px-4 py-3 font-semibold">Club</th>
-            <th class="text-center px-4 py-3 font-semibold">Event</th>
-            <th class="text-center px-4 py-3 font-semibold">Fidelity</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of crudRows" class="border-t border-gray-100 hover:bg-gray-50/60">
-            <td class="px-4 py-3 font-semibold text-dark">{{ row.label }}</td>
-            <td class="px-4 py-3 text-center">
-              <span class="inline-flex min-w-20 justify-center rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="getCellStyle(row.cinema)">{{ getCellPermission(row, 'cinema') }}</span>
-            </td>
-            <td class="px-4 py-3 text-center">
-              <span class="inline-flex min-w-20 justify-center rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="getCellStyle(row.club)">{{ getCellPermission(row, 'club') }}</span>
-            </td>
-            <td class="px-4 py-3 text-center">
-              <span class="inline-flex min-w-20 justify-center rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="getCellStyle(row.event)">{{ getCellPermission(row, 'event') }}</span>
-            </td>
-            <td class="px-4 py-3 text-center">
-              <span class="inline-flex min-w-20 justify-center rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="getCellStyle(row.fidelity)">{{ getCellPermission(row, 'fidelity') }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        <!-- Permissions par colonne -->
+        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;font-weight:600;">Permissions</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;">
+
+          <!-- Cinéma -->
+          <div style="background:#fef2f2;border-radius:12px;padding:12px;border:0.5px solid rgba(220,38,38,0.15);">
+            <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">🎬 Cinéma</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label *ngFor="let perm of getPermsByModule('CINEMA')"
+                     style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#374151;">
+                <input type="checkbox"
+                       [checked]="editingRole.permissions.includes(perm.name)"
+                       (change)="toggleEditPermission(perm.name, $any($event.target).checked)"
+                       style="accent-color:#7b1f27;width:14px;height:14px;"/>
+                {{ perm.action }}
+              </label>
+            </div>
+          </div>
+
+          <!-- Club -->
+          <div style="background:#eff6ff;border-radius:12px;padding:12px;border:0.5px solid rgba(59,130,246,0.15);">
+            <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">👥 Club</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label *ngFor="let perm of getPermsByModule('CLUB')"
+                     style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#374151;">
+                <input type="checkbox"
+                       [checked]="editingRole.permissions.includes(perm.name)"
+                       (change)="toggleEditPermission(perm.name, $any($event.target).checked)"
+                       style="accent-color:#7b1f27;width:14px;height:14px;"/>
+                {{ perm.action }}
+              </label>
+            </div>
+          </div>
+
+          <!-- Événement -->
+          <div style="background:#f0fdf4;border-radius:12px;padding:12px;border:0.5px solid rgba(34,197,94,0.15);">
+            <div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">🎭 Événement</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label *ngFor="let perm of getPermsByModule('EVENT')"
+                     style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#374151;">
+                <input type="checkbox"
+                       [checked]="editingRole.permissions.includes(perm.name)"
+                       (change)="toggleEditPermission(perm.name, $any($event.target).checked)"
+                       style="accent-color:#7b1f27;width:14px;height:14px;"/>
+                {{ perm.action }}
+              </label>
+            </div>
+          </div>
+
+          <!-- Fidélité -->
+          <div style="background:#fffbeb;border-radius:12px;padding:12px;border:0.5px solid rgba(217,154,45,0.2);">
+            <div style="font-size:11px;font-weight:700;color:#b45309;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">⭐ Fidélité</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label *ngFor="let perm of getPermsByModule('FIDELITY')"
+                     style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#374151;">
+                <input type="checkbox"
+                       [checked]="editingRole.permissions.includes(perm.name)"
+                       (change)="toggleEditPermission(perm.name, $any($event.target).checked)"
+                       style="accent-color:#7b1f27;width:14px;height:14px;"/>
+                {{ perm.action }}
+              </label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div style="padding:16px 22px;border-top:0.5px solid #f0ece6;display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;">
+        <button (click)="closeEditRole()"
+                style="padding:9px 20px;background:#faf8f5;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;cursor:pointer;">
+          Annuler
+        </button>
+        <button (click)="saveRoleUpdate()" [disabled]="creating"
+                style="padding:9px 20px;background:#7b1f27;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;"
+                [style.opacity]="creating ? '0.6' : '1'">
+          {{ creating ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
     </div>
   </div>
 
-  <div *ngIf="showEditRoleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-    <div class="w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+  <!-- MODAL CRÉER RÔLE -->
+  <div *ngIf="showCreateRoleModal" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);padding:16px;">
+    <div style="background:white;border-radius:18px;width:100%;max-width:680px;overflow:hidden;border:0.5px solid #e8e4dd;max-height:90vh;display:flex;flex-direction:column;">
+
+      <div style="padding:18px 22px;border-bottom:0.5px solid #f0ece6;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
         <div>
-          <h3 class="font-semibold text-dark">Modifier le rôle</h3>
-          <p class="text-xs text-gray-400 mt-1">Ajuste le nom et les permissions de ce rôle.</p>
+          <h3 style="font-weight:700;color:#1a1a2e;font-size:16px;margin:0 0 2px;">Créer un rôle</h3>
+          <p style="font-size:12px;color:#9ca3af;margin:0;">Définissez le nom et les permissions par module.</p>
         </div>
-        <button type="button" (click)="closeEditRole()" class="text-gray-400 hover:text-gray-600">✕</button>
+        <button type="button" (click)="closeCreateRole()"
+                style="background:none;border:none;font-size:18px;color:#9ca3af;cursor:pointer;line-height:1;">✕</button>
       </div>
 
-      <div class="p-6 space-y-4">
-        <input
-          [(ngModel)]="editingRole.name"
-          class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none focus:border-primary"
-          placeholder="Nom du rôle"
-        />
+      <div style="padding:20px 22px;overflow-y:auto;flex:1;">
+        <input [(ngModel)]="roleForm.name"
+               style="width:100%;padding:9px 12px;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;outline:none;background:#faf8f5;box-sizing:border-box;margin-bottom:16px;"
+               placeholder="Nom du rôle (ex: ADMIN_FILM)"/>
 
-        <div class="border border-gray-200 rounded-xl p-3">
-          <p class="text-xs text-gray-500 mb-2">Permissions du rôle</p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-72 overflow-y-auto">
-            <label *ngFor="let permission of permissions" class="flex items-center gap-2 text-xs text-gray-700">
-              <input
-                type="checkbox"
-                [checked]="editingRole.permissions.includes(permission.name)"
-                (change)="toggleEditPermission(permission.name, $any($event.target).checked)"
-              />
-              <span>{{ permission.name }}</span>
-            </label>
+        <div *ngIf="permissionsLoading" style="text-align:center;color:#9ca3af;font-size:13px;padding:20px;">
+          Chargement des permissions...
+        </div>
+
+        <div *ngIf="!permissionsLoading">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:10px;font-weight:600;">Permissions par module</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;">
+
+            <!-- Cinéma -->
+            <div style="background:#fef2f2;border-radius:12px;padding:12px;border:0.5px solid rgba(220,38,38,0.15);">
+              <div style="font-size:11px;font-weight:700;color:#991b1b;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">🎬 Cinéma</div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <label *ngFor="let perm of getPermsByModule('CINEMA')"
+                       style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#374151;">
+                  <input type="checkbox"
+                         [checked]="roleForm.permissions.includes(perm.name)"
+                         (change)="onPermissionToggle(perm.name, $any($event.target).checked)"
+                         style="accent-color:#7b1f27;width:14px;height:14px;"/>
+                  {{ perm.action }}
+                </label>
+              </div>
+            </div>
+
+            <!-- Club -->
+            <div style="background:#eff6ff;border-radius:12px;padding:12px;border:0.5px solid rgba(59,130,246,0.15);">
+              <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">👥 Club</div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <label *ngFor="let perm of getPermsByModule('CLUB')"
+                       style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#374151;">
+                  <input type="checkbox"
+                         [checked]="roleForm.permissions.includes(perm.name)"
+                         (change)="onPermissionToggle(perm.name, $any($event.target).checked)"
+                         style="accent-color:#7b1f27;width:14px;height:14px;"/>
+                  {{ perm.action }}
+                </label>
+              </div>
+            </div>
+
+            <!-- Événement -->
+            <div style="background:#f0fdf4;border-radius:12px;padding:12px;border:0.5px solid rgba(34,197,94,0.15);">
+              <div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">🎭 Événement</div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <label *ngFor="let perm of getPermsByModule('EVENT')"
+                       style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#374151;">
+                  <input type="checkbox"
+                         [checked]="roleForm.permissions.includes(perm.name)"
+                         (change)="onPermissionToggle(perm.name, $any($event.target).checked)"
+                         style="accent-color:#7b1f27;width:14px;height:14px;"/>
+                  {{ perm.action }}
+                </label>
+              </div>
+            </div>
+
+            <!-- Fidélité -->
+            <div style="background:#fffbeb;border-radius:12px;padding:12px;border:0.5px solid rgba(217,154,45,0.2);">
+              <div style="font-size:11px;font-weight:700;color:#b45309;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">⭐ Fidélité</div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <label *ngFor="let perm of getPermsByModule('FIDELITY')"
+                       style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#374151;">
+                  <input type="checkbox"
+                         [checked]="roleForm.permissions.includes(perm.name)"
+                         (change)="onPermissionToggle(perm.name, $any($event.target).checked)"
+                         style="accent-color:#7b1f27;width:14px;height:14px;"/>
+                  {{ perm.action }}
+                </label>
+              </div>
+            </div>
+
           </div>
         </div>
+      </div>
 
-        <div class="flex items-center justify-end gap-2">
-          <button (click)="closeEditRole()" class="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50">
-            Annuler
-          </button>
-          <button (click)="saveRoleUpdate()" [disabled]="creating" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60">
-            {{ creating ? 'Enregistrement...' : 'Enregistrer' }}
-          </button>
-        </div>
+      <div style="padding:16px 22px;border-top:0.5px solid #f0ece6;display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;">
+        <button (click)="closeCreateRole()"
+                style="padding:9px 20px;background:#faf8f5;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;cursor:pointer;">
+          Annuler
+        </button>
+        <button (click)="createCustomRole()" [disabled]="creating"
+                style="padding:9px 20px;background:#7b1f27;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;"
+                [style.opacity]="creating ? '0.6' : '1'">
+          {{ creating ? 'Création...' : 'Créer le rôle' }}
+        </button>
       </div>
     </div>
   </div>
 
-  <div *ngIf="showCreateRoleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-    <div class="w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <div>
-          <h3 class="font-semibold text-dark">Créer un rôle</h3>
-          <p class="text-xs text-gray-400 mt-1">Même style que le modal de modification, mais pour un nouveau rôle.</p>
-        </div>
-        <button type="button" (click)="closeCreateRole()" class="text-gray-400 hover:text-gray-600">✕</button>
-      </div>
-
-      <div class="p-6 space-y-4">
-        <input
-          [(ngModel)]="roleForm.name"
-          class="w-full px-3 py-2 border border-gray-200 rounded-xl outline-none focus:border-primary"
-          placeholder="Nom du rôle"
-        />
-
-        <div class="border border-gray-200 rounded-xl p-3">
-          <p class="text-xs text-gray-500 mb-2">Permissions</p>
-          <div *ngIf="permissionsLoading" class="text-xs text-gray-400">Chargement des permissions...</div>
-
-          <div *ngIf="!permissionsLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-72 overflow-y-auto">
-            <label *ngFor="let permission of permissions" class="flex items-center gap-2 text-xs text-gray-700">
-              <input
-                type="checkbox"
-                [value]="permission.name"
-                [checked]="roleForm.permissions.includes(permission.name)"
-                (change)="onPermissionToggle(permission.name, $any($event.target).checked)"
-              />
-              <span>{{ permission.name }}</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-end gap-2">
-          <button (click)="closeCreateRole()" class="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50">
-            Annuler
-          </button>
-          <button (click)="createCustomRole()" [disabled]="creating" class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60">
-            {{ creating ? 'Création...' : 'Créer rôle' }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
