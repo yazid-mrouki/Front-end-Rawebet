@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -19,22 +19,20 @@ export class ClubJoinComponent implements OnInit {
   success = false;
   error: string | null = null;
 
-  /** true si une demande est déjà en cours (PENDING) */
   alreadyPending = false;
 
-  constructor(private joinRequestService: ClubJoinRequestService) {}
+  constructor(
+    private joinRequestService: ClubJoinRequestService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
-    // Vérifie si l'utilisateur a déjà une demande en attente
     this.joinRequestService.getMyRequest().subscribe({
       next: (req) => {
-        if (req && req.status === 'PENDING') {
-          this.alreadyPending = true;
-        }
+        if (req && req.status === 'PENDING') this.alreadyPending = true;
+        this.cdr.detectChanges();
       },
-      error: () => {
-        // Pas de demande existante — état normal
-      }
+      error: () => { this.cdr.detectChanges(); }
     });
   }
 
@@ -47,10 +45,12 @@ export class ClubJoinComponent implements OnInit {
       next: () => {
         this.loading = false;
         this.success = true;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.error = err?.error?.error || 'Failed to submit request. Please try again.';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }

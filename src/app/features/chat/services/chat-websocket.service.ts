@@ -1,65 +1,129 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, NgZone, OnDestroy } from '@angular/core';
 import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { Subject } from 'rxjs';
-import { ChatMessage } from '../models/chat-message.model';
+import { BehaviorSubject, Subject } from 'rxjs';
+import { ChatMessage, ReactionEvent, UnsendEvent } from '../models/chat-message.model';
 import { environment } from '../../../../environments/environment';
+
+// ✅ Interface pour l'événement spoiler
+export interface SpoilerEvent {
+  messageId: number;
+  isSpoiler: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ChatWebSocketService implements OnDestroy {
 
   private client!: Client;
-  private messageSubject = new Subject<ChatMessage>();
+  private messageSubject   = new Subject<ChatMessage>();
+  private connectedSubject = new BehaviorSubject<boolean>(false);
+  private typingSubject    = new Subject<string>();
+  private reactionSubject  = new Subject<ReactionEvent>();
+  private unsendSubject    = new Subject<UnsendEvent>();
+  private editSubject      = new Subject<ChatMessage>();
+  private spoilerSubject   = new Subject<SpoilerEvent>(); // ✅ nouveau
 
-  // Observable que le composant écoute pour recevoir les nouveaux messages
-  messages$ = this.messageSubject.asObservable();
+  private connectionId = 0;
+
+  messages$  = this.messageSubject.asObservable();
+  connected$ = this.connectedSubject.asObservable();
+  typing$    = this.typingSubject.asObservable();
+  reaction$  = this.reactionSubject.asObservable();
+  unsend$    = this.unsendSubject.asObservable();
+  edit$      = this.editSubject.asObservable();
+  spoiler$   = this.spoilerSubject.asObservable(); // ✅ nouveau
+
+  constructor(private ngZone: NgZone) {}
 
   connect(chatSessionId: number, token: string | null): void {
+    const id = ++this.connectionId;
+
+    if (this.client?.active) this.client.deactivate();
+    this.ngZone.run(() => this.connectedSubject.next(false));
+
     this.client = new Client({
-      // SockJS comme transport (même config que le backend)
       webSocketFactory: () => new SockJS(`${environment.apiUrl}/ws`),
-
-      // Si l'utilisateur est connecté, on envoie le JWT dans le header CONNECT
       connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
-
       reconnectDelay: 5000,
 
       onConnect: () => {
-        // S'abonner au canal de cette session spécifique
-        this.client.subscribe(
-          `/topic/chat/${chatSessionId}`,
-          (frame: IMessage) => {
-            const message: ChatMessage = JSON.parse(frame.body);
-            this.messageSubject.next(message);
-          }
-        );
+        if (this.connectionId !== id) return;
+
+        this.client.subscribe(`/topic/chat/${chatSessionId}`, (frame: IMessage) => {
+          if (this.connectionId !== id) return;
+          this.ngZone.run(() => this.messageSubject.next(JSON.parse(frame.body)));
+        });
+
+        this.client.subscribe(`/topic/chat/${chatSessionId}/typing`, (frame: IMessage) => {
+          if (this.connectionId !== id) return;
+          const event: { username: string } = JSON.parse(frame.body);
+          this.ngZone.run(() => this.typingSubject.next(event.username));
+        });
+
+        this.client.subscribe(`/topic/chat/${chatSessionId}/reactions`, (frame: IMessage) => {
+          if (this.connectionId !== id) return;
+          this.ngZone.run(() => this.reactionSubject.next(JSON.parse(frame.body)));
+        });
+
+        this.client.subscribe(`/topic/chat/${chatSessionId}/unsend`, (frame: IMessage) => {
+          if (this.connectionId !== id) return;
+          this.ngZone.run(() => this.unsendSubject.next(JSON.parse(frame.body)));
+        });
+
+        this.client.subscribe(`/topic/chat/${chatSessionId}/edit`, (frame: IMessage) => {
+          if (this.connectionId !== id) return;
+          this.ngZone.run(() => this.editSubject.next(JSON.parse(frame.body)));
+        });
+
+        // ✅ Nouveau topic spoiler
+        this.client.subscribe(`/topic/chat/${chatSessionId}/spoiler`, (frame: IMessage) => {
+          if (this.connectionId !== id) return;
+          this.ngZone.run(() => this.spoilerSubject.next(JSON.parse(frame.body)));
+        });
+
+        this.ngZone.run(() => this.connectedSubject.next(true));
       },
 
-      onStompError: (frame) => {
-        console.error('[WebSocket] Erreur STOMP :', frame.headers['message']);
-      }
+      onDisconnect:    () => { if (this.connectionId !== id) return; this.ngZone.run(() => this.connectedSubject.next(false)); },
+      onStompError:    (f) => { if (this.connectionId !== id) return; console.error('[WS] STOMP error', f); this.ngZone.run(() => this.connectedSubject.next(false)); },
+      onWebSocketClose:(e) => { if (this.connectionId !== id) return; console.warn('[WS] closed', e);       this.ngZone.run(() => this.connectedSubject.next(false)); },
+      onWebSocketError:(e) => { if (this.connectionId !== id) return; console.error('[WS] error', e);       this.ngZone.run(() => this.connectedSubject.next(false)); },
     });
 
     this.client.activate();
   }
 
-  // Envoyer un message — nécessite d'être connecté (principal != null côté backend)
-  sendMessage(chatSessionId: number, content: string): void {
-    if (!this.client?.connected) return;
+  sendMessage(chatSessionId: number, content: string): boolean {
+    if (!this.client?.connected) return false;
+    this.client.publish({ destination: `/app/chat/${chatSessionId}/send`, body: JSON.stringify({ content }) });
+    return true;
+  }
 
-    this.client.publish({
-      destination: `/app/chat/${chatSessionId}/send`,
-      body: JSON.stringify({ content })
-    });
+  sendTyping(chatSessionId: number): void {
+    if (!this.client?.connected) return;
+    this.client.publish({ destination: `/app/chat/${chatSessionId}/typing`, body: '{}' });
+  }
+
+  sendReaction(chatSessionId: number, messageId: number, emoji: string): void {
+    if (!this.client?.connected) return;
+    this.client.publish({ destination: `/app/chat/${chatSessionId}/react`, body: JSON.stringify({ messageId, emoji }) });
+  }
+
+  sendUnsend(chatSessionId: number, messageId: number, forEveryone: boolean): void {
+    if (!this.client?.connected) return;
+    this.client.publish({ destination: `/app/chat/${chatSessionId}/unsend`, body: JSON.stringify({ messageId, forEveryone }) });
+  }
+
+  sendEdit(chatSessionId: number, messageId: number, newContent: string): void {
+    if (!this.client?.connected) return;
+    this.client.publish({ destination: `/app/chat/${chatSessionId}/edit`, body: JSON.stringify({ messageId, newContent }) });
   }
 
   disconnect(): void {
-    if (this.client?.active) {
-      this.client.deactivate();
-    }
+    this.connectionId++;
+    if (this.client?.active) this.client.deactivate();
+    this.ngZone.run(() => this.connectedSubject.next(false));
   }
 
-  ngOnDestroy(): void {
-    this.disconnect();
-  }
+  ngOnDestroy(): void { this.disconnect(); }
 }

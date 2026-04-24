@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ClubEventService } from '../../services/club-event.service';
 import { ClubParticipationService } from '../../services/club-participation.service';
 import { ClubMemberService } from '../../services/club-member.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ClubEvent } from '../../models/club-event.model';
 import { ClubParticipation } from '../../models/club-participation.model';
 import { ClubMember } from '../../models/club-member.model';
@@ -32,12 +33,19 @@ export class ClubEventsComponent implements OnInit {
   filter: EventFilter = 'upcoming';
 
   places: { [key: number]: number } = {};
+  eventErrors: { [key: number]: string } = {};
 
   constructor(
     private eventService: ClubEventService,
     private participationService: ClubParticipationService,
-    private memberService: ClubMemberService
+    private memberService: ClubMemberService,
+    public auth: AuthService,
+    private cdr: ChangeDetectorRef,
   ) {}
+
+  get isClubAdmin(): boolean {
+    return this.auth.isSuperAdmin() || this.auth.hasPermission('CLUB_MANAGE');
+  }
 
   ngOnInit(): void {
     this.loadAll();
@@ -60,24 +68,34 @@ export class ClubEventsComponent implements OnInit {
         data.forEach(e => {
           if (!this.places[e.id]) this.places[e.id] = 1;
         });
+        this.cdr.detectChanges();
       },
       error: () => {
         this.showError('Failed to load events');
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
   loadReservations(): void {
+    if (!this.auth.isAuthenticated() || this.isClubAdmin) {
+      this.reservations = [];
+      return;
+    }
     this.participationService.myReservations().subscribe({
-      next: (data) => { this.reservations = data; },
+      next: (data) => { this.reservations = data; this.cdr.detectChanges(); },
       error: () => { this.reservations = []; }
     });
   }
 
   loadMembership(): void {
+    if (!this.auth.isAuthenticated() || this.isClubAdmin) {
+      this.myMembership = null;
+      return;
+    }
     this.memberService.getMyMembership().subscribe({
-      next: (data) => { this.myMembership = data; },
+      next: (data) => { this.myMembership = data; this.cdr.detectChanges(); },
       error: () => { this.myMembership = null; }
     });
   }
@@ -114,6 +132,36 @@ export class ClubEventsComponent implements OnInit {
   private showError(msg: string): void {
     this.error = msg;
     setTimeout(() => { this.error = null; }, 6000);
+  }
+
+  // ── Confirmation réservation ──────────────────────────────
+  confirmTargetId: number | null = null;
+  confirmPlaces = 1;
+
+  askConfirmReserve(eventId: number, remainingPlaces: number): void {
+    const p = this.places[eventId] || 1;
+    this.eventErrors[eventId] = '';
+    if (p < 1) {
+      this.eventErrors[eventId] = 'Please select at least 1 place.';
+      return;
+    }
+    if (p > remainingPlaces) {
+      this.eventErrors[eventId] = `Only ${remainingPlaces} spot(s) available.`;
+      return;
+    }
+    this.confirmTargetId = eventId;
+    this.confirmPlaces = p;
+  }
+
+  abortReserve(): void {
+    this.confirmTargetId = null;
+  }
+
+  confirmReserve(): void {
+    if (this.confirmTargetId === null) return;
+    const id = this.confirmTargetId;
+    this.confirmTargetId = null;
+    this.reserve(id);
   }
 
   // ── Réservation ───────────────────────────────────────────
