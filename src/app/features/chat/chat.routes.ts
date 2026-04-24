@@ -3,10 +3,13 @@ import { ChatRoomComponent } from './pages/chat-room/chat-room.component';
 
 export const CHAT_ROUTES: Routes = [
 
-  // Accueil chat — saisie du code
+  // /chat → formulaire de saisie du code
   { path: '', component: ChatRoomComponent },
 
-  // Accès direct via URL avec le code (ex: /chat/join/4782)
+  // /chat/join → formulaire de saisie du code (URL explicite)
+  { path: 'join', component: ChatRoomComponent },
+
+  // /chat/join/1234 → rejoindre directement avec le code
   { path: 'join/:code', component: ChatRoomComponent }
 
 ];

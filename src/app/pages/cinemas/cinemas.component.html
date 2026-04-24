@@ -1,0 +1,68 @@
+<div class="min-h-screen bg-gray-50 py-10 px-4">
+
+  <!-- Header -->
+  <div class="max-w-4xl mx-auto mb-8">
+    <h1 class="text-3xl font-bold text-gray-800">Nos Cinémas</h1>
+    <p class="text-gray-500 mt-1">Retrouvez nos salles et leurs équipements</p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="flex justify-center py-24">
+    <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="max-w-4xl mx-auto bg-red-50 border border-red-200 text-red-700 rounded-xl px-6 py-4">
+    {{ error }}
+  </div>
+
+  <!-- Liste cinémas -->
+  <div *ngIf="!isLoading && !error" class="max-w-4xl mx-auto space-y-4">
+    <div *ngFor="let cinema of cinemas" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+
+      <!-- Card header -->
+      <div class="p-6 flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800">{{ cinema.name }}</h2>
+          <p class="text-sm text-gray-500 mt-0.5">{{ cinema.address }}, {{ cinema.city }}</p>
+          <div class="flex items-center gap-4 mt-2 text-sm text-gray-500">
+            <span>📞 {{ cinema.phone }}</span>
+            <span>✉️ {{ cinema.email }}</span>
+          </div>
+        </div>
+        <button (click)="toggleSalles(cinema.id)"
+                class="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-sm font-medium text-gray-700 transition-colors border border-gray-200">
+          <span>{{ expandedCinemaId === cinema.id ? 'Masquer' : 'Voir les salles' }}</span>
+          <span class="transition-transform" [class.rotate-180]="expandedCinemaId === cinema.id">▾</span>
+        </button>
+      </div>
+
+      <!-- Salles -->
+      <div *ngIf="expandedCinemaId === cinema.id" class="border-t border-gray-100 bg-gray-50 px-6 py-4">
+        <div *ngIf="!sallesMap[cinema.id]" class="text-sm text-gray-400 py-2">Chargement...</div>
+        <div *ngIf="sallesMap[cinema.id] && sallesMap[cinema.id].length === 0" class="text-sm text-gray-400 py-2">Aucune salle disponible.</div>
+        <div *ngIf="sallesMap[cinema.id] && sallesMap[cinema.id].length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div *ngFor="let salle of sallesMap[cinema.id]"
+               class="bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-gray-800 text-sm">{{ salle.name }}</p>
+              <p class="text-xs text-gray-500 mt-0.5">{{ getHallLabel(salle.hallType) }} · {{ getScreenLabel(salle.screenType) }}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-sm font-bold text-gray-700">{{ salle.totalCapacity }}</span>
+              <p class="text-xs text-gray-400">places</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="cinemas.length === 0" class="text-center py-24 text-gray-400">
+      <div class="text-5xl mb-3">🏛️</div>
+      <p>Aucun cinéma disponible pour le moment.</p>
+    </div>
+  </div>
+
+</div>

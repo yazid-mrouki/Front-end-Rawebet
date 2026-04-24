@@ -1,0 +1,302 @@
+<div class="p-6">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">Cinémas</h1>
+      <p class="text-sm text-gray-500 mt-0.5">{{ cinemas.length }} cinéma(s) enregistré(s)</p>
+    </div>
+    <button (click)="openCinemaModal()"
+            class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors">
+      <span class="text-lg leading-none">+</span> Nouveau cinéma
+    </button>
+  </div>
+
+<!-- Recherche cinémas -->
+<div class="mb-5 flex gap-3">
+  <div class="flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2 flex-1 max-w-sm shadow-sm">
+    <svg class="w-4 h-4 text-gray-400 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+    </svg>
+    <input [(ngModel)]="searchQuery"
+           type="text"
+           placeholder="Rechercher un cinéma, ville..."
+           class="bg-transparent outline-none text-sm text-gray-700 w-full placeholder-gray-400"/>
+    <button *ngIf="searchQuery" (click)="searchQuery = ''"
+            class="ml-2 text-gray-400 hover:text-gray-600 text-lg leading-none">
+      &times;
+    </button>
+  </div>
+  <div class="text-sm text-gray-400 flex items-center">
+    {{ filteredCinemas.length }} résultat(s)
+  </div>
+</div>
+
+  <!-- Loading / Error -->
+  <div *ngIf="isLoading" class="flex justify-center py-16">
+    <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+  </div>
+  <div *ngIf="error" class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{{ error }}</div>
+
+  <!-- Liste -->
+  <div *ngIf="!isLoading" class="space-y-4">
+    <div *ngFor="let cinema of filteredCinemas" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+
+      <!-- Cinema row -->
+      <div class="flex items-center gap-4 px-5 py-4">
+        <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+          <span class="text-primary font-bold text-sm">{{ cinema.name.charAt(0) }}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <p class="font-semibold text-gray-800 truncate">{{ cinema.name }}</p>
+            <span *ngIf="cinema.isActive" class="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">Actif</span>
+            <span *ngIf="!cinema.isActive" class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Inactif</span>
+          </div>
+          <p class="text-xs text-gray-500 truncate">{{ cinema.address }}, {{ cinema.city }}</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button (click)="openSalleModal(cinema.id)"
+                  class="text-xs px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors font-medium">
+            + Salle
+          </button>
+          <button (click)="toggleSalles(cinema.id)"
+                  class="text-xs px-3 py-1.5 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors font-medium">
+            {{ expandedCinemaId === cinema.id ? 'Masquer' : 'Salles' }}
+          </button>
+          <button (click)="disableCinema(cinema.id)"
+                  class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-medium">
+            Désactiver
+          </button>
+        </div>
+      </div>
+
+      <!-- Salles panel -->
+      <ng-container *ngIf="expandedCinemaId === cinema.id">
+        <div class="border-t border-gray-100 bg-gray-50 px-5 py-3">
+          <!-- Recherche salles -->
+<div *ngIf="sallesMap[cinema.id] && sallesMap[cinema.id]!.length > 1"
+     class="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-1.5 mb-3">
+  <svg class="w-3.5 h-3.5 text-gray-400 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+  </svg>
+  <input [(ngModel)]="searchSalle"
+         type="text"
+         placeholder="Filtrer les salles..."
+         class="bg-transparent outline-none text-xs text-gray-700 w-full placeholder-gray-400"/>
+  <button *ngIf="searchSalle" (click)="searchSalle = ''"
+          class="ml-1 text-gray-400 hover:text-gray-600">
+    &times;
+  </button>
+</div>
+          <ng-container [ngSwitch]="true">
+            <div *ngSwitchCase="!sallesMap[cinema.id]" class="text-sm text-gray-400 py-2">
+              Chargement...
+            </div>
+            <!-- Ce cas gère maintenant aussi les filtres sans résultats -->
+<div *ngSwitchCase="sallesMap[cinema.id] !== undefined && getSallesFiltrees(cinema.id).length === 0"
+     class="text-sm text-gray-400 py-2">
+  <span *ngIf="searchSalle">Aucune salle ne correspond à "{{ searchSalle }}".</span>
+  <span *ngIf="!searchSalle">Aucune salle — ajoutez-en une.</span>
+</div>
+            <div *ngSwitchDefault class="space-y-2">
+              <div *ngFor="let salle of getSallesFiltrees(cinema.id)"
+                   class="bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-center justify-between">
+                <div>
+                  <p class="font-medium text-gray-800 text-sm">{{ salle.name }}</p>
+                  <p class="text-xs text-gray-500">{{ salle.hallType }} · {{ getScreenLabel(salle.screenType) }} · {{ salle.totalCapacity }} places</p>
+                </div>
+                <div class="flex gap-2">
+                  <button (click)="openSeatsModal(salle.id)"
+                          class="text-xs px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors font-medium">
+                    Configurer sièges
+                  </button>
+                  <button (click)="disableSalle(cinema.id, salle.id)"
+                          class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-medium">
+                    Désactiver
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </ng-container>
+
+    </div>
+
+    <div *ngIf="cinemas.length === 0" class="text-center py-16 text-gray-400">
+      <div class="text-5xl mb-3">🏛️</div>
+      <p>Aucun cinéma enregistré.</p>
+    </div>
+  </div>
+
+  <!-- ══ MODAL CINEMA ══ -->
+  <div *ngIf="activeModal === 'cinema'" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 class="font-bold text-gray-800">Nouveau cinéma</h2>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+      </div>
+      <div class="px-6 py-4 space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Nom *</label>
+          <input [(ngModel)]="cinemaForm.name" type="text"
+                 class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Adresse</label>
+          <input [(ngModel)]="cinemaForm.address" type="text"
+                 class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Ville</label>
+            <input [(ngModel)]="cinemaForm.city" type="text"
+                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Pays</label>
+            <input [(ngModel)]="cinemaForm.country" type="text"
+                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Téléphone</label>
+            <input [(ngModel)]="cinemaForm.phone" type="text"
+                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+            <input [(ngModel)]="cinemaForm.email" type="email"
+                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Horaires d'ouverture</label>
+          <input [(ngModel)]="cinemaForm.openingHours" type="text" placeholder="ex: 10h00 - 23h00"
+                 class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+        <button (click)="closeModal()" class="px-4 py-2 text-sm text-gray-600">Annuler</button>
+        <button (click)="submitCinema()" [disabled]="isSubmitting || !cinemaForm.name"
+                class="px-5 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors">
+          {{ isSubmitting ? 'Création...' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL SALLE ══ -->
+  <div *ngIf="activeModal === 'salle'" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 class="font-bold text-gray-800">Nouvelle salle</h2>
+        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+      </div>
+      <div class="px-6 py-4 space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Nom de la salle *</label>
+          <input [(ngModel)]="salleForm.name" type="text" placeholder="ex: Salle 1"
+                 class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Type de salle</label>
+          <select [(ngModel)]="salleForm.hallType"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary bg-white">
+            <option value="STANDARD">Standard</option>
+            <option value="PREMIUM">Premium</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Type d'écran</label>
+          <select [(ngModel)]="salleForm.screenType"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary bg-white">
+            <option value="TWO_D">2D</option>
+            <option value="THREE_D">3D</option>
+            <option value="IMAX">IMAX</option>
+          </select>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+        <button (click)="closeModal()" class="px-4 py-2 text-sm text-gray-600">Annuler</button>
+        <button (click)="submitSalle()" [disabled]="isSubmitting || !salleForm.name"
+                class="px-5 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors">
+          {{ isSubmitting ? 'Création...' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL CONFIGURATION SIÈGES ══ -->
+  <!-- ══ MODAL CONFIGURATION SIÈGES ══ -->
+<div *ngIf="activeModal === 'seats'" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h2 class="font-bold text-gray-800">Configurer les sièges</h2>
+      <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+    </div>
+
+    <div class="px-6 py-4 space-y-4">
+
+      <!-- Nombre de rangées -->
+      <div class="flex items-center gap-4">
+        <div class="flex-1">
+          <label class="block text-xs font-medium text-gray-600 mb-1">Nombre de rangées</label>
+          <input [(ngModel)]="numberOfRows" type="number" min="1" max="26"
+                 (ngModelChange)="generateRowConfigs()"
+                 class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+        </div>
+        <div class="pt-5 text-sm text-gray-500">
+          Total : <strong class="text-gray-800">{{ totalSeats }} sièges</strong>
+        </div>
+      </div>
+
+      <!-- Tableau des rangées -->
+      <div class="border border-gray-200 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th class="text-left px-4 py-2 text-xs font-medium text-gray-500 w-16">Rangée</th>
+              <th class="text-left px-4 py-2 text-xs font-medium text-gray-500">Sièges</th>
+              <th class="text-left px-4 py-2 text-xs font-medium text-gray-500">Type</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            <tr *ngFor="let row of rowConfigs; let i = index">
+              <td class="px-4 py-2">
+                <span class="font-bold text-gray-700 text-sm">{{ row.rowLabel }}</span>
+              </td>
+              <td class="px-4 py-2">
+                <input [(ngModel)]="row.seatsPerRow" type="number" min="1" max="50"
+                       class="w-20 px-2 py-1 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+              </td>
+              <td class="px-4 py-2">
+                <select [(ngModel)]="row.seatType"
+                        class="px-2 py-1 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary bg-white">
+                  <option value="STANDARD">Standard</option>
+                  <option value="PMR">PMR ♿</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+        Les sièges PMR sont générés séparément et identifiés automatiquement.
+      </p>
+    </div>
+
+    <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+      <button (click)="closeModal()" class="px-4 py-2 text-sm text-gray-600">Annuler</button>
+      <button (click)="submitSeats()" [disabled]="isSubmitting || rowConfigs.length === 0"
+              class="px-5 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors">
+        {{ isSubmitting ? 'Configuration...' : 'Configurer (' + totalSeats + ' sièges)' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+</div>
