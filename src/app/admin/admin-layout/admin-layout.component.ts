@@ -43,7 +43,6 @@ export class AdminLayoutComponent implements OnInit {
     private router: Router,
     private cdr: ChangeDetectorRef,
   ) {
-    // Lire depuis le token ADMIN (localStorage) — pas le token impersonation
     this.adminName = this.auth.getCurrentUserName() || 'Admin';
     this.adminEmail = this.auth.getCurrentUserEmail() || '';
     this.adminId = this.auth.getCurrentUserId();
@@ -76,16 +75,43 @@ export class AdminLayoutComponent implements OnInit {
       route: '/admin/events',
       roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'],
     },
-    { label: 'Films', icon: '🎬', route: '/admin/films', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+    {
+      label: 'Films',
+      icon: '🎬',
+      route: '/admin/films',
+      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'],
+    },
+    // ── Ajout Cinémas ─────────────────────────────────────────────
+    {
+      label: 'Cinémas',
+      icon: '🏛️',
+      route: '/admin/cinemas',
+      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'],
+    },
     {
       label: 'Tickets',
       icon: '🎟️',
       route: '/admin/tickets',
       roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'],
     },
-    { label: 'Club', icon: '👥', route: '/admin/club', roles: ['SUPER_ADMIN', 'ADMIN_CLUB'] },
-    { label: 'Chat', icon: '💬', route: '/admin/chat', roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
-    { label: 'Subscriptions', icon: '💳', route: '/admin/subscriptions', roles: ['SUPER_ADMIN'] },
+    {
+      label: 'Club',
+      icon: '👥',
+      route: '/admin/club',
+      roles: ['SUPER_ADMIN', 'ADMIN_CLUB'],
+    },
+    {
+      label: 'Chat',
+      icon: '💬',
+      route: '/admin/chat',
+      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'],
+    },
+    {
+      label: 'Subscriptions',
+      icon: '💳',
+      route: '/admin/subscriptions',
+      roles: ['SUPER_ADMIN'],
+    },
     {
       label: 'Users',
       icon: '👤',
@@ -152,25 +178,13 @@ export class AdminLayoutComponent implements OnInit {
     });
   }
 
-  // ── Mode client ────────────────────────────────────────────────────────
-  /**
-   * L'admin clique "Mode client" :
-   * 1. Appel POST /auth/impersonate avec son propre userId
-   * 2. Backend génère un token CLIENT (roles = [CLIENT], impersonation = true)
-   * 3. Ce token est stocké en sessionStorage
-   * 4. AuthService.getToken() retourne ce token en priorité → toute l'app se comporte en mode client
-   * 5. adminGuard bloque /admin/* → l'admin ne peut pas accéder au back-office
-   * 6. La navbar affiche l'interface client (isAdmin() = false)
-   */
   startClientMode() {
     if (!this.adminId) {
       this.toast.error('Impossible de récupérer votre identifiant.');
       return;
     }
-
     this.clientModeLoading = true;
     this.closeProfileDropdown();
-
     this.impersonation
       .startImpersonation({
         targetUserId: this.adminId,
@@ -181,15 +195,12 @@ export class AdminLayoutComponent implements OnInit {
         next: () => {
           this.clientModeLoading = false;
           this.toast.success('Mode client activé — vous naviguez comme un client. 🎭');
-          // Rediriger vers l'interface client
           this.router.navigate(['/home']);
         },
         error: (err) => {
           this.clientModeLoading = false;
           const msg = err?.error?.message || err?.error || '';
-
           if (msg.includes('CLIENT') || msg.includes('role')) {
-            // L'admin n'a pas le rôle CLIENT → lui donner accès direct sans impersonation
             this.toast.info("Redirection vers l'interface client...");
             this.router.navigate(['/home']);
           } else {
@@ -199,26 +210,15 @@ export class AdminLayoutComponent implements OnInit {
       });
   }
 
-  // ── Guest preview ──────────────────────────────────────────────────────
   openGuestPreview() {
     this.guestPreview.openGuestPreview('/home');
     this.closeProfileDropdown();
   }
 
-  toggleProfileDropdown() {
-    this.profileDropdownOpen = !this.profileDropdownOpen;
-  }
-  closeProfileDropdown() {
-    this.profileDropdownOpen = false;
-  }
-  toggleSidebar() {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
-  }
-
-  logout() {
-    this.closeProfileDropdown();
-    this.auth.logout();
-  }
+  toggleProfileDropdown() { this.profileDropdownOpen = !this.profileDropdownOpen; }
+  closeProfileDropdown()  { this.profileDropdownOpen = false; }
+  toggleSidebar()         { this.sidebarCollapsed = !this.sidebarCollapsed; }
+  logout()                { this.closeProfileDropdown(); this.auth.logout(); }
 
   private resolveUrl(raw: unknown): string {
     const v = typeof raw === 'string' ? raw.trim() : '';
@@ -229,10 +229,10 @@ export class AdminLayoutComponent implements OnInit {
 
   private getAdminRoleLabel(): string {
     const roles = this.auth.getRoles();
-    if (roles.includes('SUPER_ADMIN')) return 'Super Admin';
+    if (roles.includes('SUPER_ADMIN'))  return 'Super Admin';
     if (roles.includes('ADMIN_CINEMA')) return 'Admin Cinéma';
-    if (roles.includes('ADMIN_EVENT')) return 'Admin Events';
-    if (roles.includes('ADMIN_CLUB')) return 'Admin Club';
+    if (roles.includes('ADMIN_EVENT'))  return 'Admin Events';
+    if (roles.includes('ADMIN_CLUB'))   return 'Admin Club';
     return 'Admin';
   }
 }
