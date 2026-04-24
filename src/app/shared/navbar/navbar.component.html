@@ -23,11 +23,11 @@
         <a routerLink="/events" routerLinkActive="text-primary bg-primary/5"
            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Events</a>
 
-          <!-- Cinémas — visible à tous -->
-          <a routerLink="/cinemas" routerLinkActive="text-primary bg-primary/5"
-            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Cinémas</a>
+        <!-- Cinémas — visible à tous -->
+        <a routerLink="/cinemas" routerLinkActive="text-primary bg-primary/5"
+           class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Cinémas</a>
 
-        <!-- Réserver (tickets) — client uniquement (pas admin en mode normal) -->
+        <!-- Réserver (tickets) — client uniquement -->
         <a *ngIf="isAuthenticated() && !isAdmin()"
            routerLink="/tickets" routerLinkActive="text-primary bg-primary/5"
            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Réserver</a>
@@ -37,11 +37,11 @@
            routerLink="/club" routerLinkActive="text-primary bg-primary/5"
            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Club</a>
 
-        <!-- Management dropdown — admin en mode NORMAL seulement -->
+        <!-- Management dropdown — admin seulement -->
         <div class="relative" *ngIf="isBackOfficeAdmin()">
           <button (click)="toggleManagement()"
                   class="flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
-            Management
+            À propos
             <svg class="w-4 h-4 transition-transform" [class.rotate-180]="managementDropdown"
                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -91,15 +91,11 @@
             <!-- Nom + badge -->
             <div class="flex flex-col items-start gap-0.5">
               <span class="text-sm font-semibold text-dark leading-none">{{ userName || 'Mon compte' }}</span>
-
-              <!-- Badge CLIENT (ou mode client) -->
               <span *ngIf="!isAdmin()"
                     class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold leading-none"
                     [class]="clientBadgeClass">
                 {{ clientBadgeIcon }} {{ clientBadgeLabel }}
               </span>
-
-              <!-- Badge ADMIN — seulement en mode admin normal -->
               <span *ngIf="isAdmin()"
                     class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold leading-none"
                     [class]="adminBadgeClass">
@@ -143,8 +139,6 @@
                  class="block px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">
                 👤 Mon Profil
               </a>
-
-              <!-- Menu CLIENT (y compris mode impersonation) -->
               <ng-container *ngIf="!isAdmin()">
                 <a routerLink="/loyalty" (click)="closeDropdowns()"
                    class="block px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">
@@ -159,15 +153,12 @@
                   💳 Abonnements
                 </a>
               </ng-container>
-
-              <!-- Menu ADMIN (mode normal uniquement) -->
               <ng-container *ngIf="isAdmin()">
                 <a routerLink="/admin/dashboard" (click)="closeDropdowns()"
                    class="block px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">
                   📊 Dashboard Admin
                 </a>
               </ng-container>
-
               <div class="my-1 border-t border-gray-100"></div>
               <button (click)="logout()"
                       class="w-full px-4 py-2.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50">

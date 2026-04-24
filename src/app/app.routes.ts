@@ -52,6 +52,14 @@ export const routes: Routes = [
     path: 'films',
     loadComponent: () => import('./pages/films/films.component').then((m) => m.FilmsComponent),
   },
+  // ── Ajout de Wiam : page détail film ────────────────────────────
+  {
+    path: 'films/:id',
+    loadComponent: () =>
+      import('./pages/films/film-detail/film-detail.component').then(
+        (m) => m.FilmDetailComponent,
+      ),
+  },
   {
     path: 'cinemas',
     loadComponent: () =>
@@ -64,7 +72,9 @@ export const routes: Routes = [
   {
     path: 'subscriptions',
     loadComponent: () =>
-      import('./pages/subscriptions/subscriptions.component').then((m) => m.SubscriptionsComponent),
+      import('./pages/subscriptions/subscriptions.component').then(
+        (m) => m.SubscriptionsComponent,
+      ),
   },
   {
     path: 'logistics',
@@ -100,7 +110,9 @@ export const routes: Routes = [
   {
     path: 'notifications',
     loadComponent: () =>
-      import('./pages/notifications/notifications.component').then((m) => m.NotificationsComponent),
+      import('./pages/notifications/notifications.component').then(
+        (m) => m.NotificationsComponent,
+      ),
     canActivate: [authGuard],
   },
 
@@ -137,7 +149,7 @@ export const routes: Routes = [
           ),
       },
 
-      // Dashboard — tousles admins (pas de permission guard)
+      // Dashboard — tous les admins
       {
         path: 'dashboard',
         loadComponent: () =>
@@ -146,15 +158,17 @@ export const routes: Routes = [
           ),
       },
 
-      // Events — ADMIN_CINEMA (CINEMA_CREATE) + ADMIN_EVENT (EVENT_CREATE) + SUPER_ADMIN (ADMIN_MANAGE)
+      // Events
       {
         path: 'events',
         loadComponent: () =>
-          import('./admin/pages/events/admin-events.component').then((m) => m.AdminEventsComponent),
+          import('./admin/pages/events/admin-events.component').then(
+            (m) => m.AdminEventsComponent,
+          ),
         canActivate: [permissionGuard(['CINEMA_CREATE', 'EVENT_CREATE', 'ADMIN_MANAGE'])],
       },
 
-      // Films — ADMIN_CINEMA (CINEMA_CREATE) + SUPER_ADMIN (ADMIN_MANAGE)
+      // Films
       {
         path: 'films',
         loadComponent: () =>
@@ -162,7 +176,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
       },
 
-      // Cinémas — ADMIN_CINEMA + SUPER_ADMIN
+      // Cinémas
       {
         path: 'cinemas',
         loadComponent: () =>
@@ -172,7 +186,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
       },
 
-      // Tickets — ADMIN_CINEMA + ADMIN_EVENT + SUPER_ADMIN
+      // Tickets
       {
         path: 'tickets',
         loadComponent: () =>
@@ -182,7 +196,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['CINEMA_CREATE', 'EVENT_CREATE', 'ADMIN_MANAGE'])],
       },
 
-      // Club — ADMIN_CLUB (CLUB_MANAGE) + SUPER_ADMIN (ADMIN_MANAGE)
+      // Club
       {
         path: 'club',
         loadComponent: () =>
@@ -190,7 +204,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['CLUB_MANAGE', 'ADMIN_MANAGE'])],
       },
 
-      // Détail event club — ADMIN_CLUB + SUPER_ADMIN
+      // Détail event club
       {
         path: 'club/events/:id',
         loadComponent: () =>
@@ -200,7 +214,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['CLUB_MANAGE', 'ADMIN_MANAGE'])],
       },
 
-      // Chat — ADMIN_CINEMA (CINEMA_CREATE) + SUPER_ADMIN (ADMIN_MANAGE)
+      // Chat
       {
         path: 'chat',
         loadComponent: () =>
@@ -208,7 +222,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
       },
 
-      // Détail chat — ADMIN_CINEMA + SUPER_ADMIN
+      // Détail chat
       {
         path: 'chat/:id',
         loadComponent: () =>
@@ -218,7 +232,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
       },
 
-      // Subscriptions — SUPER_ADMIN uniquement
+      // Subscriptions
       {
         path: 'subscriptions',
         loadComponent: () =>
@@ -228,7 +242,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['ADMIN_MANAGE'])],
       },
 
-      // Users — SUPER_ADMIN uniquement
+      // Users
       {
         path: 'users',
         loadComponent: () =>
@@ -236,7 +250,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['ADMIN_MANAGE'])],
       },
 
-      // Loyalty — SUPER_ADMIN uniquement
+      // Loyalty
       {
         path: 'loyalty',
         loadComponent: () =>
@@ -246,7 +260,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['FIDELITY_UPDATE', 'ADMIN_MANAGE'])],
       },
 
-      // Roles — SUPER_ADMIN uniquement
+      // Roles
       {
         path: 'roles',
         loadComponent: () =>
@@ -254,7 +268,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['ADMIN_MANAGE'])],
       },
 
-      // Logistics — ADMIN_CINEMA + SUPER_ADMIN
+      // Logistics
       {
         path: 'logistics',
         loadComponent: () =>
@@ -264,7 +278,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
       },
 
-      // Feedback — ADMIN_CINEMA + ADMIN_EVENT + SUPER_ADMIN
+      // Feedback
       {
         path: 'feedback',
         loadComponent: () =>
@@ -274,7 +288,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['CINEMA_CREATE', 'EVENT_CREATE', 'ADMIN_MANAGE'])],
       },
 
-      // Intelligence Artificielle — SUPER_ADMIN uniquement
+      // Intelligence Artificielle
       {
         path: 'ml',
         loadComponent: () =>
@@ -282,7 +296,7 @@ export const routes: Routes = [
         canActivate: [permissionGuard(['ADMIN_MANAGE'])],
       },
 
-      // Notifications — tous les admins
+      // Notifications
       {
         path: 'notifications',
         loadComponent: () =>
