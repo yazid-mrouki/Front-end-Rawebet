@@ -1,0 +1,166 @@
+<!-- Loading -->
+<div *ngIf="isLoading" class="flex justify-center items-center min-h-screen bg-gray-950">
+  <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+</div>
+
+<!-- Error -->
+<div *ngIf="error" class="flex flex-col items-center justify-center min-h-screen bg-gray-950 text-white gap-4">
+  <span class="text-5xl">🎬</span>
+  <p class="text-gray-400">{{ error }}</p>
+  <button (click)="goBack()" class="px-5 py-2 bg-primary text-white rounded-xl text-sm hover:bg-primary/90">
+    ← Retour aux films
+  </button>
+</div>
+
+<!-- Contenu -->
+<div *ngIf="film && !isLoading" class="min-h-screen bg-gray-950 text-white">
+
+  <!-- Hero backdrop -->
+  <div class="relative h-[420px] overflow-hidden">
+    <div class="absolute inset-0"
+         [style.background]="film.posterUrl
+           ? 'linear-gradient(to bottom, rgba(10,10,26,0.3) 0%, rgba(10,10,26,0.95) 100%)'
+           : 'linear-gradient(135deg,#0a0a1a 0%,#1a0a2e 50%,#0d1a3a 100%)'">
+    </div>
+    <img *ngIf="film.posterUrl" [src]="film.posterUrl" [alt]="film.title"
+         class="w-full h-full object-cover opacity-20 blur-sm scale-110"/>
+
+    <!-- Back button -->
+    <button (click)="goBack()"
+            class="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-sm text-white transition-colors">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Films
+    </button>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="max-w-5xl mx-auto px-4 -mt-48 relative z-10 pb-16">
+    <div class="flex flex-col md:flex-row gap-8">
+
+      <!-- Affiche -->
+      <div class="shrink-0">
+        <div class="w-48 md:w-56 rounded-2xl overflow-hidden shadow-2xl border border-white/10 mx-auto md:mx-0"
+             style="background: linear-gradient(145deg,#1a1a2e,#16213e)">
+          <img *ngIf="film.posterUrl" [src]="film.posterUrl" [alt]="film.title"
+               class="w-full aspect-[2/3] object-cover"/>
+          <div *ngIf="!film.posterUrl"
+               class="w-full aspect-[2/3] flex items-center justify-center text-gray-500">
+            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+              <path d="M15 10l4.553-2.553A1 1 0 0121 8.382v7.236a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Rating étoiles sous l'affiche -->
+        <div *ngIf="film.averageRating" class="mt-4 text-center md:text-left">
+          <div class="flex justify-center md:justify-start gap-0.5 mb-1">
+            <span *ngFor="let s of getStars(film.averageRating)" class="text-yellow-400 text-lg">★</span>
+            <span *ngFor="let s of getEmptyStars(film.averageRating)" class="text-gray-600 text-lg">★</span>
+          </div>
+          <p class="text-sm text-gray-400">
+            <span class="text-white font-semibold">{{ film.averageRating | number:'1.1-1' }}</span>/5
+            <span class="ml-1">({{ film.totalReviews }} avis)</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Détails -->
+      <div class="flex-1 min-w-0">
+
+        <!-- Badges -->
+        <div class="flex flex-wrap gap-2 mb-3">
+          <span *ngIf="isNew(film.releaseDate)"
+                class="px-3 py-1 bg-primary text-white text-xs font-bold rounded-full">★ NOUVEAU</span>
+          <span *ngIf="film.genre"
+                class="px-3 py-1 bg-white/10 text-gray-300 text-xs rounded-full">{{ film.genre }}</span>
+          <span *ngIf="film.rating"
+                class="px-3 py-1 bg-white/10 text-gray-300 text-xs rounded-full">{{ film.rating }}</span>
+        </div>
+
+        <!-- Titre -->
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">{{ film.title }}</h1>
+
+        <!-- Meta infos -->
+        <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-400 mb-6">
+          <span *ngIf="film.durationMinutes" class="flex items-center gap-1.5">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            {{ getDurationLabel(film.durationMinutes) }}
+          </span>
+          <span *ngIf="film.language" class="flex items-center gap-1.5">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+            </svg>
+            {{ film.language }}
+          </span>
+          <span *ngIf="film.releaseDate" class="flex items-center gap-1.5">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            {{ getReleaseDateLabel(film.releaseDate) }}
+          </span>
+        </div>
+
+        <!-- Synopsis -->
+        <div *ngIf="film.synopsis" class="mb-6">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Synopsis</h3>
+          <p class="text-gray-300 leading-relaxed text-sm md:text-base">{{ film.synopsis }}</p>
+        </div>
+
+        <!-- Réalisateur -->
+        <div class="grid grid-cols-2 gap-4 mb-8">
+          <div *ngIf="film.director">
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Réalisateur</p>
+            <p class="text-white text-sm">{{ film.director }}</p>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-wrap gap-3">
+          <button class="flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors">
+            <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            Voir les séances
+          </button>
+          <button *ngIf="film.trailerUrl"
+                  (click)="openTrailer()"
+                  class="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl backdrop-blur-sm transition-colors border border-white/20">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            Bande-annonce
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal Trailer -->
+<div *ngIf="showTrailer"
+     class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+     (click)="closeTrailer()">
+  <div class="relative w-full max-w-4xl aspect-video" (click)="$event.stopPropagation()">
+    <button (click)="closeTrailer()"
+            class="absolute -top-10 right-0 text-white hover:text-gray-300 flex items-center gap-2 text-sm">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      Fermer
+    </button>
+    <iframe [src]="trailerEmbedUrl | safeUrl"
+            class="w-full h-full rounded-xl"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+    </iframe>
+  </div>
+</div>

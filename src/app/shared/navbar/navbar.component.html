@@ -20,6 +20,7 @@
            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
           Films
         </a>
+        <!-- ── Cinémas visible pour tout le monde ── -->
         <a routerLink="/cinemas" routerLinkActive="text-primary bg-primary/5"
            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
           Cinémas
@@ -46,11 +47,11 @@
           <span class="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white">3</span>
         </a>
 
-        <!-- Management — dernier, admin seulement, même taille -->
+        <!-- Management — admin seulement -->
         <div class="relative" *ngIf="isBackOfficeAdmin()">
           <button (click)="toggleManagement()"
                   class="flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
-            Management
+            À propos
             <svg class="w-4 h-4 transition-transform" [class.rotate-180]="managementDropdown"
                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -62,6 +63,10 @@
             <div class="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Events & Entertainment</div>
             <a routerLink="/events" (click)="closeDropdowns()"
                class="flex items-center gap-3 px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">Events</a>
+            <a routerLink="/cinemas" (click)="closeDropdowns()"
+               class="flex items-center gap-3 px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">
+              Nos Cinémas
+            </a>
             <a routerLink="/films" (click)="closeDropdowns()"
                class="flex items-center gap-3 px-4 py-2.5 text-gray-700 transition-colors hover:bg-primary/5 hover:text-primary">Films & Premieres</a>
             <a routerLink="/tickets" (click)="closeDropdowns()"
@@ -131,6 +136,7 @@
     <div class="space-y-1 px-4 py-3">
       <a routerLink="/home" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 font-medium text-gray-700 hover:bg-primary/5">Home</a>
       <a routerLink="/films" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Films</a>
+      <!-- ── Cinémas visible pour tout le monde en mobile ── -->
       <a routerLink="/cinemas" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Cinémas</a>
       <a routerLink="/events" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Events</a>
       <a *ngIf="isAuthenticated()" routerLink="/club" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Club</a>

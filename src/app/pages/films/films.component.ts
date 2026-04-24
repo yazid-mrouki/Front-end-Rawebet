@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FilmService } from '../../features/cinema/services/film.service';
 import { Film } from '../../features/cinema/models/film.model';
 import { SafeUrlPipe } from '../../shared/pipes/safe-url.pipe';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-films',
@@ -26,9 +27,10 @@ export class FilmsComponent implements OnInit, AfterViewInit {
   private heroInterval: any;
 
   constructor(
-    private filmService: FilmService,
-    private cdr: ChangeDetectorRef
-  ) {}
+  private filmService: FilmService,
+  private cdr: ChangeDetectorRef,
+  private router: Router
+) {}
 
   ngOnInit(): void {
     this.filmService.getAll().subscribe({
@@ -83,6 +85,10 @@ export class FilmsComponent implements OnInit, AfterViewInit {
     this.heroFilm = this.heroFilms[index];
     this.cdr.detectChanges();
   }
+
+  goToFilm(id: number): void {
+  this.router.navigate(['/films', id]);
+}
 
   nextHero(): void {
     const next = (this.heroIndex + 1) % this.heroFilms.length;

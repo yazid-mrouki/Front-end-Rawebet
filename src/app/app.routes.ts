@@ -16,7 +16,7 @@ import { NotificationsComponent } from './pages/notifications/notifications.comp
 import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './pages/auth/reset-password/reset-password.component';
 import { authGuard } from './core/guards/auth.guard';
-
+import { FilmDetailComponent } from './pages/films/film-detail/film-detail.component';
 import { AdminLayoutComponent } from './admin/admin-layout/admin-layout.component';
 import { AdminDashboardComponent } from './admin/pages/dashboard/admin-dashboard.component';
 import { AdminEventsComponent } from './admin/pages/events/admin-events.component';
@@ -45,6 +45,7 @@ export const routes: Routes = [
   { path: 'home', component: HomeComponent },
   { path: 'events', component: EventsComponent },
   { path: 'films', component: FilmsComponent },
+  { path: 'films/:id', component: FilmDetailComponent },
   { path: 'cinemas', component: CinemasComponent },
   { path: 'tickets', component: TicketsComponent, canActivate: [authGuard] },
   { path: 'clubs', component: ClubsComponent },

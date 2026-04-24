@@ -24,12 +24,9 @@
     </div>
   </div>
 
-  <!-- Loading -->
   <div *ngIf="isLoading" class="flex justify-center py-16">
     <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
   </div>
-
-  <!-- Error -->
   <div *ngIf="error" class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{{ error }}</div>
 
   <!-- Table -->
@@ -42,6 +39,7 @@
           <th class="text-left px-4 py-3 text-gray-500 font-medium">Genre</th>
           <th class="text-left px-4 py-3 text-gray-500 font-medium">Durée</th>
           <th class="text-left px-4 py-3 text-gray-500 font-medium">Note</th>
+          <th class="text-left px-4 py-3 text-gray-500 font-medium">Recommandation IA</th>
           <th class="text-right px-4 py-3 text-gray-500 font-medium">Actions</th>
         </tr>
       </thead>
@@ -50,10 +48,8 @@
           <td class="px-4 py-3">
             <div class="flex items-center gap-3">
               <div class="w-10 h-14 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                <img *ngIf="film.posterUrl" [src]="film.posterUrl" [alt]="film.title"
-                     class="w-full h-full object-cover"/>
-                <div *ngIf="!film.posterUrl"
-                     class="w-full h-full flex items-center justify-center text-gray-300 text-xs">🎬</div>
+                <img *ngIf="film.posterUrl" [src]="film.posterUrl" [alt]="film.title" class="w-full h-full object-cover"/>
+                <div *ngIf="!film.posterUrl" class="w-full h-full flex items-center justify-center text-gray-300 text-xs">🎬</div>
               </div>
               <div>
                 <p class="font-medium text-gray-800">{{ film.title }}</p>
@@ -70,6 +66,22 @@
             <span *ngIf="film.averageRating">★ {{ film.averageRating | number:'1.1-1' }}</span>
             <span *ngIf="!film.averageRating" class="text-gray-300">—</span>
           </td>
+          <!-- Colonne Recommandation IA -->
+          <td class="px-4 py-3">
+            <div *ngIf="film.roiLabel" class="flex items-center gap-1.5">
+              <span [ngClass]="{
+                'bg-green-50 text-green-700':  film.profitable === true,
+                'bg-amber-50 text-amber-700':  film.profitable === null,
+                'bg-red-50   text-red-600':    film.profitable === false
+              }" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium">
+                {{ film.roiLabel }}
+              </span>
+              <span *ngIf="film.roiConfidence" class="text-xs text-gray-400">
+                {{ (film.roiConfidence * 100).toFixed(0) }}%
+              </span>
+            </div>
+            <span *ngIf="!film.roiLabel" class="text-gray-300 text-xs">—</span>
+          </td>
           <td class="px-4 py-3 text-right">
             <button (click)="deleteFilm(film.id)"
                     class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-medium">
@@ -78,7 +90,7 @@
           </td>
         </tr>
         <tr *ngIf="filteredFilms.length === 0">
-          <td colspan="6" class="text-center py-10 text-gray-400">Aucun film trouvé.</td>
+          <td colspan="7" class="text-center py-10 text-gray-400">Aucun film trouvé.</td>
         </tr>
       </tbody>
     </table>
@@ -88,7 +100,6 @@
   <div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
 
-      <!-- Modal header -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
         <div class="flex items-center gap-3">
           <div *ngIf="modalStep === 'confirm'" (click)="backToSearch()"
@@ -102,39 +113,28 @@
               {{ modalStep === 'search' ? 'Rechercher un film' : 'Confirmer les informations' }}
             </h2>
             <p class="text-xs text-gray-400 mt-0.5">
-              {{ modalStep === 'search' ? 'Powered by TMDB' : 'Modifiez si nécessaire avant d\'ajouter' }}
+              {{ modalStep === 'search' ? 'Powered by TMDB' : "Modifiez si nécessaire avant d'ajouter" }}
             </p>
           </div>
         </div>
         <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors">&times;</button>
       </div>
 
-      <!-- ── STEP 1 : Recherche TMDB ── -->
+      <!-- STEP 1 : Recherche -->
       <div *ngIf="modalStep === 'search'" class="flex flex-col flex-1 overflow-hidden">
-
-        <!-- Search input -->
         <div class="px-6 py-4 border-b border-gray-50">
           <div class="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 gap-3">
             <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
-            <input
-              [(ngModel)]="tmdbQuery"
-              (ngModelChange)="onTmdbSearch()"
-              type="text"
-              placeholder="Rechercher un film... ex: Dune, Oppenheimer"
-              class="bg-transparent outline-none text-sm text-gray-700 w-full placeholder-gray-400"
-              autofocus/>
+            <input [(ngModel)]="tmdbQuery" (ngModelChange)="onTmdbSearch()" type="text"
+                   placeholder="Rechercher un film... ex: Dune, Oppenheimer"
+                   class="bg-transparent outline-none text-sm text-gray-700 w-full placeholder-gray-400" autofocus/>
             <div *ngIf="isSearching" class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0"></div>
-            <button *ngIf="tmdbQuery && !isSearching" (click)="tmdbQuery=''; tmdbResults=[]"
-                    class="text-gray-400 hover:text-gray-600 shrink-0">&times;</button>
+            <button *ngIf="tmdbQuery && !isSearching" (click)="tmdbQuery=''; tmdbResults=[]" class="text-gray-400 hover:text-gray-600 shrink-0">&times;</button>
           </div>
         </div>
-
-        <!-- Résultats -->
         <div class="flex-1 overflow-y-auto">
-
-          <!-- Placeholder vide -->
           <div *ngIf="!isSearching && tmdbResults.length === 0 && !tmdbQuery"
                class="flex flex-col items-center justify-center py-16 text-gray-400">
             <svg class="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,61 +142,38 @@
             </svg>
             <p class="text-sm">Tapez le titre d'un film pour commencer</p>
           </div>
-
-          <!-- Aucun résultat -->
           <div *ngIf="!isSearching && tmdbResults.length === 0 && tmdbQuery.length >= 2"
                class="flex flex-col items-center justify-center py-16 text-gray-400">
             <p class="text-sm">Aucun résultat pour "{{ tmdbQuery }}"</p>
           </div>
-
-          <!-- Liste résultats -->
           <div *ngIf="tmdbResults.length > 0" class="divide-y divide-gray-50">
-            <div *ngFor="let movie of tmdbResults"
-                 (click)="selectMovie(movie)"
+            <div *ngFor="let movie of tmdbResults" (click)="selectMovie(movie)"
                  class="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 cursor-pointer transition-colors group">
-
-              <!-- Poster -->
               <div class="w-12 h-16 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                <img *ngIf="movie.poster_path"
-                     [src]="getPosterUrl(movie.poster_path)"
-                     [alt]="movie.title"
-                     class="w-full h-full object-cover"/>
-                <div *ngIf="!movie.poster_path"
-                     class="w-full h-full flex items-center justify-center text-gray-300 text-xs">🎬</div>
+                <img *ngIf="movie.poster_path" [src]="getPosterUrl(movie.poster_path)" [alt]="movie.title" class="w-full h-full object-cover"/>
+                <div *ngIf="!movie.poster_path" class="w-full h-full flex items-center justify-center text-gray-300 text-xs">🎬</div>
               </div>
-
-              <!-- Info -->
               <div class="flex-1 min-w-0">
-                <p class="font-semibold text-gray-800 truncate group-hover:text-primary transition-colors">
-                  {{ movie.title }}
-                </p>
+                <p class="font-semibold text-gray-800 truncate group-hover:text-primary transition-colors">{{ movie.title }}</p>
                 <p class="text-xs text-gray-400 mt-0.5">
                   {{ getYear(movie.release_date) }}
                   <span *ngIf="movie.vote_average"> · ★ {{ movie.vote_average | number:'1.1-1' }}</span>
                 </p>
                 <p class="text-xs text-gray-500 mt-1 line-clamp-1">{{ movie.overview }}</p>
               </div>
-
-              <!-- Arrow -->
-              <svg class="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors shrink-0"
-                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
             </div>
           </div>
-
-          <!-- Loading overlay résultats -->
-          <div *ngIf="isSearching && tmdbResults.length === 0"
-               class="flex items-center justify-center py-16">
+          <div *ngIf="isSearching && tmdbResults.length === 0" class="flex items-center justify-center py-16">
             <div class="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         </div>
       </div>
 
-      <!-- ── STEP 2 : Confirmation ── -->
+      <!-- STEP 2 : Confirmation -->
       <div *ngIf="modalStep === 'confirm'" class="flex-1 overflow-y-auto">
-
-        <!-- Loading état -->
         <div *ngIf="isSearching" class="flex flex-col items-center justify-center py-16 gap-3">
           <div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           <p class="text-sm text-gray-500">Chargement des informations TMDB...</p>
@@ -204,7 +181,7 @@
 
         <div *ngIf="!isSearching" class="px-6 py-4 space-y-4">
 
-          <!-- Aperçu poster + titre -->
+          <!-- Aperçu -->
           <div class="flex gap-4 items-start bg-gray-50 rounded-xl p-4">
             <div class="w-20 h-28 rounded-xl overflow-hidden bg-gray-200 shrink-0">
               <img *ngIf="form.posterUrl" [src]="form.posterUrl" alt="poster" class="w-full h-full object-cover"/>
@@ -221,116 +198,218 @@
             </div>
           </div>
 
-          <!-- Champs auto-remplis (éditables) -->
+          <!-- ── Bloc Analyse IA ── -->
+          <div class="rounded-xl border overflow-hidden"
+               [class.border-green-200]="getRecoColor() === 'green'"
+               [class.border-amber-200]="getRecoColor() === 'amber'"
+               [class.border-red-200]="getRecoColor() === 'red'"
+               [class.border-gray-100]="!roiResult && !isLoadingRoi"
+               [class.border-blue-100]="isLoadingRoi">
+
+            <!-- Header bloc -->
+            <div class="px-4 py-2 flex items-center justify-between"
+                 [class.bg-green-50]="getRecoColor() === 'green'"
+                 [class.bg-amber-50]="getRecoColor() === 'amber'"
+                 [class.bg-red-50]="getRecoColor() === 'red'"
+                 [class.bg-gray-50]="!roiResult && !isLoadingRoi"
+                 [class.bg-blue-50]="isLoadingRoi">
+              <span class="text-xs font-medium uppercase tracking-wide"
+                    [class.text-green-700]="getRecoColor() === 'green'"
+                    [class.text-amber-700]="getRecoColor() === 'amber'"
+                    [class.text-red-600]="getRecoColor() === 'red'"
+                    [class.text-gray-500]="!roiResult && !isLoadingRoi"
+                    [class.text-blue-600]="isLoadingRoi">
+                Analyse IA — Recommandation de programmation
+              </span>
+              <div *ngIf="isLoadingRoi" class="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+              <span *ngIf="roiResult && !isLoadingRoi"
+                    class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                    [class.bg-green-100]="getRecoColor() === 'green'"
+                    [class.text-green-800]="getRecoColor() === 'green'"
+                    [class.bg-amber-100]="getRecoColor() === 'amber'"
+                    [class.text-amber-800]="getRecoColor() === 'amber'"
+                    [class.bg-red-100]="getRecoColor() === 'red'"
+                    [class.text-red-700]="getRecoColor() === 'red'">
+                {{ roiResult.label }}
+              </span>
+            </div>
+
+            <!-- Corps résultat -->
+            <div *ngIf="roiResult && !isLoadingRoi" class="px-4 py-3 bg-white space-y-3">
+
+              <!-- Recommandation principale -->
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                     [class.bg-green-100]="getRecoColor() === 'green'"
+                     [class.bg-amber-100]="getRecoColor() === 'amber'"
+                     [class.bg-red-100]="getRecoColor() === 'red'">
+                  <svg *ngIf="getRecoColor() === 'green'" class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                  </svg>
+                  <svg *ngIf="getRecoColor() === 'amber'" class="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                  </svg>
+                  <svg *ngIf="getRecoColor() === 'red'" class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <p class="text-sm font-semibold"
+                   [class.text-green-700]="getRecoColor() === 'green'"
+                   [class.text-amber-700]="getRecoColor() === 'amber'"
+                   [class.text-red-600]="getRecoColor() === 'red'">
+                  {{ roiResult.recommendation }}
+                </p>
+              </div>
+
+              <!-- Fenêtre temporelle -->
+              <div class="bg-gray-50 rounded-lg px-3 py-2">
+                <p class="text-xs text-gray-500 mb-0.5">Fenêtre d'exploitation</p>
+                <p class="text-xs font-medium text-gray-700">{{ roiResult.temporalLabel }}</p>
+              </div>
+
+              <!-- 3 barres de score -->
+              <div class="space-y-2">
+                <!-- Score IA -->
+                <div>
+                  <div class="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>Potentiel du film (IA)</span>
+                    <span class="font-medium text-gray-700">{{ getPct(roiResult.aiScore) }}%</span>
+                  </div>
+                  <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-blue-400 rounded-full transition-all duration-500"
+                         [style.width.%]="getPct(roiResult.aiScore)"></div>
+                  </div>
+                </div>
+                <!-- Score temporel -->
+                <div>
+                  <div class="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>Fraîcheur (fenêtre d'exploitation)</span>
+                    <span class="font-medium text-gray-700">{{ getPct(roiResult.temporalScore) }}%</span>
+                  </div>
+                  <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-purple-400 rounded-full transition-all duration-500"
+                         [style.width.%]="getPct(roiResult.temporalScore)"></div>
+                  </div>
+                </div>
+                <!-- Score final -->
+                <div>
+                  <div class="flex justify-between text-xs font-medium mb-1"
+                       [class.text-green-700]="getRecoColor() === 'green'"
+                       [class.text-amber-700]="getRecoColor() === 'amber'"
+                       [class.text-red-600]="getRecoColor() === 'red'">
+                    <span>Score final de programmation</span>
+                    <span>{{ getPct(roiResult.finalScore) }}%</span>
+                  </div>
+                  <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500"
+                         [class.bg-green-500]="getRecoColor() === 'green'"
+                         [class.bg-amber-500]="getRecoColor() === 'amber'"
+                         [class.bg-red-400]="getRecoColor() === 'red'"
+                         [style.width.%]="getPct(roiResult.finalScore)"></div>
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-xs text-gray-400">
+                Modèle entraîné sur 3 157 films TMDB · AUC-ROC 0.84
+              </p>
+            </div>
+
+            <!-- Pas de budget -->
+            <div *ngIf="!roiResult && !isLoadingRoi" class="px-4 py-3 bg-white">
+              <p class="text-xs text-gray-400">Données de budget insuffisantes pour cette prédiction.</p>
+            </div>
+          </div>
+
+          <!-- Champs éditables -->
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Synopsis</label>
             <textarea [(ngModel)]="form.synopsis" rows="3"
                       class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary resize-none"></textarea>
           </div>
-
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Titre</label>
-              <input [(ngModel)]="form.title" type="text"
-                     class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+              <input [(ngModel)]="form.title" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Réalisateur</label>
-              <input [(ngModel)]="form.director" type="text"
-                     class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+              <input [(ngModel)]="form.director" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
             </div>
           </div>
-
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Genre</label>
-              <input [(ngModel)]="form.genre" type="text"
-                     class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+              <input [(ngModel)]="form.genre" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Durée (minutes)</label>
-              <input [(ngModel)]="form.durationMinutes" type="number"
-                     class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+              <input [(ngModel)]="form.durationMinutes" type="number" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
             </div>
           </div>
-
           <div class="grid grid-cols-2 gap-3">
-  <div>
-    <label class="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1">
-      Langue
-      <span class="text-red-500 text-xs font-bold">*</span>
-      <span class="text-gray-400 font-normal">(à renseigner)</span>
-    </label>
-    <select [(ngModel)]="form.language"
-            class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm outline-none focus:border-primary bg-orange-50/30">
-      <option value="" disabled selected>Choisir une langue...</option>
-      <option value="VF">VF — Version Française</option>
-      <option value="VOSTFR">VOSTFR — Sous-titres français</option>
-      <option value="VO">VO — Version Originale</option>
-      <option value="VOSTA">VOSTA — Sous-titres anglais</option>
-      <option value="AR">AR — Version Arabe</option>
-    </select>
-  </div>
-  <div>
-    <label class="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1">
-      Classification
-      <span class="text-red-500 text-xs font-bold">*</span>
-      <span class="text-gray-400 font-normal">(à renseigner)</span>
-    </label>
-    <select [(ngModel)]="form.rating"
-            class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm outline-none focus:border-primary bg-orange-50/30">
-      <option value="" disabled selected>Choisir une classification...</option>
-      <option value="Tout public">Tout public</option>
-      <option value="-10">-10 ans</option>
-      <option value="-12">-12 ans</option>
-      <option value="-16">-16 ans</option>
-      <option value="-18">-18 ans</option>
-      <option value="PG">PG — Guidance parentale</option>
-      <option value="PG-13">PG-13</option>
-      <option value="R">R — Restreint</option>
-      <option value="NC-17">NC-17</option>
-    </select>
-  </div>
-</div>
-
+            <div>
+              <label class="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1">
+                Langue <span class="text-red-500">*</span><span class="text-gray-400 font-normal">(à renseigner)</span>
+              </label>
+              <select [(ngModel)]="form.language" class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm outline-none focus:border-primary bg-orange-50/30">
+                <option value="" disabled selected>Choisir une langue...</option>
+                <option value="VF">VF — Version Française</option>
+                <option value="VOSTFR">VOSTFR — Sous-titres français</option>
+                <option value="VO">VO — Version Originale</option>
+                <option value="VOSTA">VOSTA — Sous-titres anglais</option>
+                <option value="AR">AR — Version Arabe</option>
+              </select>
+            </div>
+            <div>
+              <label class="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1">
+                Classification <span class="text-red-500">*</span><span class="text-gray-400 font-normal">(à renseigner)</span>
+              </label>
+              <select [(ngModel)]="form.rating" class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm outline-none focus:border-primary bg-orange-50/30">
+                <option value="" disabled selected>Choisir une classification...</option>
+                <option value="Tout public">Tout public</option>
+                <option value="-10">-10 ans</option>
+                <option value="-12">-12 ans</option>
+                <option value="-16">-16 ans</option>
+                <option value="-18">-18 ans</option>
+                <option value="PG">PG</option>
+                <option value="PG-13">PG-13</option>
+                <option value="R">R — Restreint</option>
+                <option value="NC-17">NC-17</option>
+              </select>
+            </div>
+          </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Date de sortie</label>
-              <input [(ngModel)]="form.releaseDate" type="date"
-                     class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+              <input [(ngModel)]="form.releaseDate" type="date" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">IMDb ID</label>
-              <input [(ngModel)]="form.imdbId" type="text"
-                     class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+              <input [(ngModel)]="form.imdbId" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
             </div>
           </div>
-
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Casting principal</label>
-            <input [(ngModel)]="form.castSummary" type="text"
-                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+            <input [(ngModel)]="form.castSummary" type="text" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
           </div>
-
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">URL Affiche</label>
-            <input [(ngModel)]="form.posterUrl" type="url"
-                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
+            <input [(ngModel)]="form.posterUrl" type="url" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary"/>
           </div>
-
-          <!-- Erreur -->
           <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-xs">
             {{ errorMessage }}
           </div>
-
         </div>
       </div>
 
-      <!-- Footer modal -->
+      <!-- Footer -->
       <div *ngIf="modalStep === 'confirm' && !isSearching"
            class="px-6 py-4 border-t border-gray-100 flex justify-between items-center shrink-0">
         <p class="text-xs text-gray-400 flex items-center gap-1">
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
           Les champs en orange sont obligatoires
         </p>
         <div class="flex gap-3">

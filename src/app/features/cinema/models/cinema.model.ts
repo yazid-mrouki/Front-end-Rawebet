@@ -8,6 +8,10 @@ export interface Cinema {
   phone: string;
   email: string;
   isActive: boolean;
+  latitude?: number;
+  longitude?: number;
+  timezone?: string;
+  openingHours?: string;
 }
 
 export interface CreateCinemaRequest {
@@ -18,4 +22,7 @@ export interface CreateCinemaRequest {
   phone: string;
   email: string;
   openingHours: string;
+  latitude?: number;
+  longitude?: number;
+  timezone?: string;
 }
