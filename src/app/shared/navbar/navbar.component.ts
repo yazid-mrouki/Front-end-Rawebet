@@ -31,13 +31,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   ngOnInit() {
-    console.log('🔄 NavbarComponent Init');
-
     // Subscribe to unread count from service
     this.notificationService.unreadCount$
       .pipe(takeUntil(this.destroy$))
       .subscribe(count => {
-        console.log('📊 Unread count updated:', count);
         this.unreadCount = count;
         this.cd.detectChanges();  // Force change detection
       });
@@ -51,7 +48,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.auth.authState
       .pipe(takeUntil(this.destroy$))
       .subscribe(authenticated => {
-        console.log('🔐 Auth state changed:', authenticated);
         if (authenticated) {
           this.loadUserData();
         } else {
@@ -69,41 +65,32 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   private loadUserData() {
-    console.log('👤 Loading user data...');
-
     this.userService.getMe().subscribe({
       next: (u) => {
         const anyU = u as any;
         this.userName = anyU.nom || anyU.fullName || anyU.name || anyU.username || 'U';
         this.userId = anyU.id;
 
-        console.log('✅ User loaded:', this.userName, 'ID:', this.userId);
-
         if (this.userId) {
           this.loadUnreadCount(this.userId);
         }
       },
       error: (err) => {
-        console.error('❌ Error loading user:', err);
         this.userName = 'U';
       }
     });
   }
 
   private loadUnreadCount(userId: number) {
-    console.log('📥 Loading unread count for user:', userId);
-
     this.notificationService.getUnreadCount(userId).subscribe({
       next: (data: any) => {
         const count = data.count !== undefined ? data.count :
                      data.unreadCount !== undefined ? data.unreadCount :
                      data.totalCount || 0;
 
-        console.log('✅ Unread count loaded:', count);
         this.notificationService.setUnreadCount(count);
       },
       error: (err) => {
-        console.error('❌ Error loading unread count:', err);
         this.notificationService.setUnreadCount(0);
       }
     });
