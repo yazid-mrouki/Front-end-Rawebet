@@ -1,0 +1,157 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+  <!-- Header Section -->
+  <div class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-primary-to-r from-purple-500/20 to-pink-500/20 blur-3xl"></div>
+    <div class="relative px-6 py-12 max-w-7xl mx-auto">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-4xl">👥</span>
+            <h1 class="text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+              User Subscriptions
+            </h1>
+          </div>
+          <p class="text-gray-400 text-lg">Manage and monitor all active user subscriptions</p>
+        </div>
+        <div class="hidden md:block text-center">
+          <div class="text-5xl font-bold text-purple-400">{{ subscriptions.length }}</div>
+          <div class="text-gray-400 text-sm uppercase tracking-widest">Total Active</div>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="grid grid -cols-1 md:grid-cols-4 gap-4">
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-value">{{ subscriptions.length }}</div>
+          <div class="stat-label">Total Subscriptions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-value">{{ subscriptions.length }}</div>
+          <div class="stat-label">Active Plans</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-value">{{ subscriptions.length }}</div>
+          <div class="stat-label">Queued Plans</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💎</div>
+          <div class="stat-value">Premium</div>
+          <div class="stat-label">Most Popular</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="px-6 py-12 max-w-7xl mx-auto">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <div class="loading-box">
+        <div class="spinner-large"></div>
+        <h3 class="text-white text-xl font-semibold mt-6">Loading subscriptions...</h3>
+        <p class="text-gray-400 mt-2">This may take a moment</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="error-container">
+      <div class="error-box">
+        <div class="error-icon">⚠️</div>
+        <h3 class="text-white text-xl font-semibold">Oops! Something went wrong</h3>
+        <p class="text-gray-300 mt-2">{{ error }}</p>
+        <button (click)="loadUserSubscriptions()" class="btn-retry mt-6">
+          🔄 Try Again
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && !error && subscriptions.length === 0" class="empty-container">
+      <div class="empty-box">
+        <div class="empty-icon">📭</div>
+        <h3 class="text-white text-2xl font-semibold">No subscriptions yet</h3>
+        <p class="text-gray-400 mt-2">Users will appear here once they subscribe to a plan</p>
+      </div>
+    </div>
+
+    <!-- Subscriptions Grid -->
+    <div *ngIf="!loading && !error && subscriptions.length > 0" class="subscriptions-grid">
+      <div *ngFor="let sub of subscriptions"
+           [class.deleting]="deleting.has(sub.subscriptionId)"
+           class="subscription-card">
+
+        <!-- Status Badge -->
+        <div class="absolute top-4 right-4 z-20">
+          <span [class]="'status-badge ' + getStatusColor(sub.status)">
+            {{ sub.status }}
+          </span>
+        </div>
+
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="plan-icon">
+            <span class="text-3xl">
+              {{ sub.abonnementType === 'VIP' ? '💎' : sub.abonnementType === 'Premium' ? '🥇' : '🪙' }}
+            </span>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-xl font-bold text-white">{{ sub.abonnementName }}</h3>
+            <p class="text-sm text-gray-400">ID: #{{ sub.subscriptionId }}</p>
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          <!-- Plan Type Badge -->
+          <div class="plan-type-badge"
+               [class]="sub.abonnementType === 'VIP' ? 'type-vip' : sub.abonnementType === 'Premium' ? 'type-premium' : 'type-standard'">
+            {{ sub.abonnementType }}
+          </div>
+
+          <!-- Info Grid -->
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">📅 Start Date</span>
+              <span class="info-value">{{ sub.dateDebut | date: 'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">⏰ End Date</span>
+              <span class="info-value">{{ sub.dateFin | date: 'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">🎫 Tickets</span>
+              <span class="info-value">
+                <span *ngIf="sub.illimited" class="unlimited-badge">♾️ Unlimited</span>
+                <span *ngIf="!sub.illimited">{{ sub.ticketsRestants }}</span>
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">🔐 QR Code</span>
+              <span class="info-value qr-code-text" [title]="sub.qrCode">
+                {{ sub.qrCode | slice: 0:8 }}...
+              </span>
+            </div>
+          </div>
+
+          <!-- QR Code Preview (small) -->
+          <div class="qr-preview">
+            <span class="text-xs text-gray-500 font-mono">{{ sub.qrCode | slice: 0:12 }}...</span>
+          </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="card-footer">
+          <button (click)="deleteSubscription(sub.subscriptionId)"
+                  [disabled]="deleting.has(sub.subscriptionId)"
+                  class="btn-delete">
+            <span *ngIf="!deleting.has(sub.subscriptionId)">🗑️ Delete</span>
+            <span *ngIf="deleting.has(sub.subscriptionId)" class="spinner-mini"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

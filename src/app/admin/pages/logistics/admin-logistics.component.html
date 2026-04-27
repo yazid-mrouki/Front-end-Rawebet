@@ -1,0 +1,49 @@
+<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+  <div><h1 class="font-serif text-2xl font-bold text-dark">Logistics & Inventory</h1><p class="text-sm text-gray-400 mt-1">Manage equipment and material requests</p></div>
+
+  <input [(ngModel)]="searchQuery" type="text" placeholder="Search inventory..." class="w-full sm:w-80 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary" />
+
+  <!-- Inventory Table -->
+  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <div class="p-6 pb-0"><h3 class="font-semibold text-dark">Inventory</h3></div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm mt-4">
+        <thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100">
+          <th class="px-6 py-3 font-medium">Item</th><th class="px-4 py-3 font-medium">Category</th><th class="px-4 py-3 font-medium">Total</th><th class="px-4 py-3 font-medium">Available</th><th class="px-4 py-3 font-medium">Condition</th>
+        </tr></thead>
+        <tbody>
+          <tr *ngFor="let i of filteredInventory" class="border-b border-gray-50 hover:bg-gray-50/50">
+            <td class="px-6 py-4 font-medium text-dark text-xs">{{ i.name }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ i.category }}</td>
+            <td class="px-4 py-4 text-gray-600 text-xs">{{ i.qty }}</td>
+            <td class="px-4 py-4"><span [class]="i.available > 0 ? 'text-green-600 font-semibold' : 'text-red-500 font-semibold'" class="text-xs">{{ i.available }}</span></td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ i.condition }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Material Requests -->
+  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <div class="p-6 pb-0"><h3 class="font-semibold text-dark">Material Requests</h3></div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm mt-4">
+        <thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100">
+          <th class="px-6 py-3 font-medium">Request ID</th><th class="px-4 py-3 font-medium">Requester</th><th class="px-4 py-3 font-medium">Items</th><th class="px-4 py-3 font-medium">Event</th><th class="px-4 py-3 font-medium">Date</th><th class="px-4 py-3 font-medium">Status</th><th class="px-4 py-3 font-medium text-right">Actions</th>
+        </tr></thead>
+        <tbody>
+          <tr *ngFor="let r of requests" class="border-b border-gray-50 hover:bg-gray-50/50">
+            <td class="px-6 py-4 font-mono text-xs text-primary font-semibold">{{ r.id }}</td>
+            <td class="px-4 py-4 text-dark text-xs font-medium">{{ r.requester }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ r.items }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ r.event }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ r.date }}</td>
+            <td class="px-4 py-4"><span [class]="getReqStatusClass(r.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ r.status }}</span></td>
+            <td class="px-4 py-4 text-right"><button *ngIf="r.status === 'Pending'" class="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-xs font-medium hover:bg-green-100">Approve</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

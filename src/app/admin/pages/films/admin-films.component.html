@@ -1,0 +1,43 @@
+<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="font-serif text-2xl font-bold text-dark">Film Management</h1>
+      <p class="text-sm text-gray-400 mt-1">{{ films.length }} films in catalog</p>
+    </div>
+    <button class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors flex items-center gap-2"><span>＋</span> Add Film</button>
+  </div>
+  <input [(ngModel)]="searchQuery" type="text" placeholder="Search by title or director..." class="w-full sm:w-80 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary" />
+  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+            <th class="px-6 py-3 font-medium">Title</th>
+            <th class="px-4 py-3 font-medium">Director</th>
+            <th class="px-4 py-3 font-medium">Genre</th>
+            <th class="px-4 py-3 font-medium">Duration</th>
+            <th class="px-4 py-3 font-medium">Rating</th>
+            <th class="px-4 py-3 font-medium">Showtimes</th>
+            <th class="px-4 py-3 font-medium">Status</th>
+            <th class="px-4 py-3 font-medium text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of filteredFilms" class="border-b border-gray-50 hover:bg-gray-50/50">
+            <td class="px-6 py-4 font-medium text-dark">{{ f.title }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ f.director }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ f.genre }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ f.duration }} min</td>
+            <td class="px-4 py-4 text-accent font-semibold text-xs">⭐ {{ f.rating }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ f.showtimes }}</td>
+            <td class="px-4 py-4"><span [class]="getStatusClass(f.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ f.status }}</span></td>
+            <td class="px-4 py-4 text-right">
+              <button class="p-1.5 hover:bg-blue-50 rounded-lg text-xs" title="Edit">✏️</button>
+              <button class="p-1.5 hover:bg-red-50 rounded-lg text-xs" title="Delete" (click)="deleteFilm(f.id)">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

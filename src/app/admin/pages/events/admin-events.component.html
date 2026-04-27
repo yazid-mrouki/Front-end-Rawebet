@@ -1,0 +1,65 @@
+<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="font-serif text-2xl font-bold text-dark">Event Management</h1>
+      <p class="text-sm text-gray-400 mt-1">{{ events.length }} events total</p>
+    </div>
+    <button class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors flex items-center gap-2">
+      <span>＋</span> Create Event
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-col sm:flex-row gap-3">
+    <input [(ngModel)]="searchQuery" type="text" placeholder="Search events..." class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-colors" />
+    <select [(ngModel)]="selectedStatus" class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-600">
+      <option value="all">All Statuses</option>
+      <option value="Planning">Planning</option>
+      <option value="On Sale">On Sale</option>
+      <option value="Open">Open</option>
+      <option value="Upcoming">Upcoming</option>
+    </select>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+            <th class="px-6 py-3 font-medium">Event</th>
+            <th class="px-4 py-3 font-medium">Type</th>
+            <th class="px-4 py-3 font-medium">Date</th>
+            <th class="px-4 py-3 font-medium">Tickets</th>
+            <th class="px-4 py-3 font-medium">Price</th>
+            <th class="px-4 py-3 font-medium">Status</th>
+            <th class="px-4 py-3 font-medium text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of filteredEvents" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+            <td class="px-6 py-4 font-medium text-dark max-w-xs truncate">{{ e.name }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ e.type }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs whitespace-nowrap">{{ e.date }} {{ e.time }}</td>
+            <td class="px-4 py-4">
+              <div class="flex items-center gap-2">
+                <div class="w-16 bg-gray-100 rounded-full h-1.5"><div class="bg-primary rounded-full h-1.5" [style.width.%]="(e.sold / e.capacity) * 100"></div></div>
+                <span class="text-xs text-gray-500">{{ e.sold }}/{{ e.capacity }}</span>
+              </div>
+            </td>
+            <td class="px-4 py-4 text-gray-600 text-xs">{{ e.price > 0 ? e.price + ' TND' : 'Free' }}</td>
+            <td class="px-4 py-4">
+              <span [class]="getStatusClass(e.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ e.status }}</span>
+            </td>
+            <td class="px-4 py-4 text-right">
+              <div class="flex items-center justify-end gap-1">
+                <button class="p-1.5 hover:bg-blue-50 rounded-lg text-blue-500 text-xs" title="Edit">✏️</button>
+                <button class="p-1.5 hover:bg-red-50 rounded-lg text-red-500 text-xs" title="Delete" (click)="deleteEvent(e.id)">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

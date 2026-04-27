@@ -1,0 +1,187 @@
+<div class="min-h-screen bg-gray-50">
+
+  <!-- Toast -->
+  <div *ngIf="showPasswordToast" class="fixed top-20 right-6 z-50">
+    <div class="bg-green-600 text-white px-4 py-2 rounded-xl shadow-lg">
+      Mot de passe modifié avec succès.
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="relative bg-gradient-to-r from-primary via-dark to-black text-white py-14">
+    <div class="max-w-7xl mx-auto px-6 flex items-center gap-6">
+
+      <div class="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center text-3xl font-bold">
+        {{ user.fullName.charAt(0) }}
+      </div>
+
+      <div>
+        <h1 class="text-3xl font-bold">{{ user.fullName }}</h1>
+        <p class="text-white/70 text-sm">
+          {{ user.tier }} Member · Since {{ user.joinDate }}
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SUBSCRIPTION CARD (IMPORTANT) -->
+  <!-- spacing wrapper -->
+  <div class="max-w-7xl mx-auto px-6 -mt-8 md:-mt-12 relative z-10">
+
+    <!-- LOADING STATE -->
+    <div *ngIf="loadingSubscription && !userAbonnement"
+         class="relative overflow-hidden rounded-3xl shadow-2xl border border-white/10
+                bg-gradient-to-r from-white via-gray-50 to-white p-6 md:p-8 text-center">
+      <div class="inline-block">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+        <p class="text-gray-600 text-sm">Loading your subscription...</p>
+      </div>
+    </div>
+
+    <!-- SUBSCRIPTION CARD (Only show if loaded and has subscription) -->
+    <div *ngIf="subscriptionReady && userAbonnement"
+         class="relative overflow-hidden rounded-3xl shadow-2xl border border-white/10
+                bg-gradient-to-r from-white via-gray-50 to-white">
+
+      <!-- glow effect -->
+      <div class="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 blur-3xl rounded-full"></div>
+      <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-dark/10 blur-3xl rounded-full"></div>
+
+      <div class="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+
+        <!-- LEFT -->
+        <div>
+
+          <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mt-1">
+            Current Subscription
+          </h2>
+
+          <p class="text-sm text-gray-500 mt-2">
+            Expiry:
+            <span class="font-medium text-gray-800">
+              {{ subscriptionExpiry || '---' }}
+            </span>
+          </p>
+
+          <div class="mt-3 inline-flex items-center gap-2 text-xs font-medium text-primary">
+            <span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+            Active membership
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="text-right flex flex-col items-end gap-3">
+
+          <div class="px-4 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+            Premium Access
+          </div>
+
+          <div>
+            <p class="text-xs text-gray-500">Remaining Tickets</p>
+            <p class="text-3xl font-bold text-gray-900">
+              {{ remainingTickets !== null ? remainingTickets : '∞' }}
+            </p>
+          </div>
+
+          <a routerLink="/subscriptions"
+             class="bg-primary text-white px-5 py-2 rounded-xl font-semibold
+                    hover:bg-primary/90 transition shadow-md">
+            Manage Plan →
+          </a>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="max-w-7xl mx-auto px-6 py-10">
+
+    <!-- STATS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+      <div *ngFor="let stat of stats"
+           class="bg-white rounded-2xl p-5 shadow-sm border hover:shadow-md transition text-center">
+
+        <div class="text-2xl">{{ stat.icon }}</div>
+        <div class="text-2xl font-bold text-gray-900">{{ stat.value }}</div>
+        <div class="text-xs text-gray-500">{{ stat.label }}</div>
+
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+
+      <!-- PROFILE -->
+      <div class="bg-white rounded-3xl shadow border p-6">
+        <h3 class="text-xl font-bold mb-6">Account Information</h3>
+
+        <form (ngSubmit)="onSubmit()" class="space-y-5">
+
+          <input [(ngModel)]="user.fullName" name="fullName"
+            class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary outline-none"
+            placeholder="Full name" />
+
+          <input [(ngModel)]="user.email" name="email"
+            class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary outline-none"
+            placeholder="Email" />
+
+          <input [(ngModel)]="user.phone" name="phone"
+            class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary outline-none"
+            placeholder="Phone" />
+
+          <button class="w-full bg-primary text-white py-3 rounded-xl font-semibold hover:bg-primary/90">
+            Save Changes
+          </button>
+
+        </form>
+      </div>
+
+      <!-- PASSWORD -->
+      <div class="bg-white rounded-3xl shadow border p-6">
+        <h3 class="text-xl font-bold mb-6">Change Password</h3>
+
+        <form (ngSubmit)="changePassword()" class="space-y-5">
+
+          <input type="password" [(ngModel)]="passwordForm.oldPassword" name="oldPassword"
+            class="w-full p-3 border rounded-xl" placeholder="Current password" />
+
+          <input type="password" [(ngModel)]="passwordForm.newPassword" name="newPassword"
+            class="w-full p-3 border rounded-xl" placeholder="New password" />
+
+          <input type="password" [(ngModel)]="passwordForm.confirmPassword" name="confirmPassword"
+            class="w-full p-3 border rounded-xl" placeholder="Confirm password" />
+
+          <button class="w-full bg-primary text-white py-3 rounded-xl font-semibold">
+            Change Password
+          </button>
+
+        </form>
+      </div>
+
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
+
+      <a routerLink="/loyalty" class="bg-white p-5 rounded-2xl shadow hover:shadow-md transition">
+        ⭐ Loyalty
+      </a>
+
+      <a routerLink="/tickets" class="bg-white p-5 rounded-2xl shadow hover:shadow-md transition">
+        🎟 Tickets
+      </a>
+
+      <a routerLink="/subscriptions" class="bg-white p-5 rounded-2xl shadow hover:shadow-md transition">
+        💳 Subscription
+      </a>
+
+      <a routerLink="/feedback" class="bg-white p-5 rounded-2xl shadow hover:shadow-md transition">
+        💬 Feedback
+      </a>
+
+    </div>
+
+  </div>
+</div>
