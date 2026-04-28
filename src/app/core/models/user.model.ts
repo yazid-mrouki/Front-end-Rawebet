@@ -2,6 +2,7 @@
 export interface UserResponse {
   id: number;
   nom: string;
+  username?: string;
   email: string;
   avatarUrl?: string;
   roles: string[];
@@ -41,6 +42,8 @@ export interface Page<T> {
   last: boolean;
 }
 
+export interface UpdateProfileRequest { nom: string; email: string; }
+export interface ChangePasswordRequest { oldPassword: string; newPassword: string; }
 // ── Requêtes ────────────────────────────────────────────────────────────────
 export interface UpdateProfileRequest {
   nom: string;

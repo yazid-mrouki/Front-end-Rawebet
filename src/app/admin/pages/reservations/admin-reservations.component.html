@@ -1,0 +1,317 @@
+<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="font-serif text-2xl font-bold text-dark">Material Reservations</h1>
+      <p class="text-sm text-gray-400 mt-1">{{ reservations.length }} reservations total</p>
+    </div>
+    <button
+      (click)="openCreateModal()"
+      class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors flex items-center gap-2"
+    >
+      <span>＋</span> New Reservation
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-col sm:flex-row gap-3">
+    <input
+      type="text"
+      placeholder="Search reservations..."
+      (input)="searchSubject.next($event.target.value)"
+      class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-colors"
+    />
+    <select
+      [(ngModel)]="selectedStatusFilter"
+      (change)="onStatusFilterChange()"
+      class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-600"
+    >
+      <option value="all">All Statuses</option>
+      <option value="PENDING">Pending</option>
+      <option value="CONFIRMED">Confirmed</option>
+      <option value="COMPLETED">Completed</option>
+      <option value="RETURNED_PARTIAL">Partial Return</option>
+      <option value="CANCELLED">Cancelled</option>
+    </select>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="bg-white rounded-2xl border border-gray-100 p-8 text-center">
+    <p class="text-gray-500">Loading reservations...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+    {{ error }}
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading && !error" class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+            <th class="px-6 py-3 font-medium">Material</th>
+            <th class="px-4 py-3 font-medium">User</th>
+            <th class="px-4 py-3 font-medium">Quantity</th>
+            <th class="px-4 py-3 font-medium">Start Date</th>
+            <th class="px-4 py-3 font-medium">End Date</th>
+            <th class="px-4 py-3 font-medium">Status</th>
+            <th class="px-4 py-3 font-medium text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let res of filteredReservations"
+            class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+          >
+            <td class="px-6 py-4 font-medium text-dark max-w-xs truncate">
+              {{ res.materielNom }}
+              <p class="text-xs text-gray-500">{{ res.materielReference }}</p>
+            </td>
+            <td class="px-4 py-4 text-gray-600 text-xs">{{ res.userNom }}</td>
+            <td class="px-4 py-4 text-gray-600 font-semibold">{{ res.quantite }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs whitespace-nowrap">{{ formatDateTime(res.dateDebut) }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs whitespace-nowrap">{{ formatDateTime(res.dateFin) }}</td>
+            <td class="px-4 py-4">
+              <span [class]="getStatusClass(res.statut)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">
+                {{ res.statut }}
+              </span>
+            </td>
+            <td class="px-4 py-4 text-right">
+              <div class="flex items-center justify-end gap-1">
+                <button
+                  *ngIf="res.statut === 'PENDING'"
+                  (click)="confirmReservation(res)"
+                  class="p-1.5 hover:bg-green-50 rounded-lg text-green-500 text-xs"
+                  title="Confirm"
+                >
+                  ✓
+                </button>
+                <button
+                  *ngIf="res.statut !== 'CANCELLED' && res.statut !== 'COMPLETED'"
+                  (click)="openExtendModal(res)"
+                  class="p-1.5 hover:bg-blue-50 rounded-lg text-blue-500 text-xs"
+                  title="Extend"
+                >
+                  ⏰
+                </button>
+                <button
+                  *ngIf="res.statut === 'CONFIRMED' || res.statut === 'COMPLETED'"
+                  (click)="openRetourModal(res)"
+                  class="p-1.5 hover:bg-purple-50 rounded-lg text-purple-500 text-xs"
+                  title="Partial Return"
+                >
+                  📦
+                </button>
+                <button
+                  *ngIf="res.statut !== 'CANCELLED'"
+                  (click)="cancelReservation(res)"
+                  class="p-1.5 hover:bg-red-50 rounded-lg text-red-500 text-xs"
+                  title="Cancel"
+                >
+                  ✕
+                </button>
+                <button
+                  (click)="deleteReservation(res.id)"
+                  class="p-1.5 hover:bg-gray-200 rounded-lg text-gray-600 text-xs"
+                  title="Delete"
+                >
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredReservations.length === 0" class="border-b border-gray-50">
+            <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+              No reservations found
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Reservation Modal -->
+  <div *ngIf="showModal && modalStep === 'create'" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+      <h2 class="text-xl font-bold text-dark mb-4">New Material Reservation</h2>
+
+      <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+        {{ errorMessage }}
+      </div>
+
+      <form (ngSubmit)="createReservation()" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">User ID *</label>
+            <input
+              type="number"
+              [(ngModel)]="formUserId"
+              name="userId"
+              placeholder="e.g., 1"
+              min="1"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Material *</label>
+            <select
+              [(ngModel)]="formMaterielId"
+              name="materielId"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+            >
+              <option [value]="0">Select a material</option>
+              <option *ngFor="let mat of materiels" [value]="mat.id">
+                {{ mat.nom }} ({{ mat.quantiteTotale }} available)
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+          <input
+            type="number"
+            [(ngModel)]="formQuantite"
+            name="quantite"
+            placeholder="e.g., 5"
+            min="1"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+            <input
+              type="datetime-local"
+              [(ngModel)]="formDateDebut"
+              name="dateDebut"
+              [min]="getCurrentDateTime()"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+            <input
+              type="datetime-local"
+              [(ngModel)]="formDateFin"
+              name="dateFin"
+              [min]="formDateDebut || getCurrentDateTime()"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+            />
+          </div>
+        </div>
+      </form>
+
+      <div class="flex gap-3 mt-6">
+        <button
+          (click)="closeModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="createReservation()"
+          [disabled]="isSubmitting"
+          class="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-light transition-colors disabled:opacity-50"
+        >
+          {{ isSubmitting ? 'Creating...' : 'Create Reservation' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Extend Reservation Modal -->
+  <div *ngIf="showModal && modalStep === 'extend'" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6">
+      <h2 class="text-xl font-bold text-dark mb-4">Extend Reservation</h2>
+
+      <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+        {{ errorMessage }}
+      </div>
+
+      <div class="space-y-4 mb-6">
+        <div>
+          <p class="text-sm text-gray-600 mb-2">Material: <span class="font-semibold">{{ selectedReservation?.materielNom }}</span></p>
+          <p class="text-sm text-gray-600 mb-2">Current End Date: <span class="font-semibold">{{ formatDateTime(selectedReservation?.dateFin || '') }}</span></p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">New End Date *</label>
+          <input
+            type="datetime-local"
+            [(ngModel)]="extendNewDate"
+            [min]="selectedReservation?.dateFin"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+          />
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          (click)="closeModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="extendReservation()"
+          [disabled]="isSubmitting"
+          class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50"
+        >
+          {{ isSubmitting ? 'Extending...' : 'Extend' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Partial Return Modal -->
+  <div *ngIf="showModal && modalStep === 'retour'" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6">
+      <h2 class="text-xl font-bold text-dark mb-4">Partial Return</h2>
+
+      <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+        {{ errorMessage }}
+      </div>
+
+      <div class="space-y-4 mb-6">
+        <div>
+          <p class="text-sm text-gray-600 mb-2">Material: <span class="font-semibold">{{ selectedReservation?.materielNom }}</span></p>
+          <p class="text-sm text-gray-600 mb-2">Reserved Quantity: <span class="font-semibold">{{ selectedReservation?.quantite }}</span></p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Quantity Returned *</label>
+          <input
+            type="number"
+            [(ngModel)]="retourQuantite"
+            min="1"
+            [max]="selectedReservation?.quantite || 0"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+          />
+          <p class="text-xs text-gray-500 mt-1">Max: {{ selectedReservation?.quantite }}</p>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          (click)="closeModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="partialReturn()"
+          [disabled]="isSubmitting"
+          class="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors disabled:opacity-50"
+        >
+          {{ isSubmitting ? 'Processing...' : 'Confirm Return' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

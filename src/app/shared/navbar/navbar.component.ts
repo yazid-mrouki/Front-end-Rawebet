@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { UserService } from '../../core/services/user.service';
 import { ImpersonationService } from '../../core/services/impersonation.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -21,29 +22,58 @@ export class NavbarComponent implements OnInit, OnDestroy {
   userName = '';
   userAvatarUrl = '';
   userTier = 'SILVER';
+  unreadNotificationCount = 0;
 
   private auth = inject(AuthService);
   private userService = inject(UserService);
   private impersonation = inject(ImpersonationService);
+  private notificationService = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
 
   private authSub?: Subscription;
+  private notificationSub?: Subscription;
 
   ngOnInit() {
     if (this.auth.isAuthenticated()) this.loadUser();
 
     this.authSub = this.auth.authState.subscribe((ok) => {
-      if (ok) this.loadUser();
-      else {
+      if (ok) {
+        this.loadUser();
+        this.loadNotificationCount();
+      } else {
         this.userName = '';
         this.userAvatarUrl = '';
         this.userTier = 'SILVER';
+        this.unreadNotificationCount = 0;
       }
+    });
+
+    // Subscribe to real-time notification count updates
+    this.notificationSub = this.notificationService.unreadCount$.subscribe((count) => {
+      this.unreadNotificationCount = count;
+      this.cdr.markForCheck();
     });
   }
 
   ngOnDestroy() {
     this.authSub?.unsubscribe();
+    this.notificationSub?.unsubscribe();
+  }
+
+  private loadNotificationCount() {
+    const userId = this.auth.getCurrentUserId();
+    if (!userId) return;
+
+    this.notificationService.getUnreadCount(userId).subscribe({
+      next: (response: any) => {
+        const count = response?.count || response?.unreadCount || 0;
+        this.notificationService.setUnreadCount(count);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   private loadUser() {

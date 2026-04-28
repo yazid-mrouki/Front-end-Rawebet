@@ -1,0 +1,139 @@
+<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="font-serif text-2xl font-bold text-dark">Material Categories</h1>
+      <p class="text-sm text-gray-400 mt-1">{{ categories.length }} categories total</p>
+    </div>
+    <button
+      (click)="openCreateModal()"
+      class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors flex items-center gap-2"
+    >
+      <span>＋</span> Create Category
+    </button>
+  </div>
+
+  <!-- Search -->
+  <input
+    type="text"
+    placeholder="Search categories..."
+    (input)="searchSubject.next($event.target.value)"
+    class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-colors"
+  />
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="bg-white rounded-2xl border border-gray-100 p-8 text-center">
+    <p class="text-gray-500">Loading categories...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+    {{ error }}
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading && !error" class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+            <th class="px-6 py-3 font-medium">Name</th>
+            <th class="px-6 py-3 font-medium">Description</th>
+            <th class="px-6 py-3 font-medium text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let category of filteredCategories"
+            class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+          >
+            <td class="px-6 py-4 font-medium text-dark">{{ category.nom }}</td>
+            <td class="px-6 py-4 text-gray-500 text-xs max-w-xs truncate">{{ category.description }}</td>
+            <td class="px-6 py-4 text-right">
+              <div class="flex items-center justify-end gap-1">
+                <button
+                  (click)="openEditModal(category)"
+                  class="p-1.5 hover:bg-blue-50 rounded-lg text-blue-500 text-xs"
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+                <button
+                  (click)="deleteCategorie(category)"
+                  class="p-1.5 hover:bg-red-50 rounded-lg text-red-500 text-xs"
+                  title="Delete"
+                >
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredCategories.length === 0" class="border-b border-gray-50">
+            <td colspan="3" class="px-6 py-8 text-center text-gray-500">
+              No categories found
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div *ngIf="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+      <!-- Modal Header -->
+      <h2 class="text-xl font-bold text-dark mb-4">
+        {{ modalStep === 'create' ? 'Create Material Category' : 'Edit Material Category' }}
+      </h2>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Form -->
+      <form (ngSubmit)="submitForm()" class="space-y-4">
+        <!-- Name -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Category Name *</label>
+          <input
+            type="text"
+            [(ngModel)]="form.nom"
+            name="nom"
+            placeholder="e.g., Audiovisuel"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+          />
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+          <textarea
+            [(ngModel)]="form.description"
+            name="description"
+            placeholder="Category description"
+            rows="3"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+          ></textarea>
+        </div>
+      </form>
+
+      <!-- Modal Actions -->
+      <div class="flex gap-3 mt-6">
+        <button
+          (click)="closeModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="submitForm()"
+          [disabled]="isSubmitting"
+          class="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-light transition-colors disabled:opacity-50"
+        >
+          {{ isSubmitting ? 'Saving...' : (modalStep === 'create' ? 'Create' : 'Update') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

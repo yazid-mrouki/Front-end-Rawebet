@@ -1,32 +1,155 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { EvenementService } from '../../features/event/services/evenement.service';
+import { ReservationEvenementService } from '../../features/event/services/reservation-evenement.service';
+import { UserService } from '../../core/services/user.service';
+import { Evenement, EvenementStatus, TypeCategorie } from '../../features/event/models/evenement.model';
+import { ReservationEvenement } from '../../features/event/models/reservation-evenement.model';
 
 @Component({
   selector: 'app-events',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './events.component.html'
 })
-export class EventsComponent {
-  categories = ['All', 'Watch Party', 'Film Premiere', 'Club Event', 'Exhibition', 'Concert', 'Live Show'];
+export class EventsComponent implements OnInit {
+  categories = ['All', ...Object.values(TypeCategorie)];
   activeCategory = 'All';
 
-  events = [
-    { id: 1, title: 'Champions League Final Watch Party', category: 'Watch Party', date: 'May 31, 2026', time: '8:00 PM', location: 'Main Hall', price: 'Free', emoji: '⚽', spots: 45, totalSpots: 200, color: 'from-green-500 to-emerald-700' },
-    { id: 2, title: 'Indie Film Festival – Opening Night', category: 'Film Premiere', date: 'June 5, 2026', time: '7:30 PM', location: 'Cinema Room A', price: '15 TND', emoji: '🎬', spots: 78, totalSpots: 120, color: 'from-primary to-primary-light' },
-    { id: 3, title: 'Theatre Workshop: Acting Masterclass', category: 'Club Event', date: 'June 12, 2026', time: '10:00 AM', location: 'Workshop Space', price: '25 TND', emoji: '🎭', spots: 12, totalSpots: 30, color: 'from-accent to-yellow-500' },
-    { id: 4, title: 'Art & Photography Exhibition', category: 'Exhibition', date: 'June 20, 2026', time: '9:00 AM', location: 'Gallery Wing', price: 'Free', emoji: '🖼️', spots: 150, totalSpots: 500, color: 'from-purple-600 to-indigo-700' },
-    { id: 5, title: 'Stand-Up Comedy Night', category: 'Live Show', date: 'June 25, 2026', time: '9:00 PM', location: 'Main Stage', price: '20 TND', emoji: '😂', spots: 34, totalSpots: 150, color: 'from-pink-500 to-rose-700' },
-    { id: 6, title: 'Cultural Music Evening', category: 'Concert', date: 'July 3, 2026', time: '7:00 PM', location: 'Outdoor Arena', price: '10 TND', emoji: '🎵', spots: 200, totalSpots: 500, color: 'from-blue-500 to-cyan-700' },
-    { id: 7, title: 'World Cup 2026 – Semi Final', category: 'Watch Party', date: 'July 14, 2026', time: '9:00 PM', location: 'Main Hall', price: 'Free', emoji: '⚽', spots: 80, totalSpots: 200, color: 'from-green-500 to-emerald-700' },
-    { id: 8, title: 'Documentary Screening: Ocean Life', category: 'Film Premiere', date: 'July 20, 2026', time: '6:00 PM', location: 'Cinema Room B', price: '10 TND', emoji: '🐳', spots: 60, totalSpots: 80, color: 'from-teal-500 to-teal-700' }
-  ];
+  events: Evenement[] = [];
+  isLoading = true;
+  error = '';
+
+  // My Reservations
+  showMyReservations = false;
+  userReservations: ReservationEvenement[] = [];
+  isLoadingReservations = false;
+  currentUserId: number | null = null;
+
+  constructor(
+    private evenementService: EvenementService,
+    private reservationService: ReservationEvenementService,
+    private userService: UserService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.loadPublishedEvents();
+    this.loadCurrentUser();
+  }
+
+  loadCurrentUser(): void {
+    this.userService.getMe().subscribe({
+      next: (user) => {
+        this.currentUserId = user.id;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Error loading current user:', err);
+      }
+    });
+  }
+
+  loadPublishedEvents(): void {
+    this.isLoading = true;
+    this.error = '';
+    console.log('Loading published events...');
+
+    this.evenementService.getEvenementsByStatus(EvenementStatus.PUBLISHED).subscribe({
+      next: (data) => {
+        console.log('✓ Published events loaded:', data);
+        setTimeout(() => {
+          this.events = data;
+          this.isLoading = false;
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+          console.log('✓ UI updated - isLoading:', this.isLoading, 'events:', this.events.length);
+        }, 0);
+      },
+      error: (err) => {
+        console.error('✗ Error loading published events:', err);
+        setTimeout(() => {
+          this.error = `Failed to load events: ${err.message || err.statusText || 'Unknown error'}`;
+          this.isLoading = false;
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        }, 0);
+      }
+    });
+  }
+
+  toggleMyReservations(): void {
+    this.showMyReservations = !this.showMyReservations;
+    if (this.showMyReservations && this.currentUserId) {
+      this.loadUserReservations();
+    }
+  }
+
+  loadUserReservations(): void {
+    if (!this.currentUserId) return;
+
+    this.isLoadingReservations = true;
+    this.reservationService.getByUser(this.currentUserId).subscribe({
+      next: (reservations) => {
+        setTimeout(() => {
+          this.userReservations = reservations;
+          this.isLoadingReservations = false;
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        }, 0);
+      },
+      error: (err) => {
+        console.error('Error loading user reservations:', err);
+        this.isLoadingReservations = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  cancelReservation(reservation: ReservationEvenement): void {
+    if (!confirm(`Are you sure you want to cancel your reservation for ${reservation.evenementTitre}?`)) {
+      return;
+    }
+
+    this.reservationService.annuler(reservation.id).subscribe({
+      next: () => {
+        // Reload reservations after cancellation
+        this.loadUserReservations();
+        alert('Reservation cancelled successfully');
+      },
+      error: (err) => {
+        console.error('Error cancelling reservation:', err);
+        alert('Failed to cancel reservation. Please try again.');
+      }
+    });
+  }
 
   get filteredEvents() {
-    return this.activeCategory === 'All' ? this.events : this.events.filter(e => e.category === this.activeCategory);
+    if (this.activeCategory === 'All') {
+      return this.events;
+    }
+    // Filter by actual categorie field
+    return this.events.filter(e => e.categorie === this.activeCategory);
   }
 
   setCategory(cat: string) {
     this.activeCategory = cat;
+  }
+
+  getCategoryIcon(categorie: string): string {
+    switch (categorie) {
+      case 'THEATRE': return '🎭';
+      case 'DANSE': return '💃';
+      case 'MUSIQUE': return '🎵';
+      case 'EXPOSITION': return '🖼️';
+      case 'CONFERENCE': return '🎤';
+      case 'ATELIER': return '🛠️';
+      case 'FESTIVAL': return '🎪';
+      case 'CONCERT': return '🎸';
+      case 'SPECTACLE': return '🎭';
+      case 'AUTRE': return '🎉';
+      default: return '📅';
+    }
   }
 }

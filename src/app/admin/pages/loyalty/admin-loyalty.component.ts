@@ -11,7 +11,7 @@ import { finalize } from 'rxjs/operators';
   selector: 'app-admin-loyalty',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './admin-loyalty.component.html',
+  templateUrl: './admin-loyalty.component.html'
 })
 export class AdminLoyaltyComponent implements OnInit {
   tiers = [

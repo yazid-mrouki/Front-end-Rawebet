@@ -142,6 +142,10 @@ export class AuthService {
     return typeof id === 'number' ? id : null;
   }
 
+  getUserId(): number | null {
+    return this.getCurrentUserId();
+  }
+
   getCurrentUserName(): string {
     const d = this.getDecodedToken();
     if (d?.name) return d.name;
