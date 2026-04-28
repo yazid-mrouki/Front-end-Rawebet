@@ -60,101 +60,23 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   private readonly allMenuItems: AdminMenuItem[] = [
-    {
-      label: 'Dashboard',
-      icon: '📊',
-      route: '/admin/dashboard',
-      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'],
-    },
-    {
-      label: 'Intelligence AI',
-      icon: '🤖',
-      route: '/admin/ml',
-      permissions: ['ADMIN_MANAGE'],
-      roles: ['SUPER_ADMIN'],
-    },
-    {
-      label: 'Events',
-      icon: '🎭',
-      route: '/admin/events',
-      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'],
-    },
-    {
-      label: 'Films',
-      icon: '🎬',
-      route: '/admin/films',
-      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'],
-    },
-    // ── Ajout Cinémas ─────────────────────────────────────────────
-    {
-      label: 'Cinémas',
-      icon: '🏛️',
-      route: '/admin/cinemas',
-      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'],
-    },
-    {
-      label: 'Tickets',
-      icon: '🎟️',
-      route: '/admin/tickets',
-      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'],
-    },
-    {
-      label: 'Club',
-      icon: '👥',
-      route: '/admin/club',
-      roles: ['SUPER_ADMIN', 'ADMIN_CLUB'],
-    },
-    {
-      label: 'Chat',
-      icon: '💬',
-      route: '/admin/chat',
-      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'],
-    },
-    {
-      label: 'Subscriptions',
-      icon: '💳',
-      route: '/admin/subscriptions',
-      roles: ['SUPER_ADMIN'],
-    },
-    {
-      label: 'Users',
-      icon: '👤',
-      route: '/admin/users',
-      permissions: ['ADMIN_MANAGE'],
-      roles: ['SUPER_ADMIN'],
-    },
-    {
-      label: 'Loyalty',
-      icon: '⭐',
-      route: '/admin/loyalty',
-      permissions: ['FIDELITY_UPDATE', 'ADMIN_MANAGE'],
-      roles: ['SUPER_ADMIN'],
-    },
-    {
-      label: 'Roles',
-      icon: '🛡️',
-      route: '/admin/roles',
-      permissions: ['ADMIN_MANAGE'],
-      roles: ['SUPER_ADMIN'],
-    },
-    {
-      label: 'Logistics',
-      icon: '📦',
-      route: '/admin/logistics',
-      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'],
-    },
-    {
-      label: 'Feedback',
-      icon: '💬',
-      route: '/admin/feedback',
-      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'],
-    },
-    {
-      label: 'Notifications',
-      icon: '🔔',
-      route: '/admin/notifications',
-      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'],
-    },
+    { label: 'Dashboard',     icon: '📊', route: '/admin/dashboard',      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'] },
+    { label: 'Events',        icon: '🎭', route: '/admin/events',         roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
+    { label: 'Event Spaces',  icon: '🏢', route: '/admin/event-spaces',   roles: ['SUPER_ADMIN', 'ADMIN_EVENT'] },
+    { label: 'Films',         icon: '🎬', route: '/admin/films',          roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+    { label: 'Cinémas',       icon: '🏛️', route: '/admin/cinemas',        roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+    { label: 'Tickets',       icon: '🎟️', route: '/admin/tickets',        roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
+    { label: 'Club',          icon: '👥', route: '/admin/club',           roles: ['SUPER_ADMIN', 'ADMIN_CLUB'] },
+    { label: 'Chat',          icon: '💬', route: '/admin/chat',           roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+    { label: 'Subscriptions', icon: '💳', route: '/admin/subscriptions',  roles: ['SUPER_ADMIN'] },
+    { label: 'Materials',     icon: '🔧', route: '/admin/materiels',      roles: ['SUPER_ADMIN', 'ADMIN_EVENT'] },
+    { label: 'Reservations',  icon: '📅', route: '/admin/reservations',   roles: ['SUPER_ADMIN', 'ADMIN_EVENT'] },
+    { label: 'Users',         icon: '👤', route: '/admin/users',          permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
+    { label: 'Loyalty',       icon: '⭐', route: '/admin/loyalty',        permissions: ['FIDELITY_UPDATE'], roles: ['SUPER_ADMIN'] },
+    { label: 'Role',          icon: '🛡️', route: '/admin/roles',          permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
+    { label: 'Logistics',     icon: '📦', route: '/admin/logistics',      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+    { label: 'Feedback',      icon: '💬', route: '/admin/feedback',       roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
+    { label: 'Notifications', icon: '🔔', route: '/admin/notifications',  roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'] },
   ];
 
   get menuItems(): AdminMenuItem[] {
@@ -241,4 +163,7 @@ export class AdminLayoutComponent implements OnInit {
     if (roles.includes('ADMIN_CLUB'))   return 'Admin Club';
     return 'Admin';
   }
+
+  toggleSidebar() { this.sidebarCollapsed = !this.sidebarCollapsed; }
+  logout() { this.auth.logout(); }
 }

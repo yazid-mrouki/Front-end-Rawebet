@@ -21,7 +21,30 @@
 
         <!-- Events — visible à tous -->
         <a routerLink="/events" routerLinkActive="text-primary bg-primary/5"
-           class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Events</a>
+           class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
+          Events
+        </a>
+        <a routerLink="/materials" routerLinkActive="text-primary bg-primary/5"
+           class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
+          Materials
+        </a>
+        <a *ngIf="isAuthenticated()" routerLink="/club" routerLinkActive="text-primary bg-primary/5"
+           class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
+          Club
+        </a>
+        <a *ngIf="isAuthenticated()" routerLink="/tickets" routerLinkActive="text-primary bg-primary/5"
+           class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
+          Réserver
+        </a>
+        <a *ngIf="isAuthenticated()" routerLink="/feedback" routerLinkActive="text-primary bg-primary/5"
+           class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
+          Feedback
+        </a>
+        <a routerLink="/notifications" routerLinkActive="text-primary bg-primary/5"
+           class="relative rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
+          Notifications
+          <span class="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white">3</span>
+        </a>
 
         <!-- Cinémas — visible à tous -->
         <a routerLink="/cinemas" routerLinkActive="text-primary bg-primary/5"

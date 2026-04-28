@@ -1,4 +1,44 @@
 import { Routes } from '@angular/router';
+import { SignInComponent } from './pages/auth/sign-in/sign-in.component';
+import { SignUpComponent } from './pages/auth/sign-up/sign-up.component';
+import { HomeComponent } from './pages/home/home.component';
+import { EventsComponent } from './pages/events/events.component';
+import { EventDetailComponent } from './pages/events/event-detail/event-detail.component';
+import { MaterialsComponent } from './pages/materials/materials.component';
+import { FilmsComponent } from './pages/films/films.component';
+import { CinemasComponent } from './pages/cinemas/cinemas.component';
+import { TicketsComponent } from './pages/tickets/tickets.component';
+import { ClubsComponent } from './pages/clubs/clubs.component';
+import { SubscriptionsComponent } from './pages/subscriptions/subscriptions.component';
+import { LoyaltyComponent } from './pages/loyalty/loyalty.component';
+import { LogisticsComponent } from './pages/logistics/logistics.component';
+import { FeedbackComponent } from './pages/feedback/feedback.component';
+import { ProfileComponent } from './pages/profile/profile.component';
+import { NotificationsComponent } from './pages/notifications/notifications.component';
+import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './pages/auth/reset-password/reset-password.component';
+import { MarkReservationUsedComponent } from './pages/mark-reservation-used/mark-reservation-used';
+
+import { authGuard } from './core/guards/auth.guard';
+
+import { AdminLayoutComponent } from './admin/admin-layout/admin-layout.component';
+import { AdminDashboardComponent } from './admin/pages/dashboard/admin-dashboard.component';
+import { AdminEventsComponent } from './admin/pages/events/admin-events.component';
+import { AdminFilmsComponent } from './admin/pages/films/admin-films.component';
+import { AdminCinemasComponent } from './admin/pages/cinemas/admin-cinemas.component';
+import { AdminTicketsComponent } from './admin/pages/tickets/admin-tickets.component';
+import { AdminClubComponent } from './admin/pages/club/admin-club.component';
+import { AdminSubscriptionsComponent } from './admin/pages/subscriptions/admin-subscriptions.component';
+import { AdminUsersComponent } from './admin/pages/users/admin-users.component';
+import { AdminLoyaltyComponent } from './admin/pages/loyalty/admin-loyalty.component';
+import { AdminRolesComponent } from './admin/pages/roles/admin-roles.component';
+import { AdminLogisticsComponent } from './admin/pages/logistics/admin-logistics.component';
+import { AdminFeedbackComponent } from './admin/pages/feedback/admin-feedback.component';
+import { AdminNotificationsComponent } from './admin/pages/notifications/admin-notifications.component';
+import { AdminEventSpacesComponent } from './admin/pages/event-spaces/admin-event-spaces.component';
+import { AdminMaterielsUnifiedComponent } from './admin/pages/materiels/admin-materiels-unified.component';
+import { AdminReservationsComponent } from './admin/pages/reservations/admin-reservations.component';
+import { AdminChatComponent } from './admin/pages/chat/admin-chat.component';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { permissionGuard } from './core/guards/permission.guard';
@@ -125,7 +165,10 @@ export const routes: Routes = [
     path: 'chat',
     loadChildren: () => import('./features/chat/chat.routes').then((m) => m.CHAT_ROUTES),
   },
-
+ {
+    path: 'reservations/mark-used/:id',
+    component: MarkReservationUsedComponent
+  },
   // ════════════════════════════════════════════════════════════════
   // ESPACE ADMIN
   // adminGuard vérifie : connecté + (SUPER_ADMIN | ADMIN_CINEMA | ADMIN_EVENT | ADMIN_CLUB)
