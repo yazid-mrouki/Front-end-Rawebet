@@ -5,12 +5,15 @@ import { environment } from '../../../environments/environment';
 
 export interface SeatOption {
   id: number;
-  numero: number;
+  fullLabel: string;
+  seatNumber: number;
+  seatType: string;
+  isActive: boolean | null;
 }
 
 @Injectable({ providedIn: 'root' })
 export class SeatService {
-  private readonly apiUrl = `${environment.apiUrl}/seats`;
+  private readonly apiUrl = `${environment.apiUrl}/api/seats`;
 
   constructor(private readonly http: HttpClient) {}
 

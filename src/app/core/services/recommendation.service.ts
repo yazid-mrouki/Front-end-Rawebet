@@ -4,21 +4,33 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
-import { RecommendationApiResponse, RecommendationPayload } from '../models/recommendation.model';
+import {
+  MovieRecommendation,
+  RecommendationApiResponse,
+  RecommendationPayload,
+} from '../models/recommendation.model';
 
 @Injectable({ providedIn: 'root' })
 export class RecommendationService {
-  private baseUrl = environment.recommendationApiUrl;
-  private directUrl = environment.recommendationDirectUrl;
+  private readonly apiUrl = environment.recommendationApiUrl;
+  private readonly directUrl = environment.recommendationDirectUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
+
+  getRecommendations(userId: number): Observable<MovieRecommendation[]> {
+    return this.http.get<MovieRecommendation[]>(`${this.apiUrl}/reco/${userId}`);
+  }
+
+  getBestFeedbackRecommendation(userId: number): Observable<MovieRecommendation[]> {
+    return this.http.get<MovieRecommendation[]>(`${this.apiUrl}/reco-feedback/${userId}`);
+  }
 
   getHealth(): Observable<unknown> {
-    return this.http.get(`${this.baseUrl}/health`);
+    return this.http.get(`${this.apiUrl}/health`);
   }
 
   recommend(payload: RecommendationPayload): Observable<RecommendationApiResponse> {
-    return this.http.post<RecommendationApiResponse>(`${this.baseUrl}/recommend`, payload).pipe(
+    return this.http.post<RecommendationApiResponse>(`${this.apiUrl}/recommend`, payload).pipe(
       catchError((error: HttpErrorResponse) => {
         if (!this.shouldRetryDirect(error)) {
           return throwError(() => error);
