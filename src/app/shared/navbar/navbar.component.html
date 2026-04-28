@@ -15,27 +15,34 @@
         <a routerLink="/home" routerLinkActive="text-primary bg-primary/5"
            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Home</a>
 
-        <!-- Films — visible à tous -->
         <a routerLink="/films" routerLinkActive="text-primary bg-primary/5"
            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Films</a>
 
-        <!-- Events — visible à tous -->
         <a routerLink="/events" routerLinkActive="text-primary bg-primary/5"
            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Events</a>
 
-        <!-- Cinémas — visible à tous -->
         <a routerLink="/cinemas" routerLinkActive="text-primary bg-primary/5"
            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Cinémas</a>
 
-        <!-- Réserver (tickets) — client uniquement -->
+        <!-- Club — visible à tous -->
+        <a routerLink="/club" routerLinkActive="text-primary bg-primary/5"
+           class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Club</a>
+
+        <!-- Réserver — client uniquement -->
         <a *ngIf="isAuthenticated() && !isAdmin()"
            routerLink="/tickets" routerLinkActive="text-primary bg-primary/5"
            class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Réserver</a>
 
-        <!-- Club — authentifiés -->
-        <a *ngIf="isAuthenticated()"
-           routerLink="/club" routerLinkActive="text-primary bg-primary/5"
-           class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Club</a>
+        <!-- Feedback — authentifiés uniquement -->
+        <a *ngIf="isAuthenticated()" routerLink="/feedback" routerLinkActive="text-primary bg-primary/5"
+           class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Feedback</a>
+
+        <!-- Notifications -->
+        <a routerLink="/notifications" routerLinkActive="text-primary bg-primary/5"
+           class="relative rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
+          Notifications
+          <span class="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white">3</span>
+        </a>
 
         <!-- Management dropdown — admin seulement -->
         <div class="relative" *ngIf="isBackOfficeAdmin()">
@@ -54,24 +61,13 @@
               📊 Dashboard Admin
             </a>
             <div class="my-1 border-t border-gray-100"></div>
-            <a routerLink="/admin/films"    (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary/5 hover:text-primary text-sm">🎬 Films</a>
-            <a routerLink="/admin/events"   (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary/5 hover:text-primary text-sm">🎭 Events</a>
-            <a routerLink="/admin/tickets"  (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary/5 hover:text-primary text-sm">🎟️ Tickets</a>
-            <a routerLink="/admin/users"    (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary/5 hover:text-primary text-sm">👤 Utilisateurs</a>
-            <a routerLink="/admin/loyalty"  (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary/5 hover:text-primary text-sm">⭐ Fidélité</a>
+            <a routerLink="/admin/films"   (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary/5 hover:text-primary text-sm">🎬 Films</a>
+            <a routerLink="/admin/events"  (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary/5 hover:text-primary text-sm">🎭 Events</a>
+            <a routerLink="/admin/tickets" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary/5 hover:text-primary text-sm">🎟️ Tickets</a>
+            <a routerLink="/admin/users"   (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary/5 hover:text-primary text-sm">👤 Utilisateurs</a>
+            <a routerLink="/admin/loyalty" (click)="closeDropdowns()" class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-primary/5 hover:text-primary text-sm">⭐ Fidélité</a>
           </div>
         </div>
-
-        <!-- Feedback — authentifiés uniquement -->
-        <a *ngIf="isAuthenticated()" routerLink="/feedback" routerLinkActive="text-primary bg-primary/5"
-           class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">Feedback</a>
-
-        <!-- Notifications -->
-        <a routerLink="/notifications" routerLinkActive="text-primary bg-primary/5"
-           class="relative rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-primary/5 hover:text-primary">
-          Notifications
-          <span class="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white">3</span>
-        </a>
       </div>
 
       <!-- Desktop right — Avatar + badge -->
@@ -174,7 +170,7 @@
         </a>
       </div>
 
-      <!-- Burger mobile -->
+      <!-- Burger -->
       <button (click)="toggleMobileMenu()" class="rounded-lg p-2 text-gray-600 hover:bg-gray-100 lg:hidden">
         <svg *ngIf="!mobileMenuOpen" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
@@ -186,18 +182,19 @@
     </div>
   </div>
 
-  <!-- Mobile menu -->
+  <!-- Menu burger -->
   <div *ngIf="mobileMenuOpen" class="animate-fade-in border-t border-gray-100 bg-white lg:hidden">
     <div class="space-y-1 px-4 py-3">
-      <a routerLink="/home"   (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 font-medium text-gray-700 hover:bg-primary/5">Home</a>
-      <a routerLink="/films"  (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Films</a>
+      <a routerLink="/home"    (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 font-medium text-gray-700 hover:bg-primary/5">Home</a>
+      <a routerLink="/films"   (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Films</a>
       <a routerLink="/cinemas" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Cinémas</a>
-      <a routerLink="/events" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Events</a>
+      <a routerLink="/events"  (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Events</a>
+      <!-- Club — visible à tous -->
+      <a routerLink="/club"    (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Club</a>
       <a *ngIf="isAuthenticated() && !isAdmin()" routerLink="/tickets" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Réserver</a>
-      <a *ngIf="isAuthenticated()" routerLink="/club" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Club</a>
       <a *ngIf="!isAdmin()" routerLink="/subscriptions" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Abonnements</a>
-      <a *ngIf="!isAdmin()" routerLink="/loyalty" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Fidélité</a>
-      <a *ngIf="isAuthenticated()" routerLink="/feedback" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Feedback</a>
+      <a *ngIf="!isAdmin()" routerLink="/loyalty"       (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Fidélité</a>
+      <a *ngIf="isAuthenticated()" routerLink="/feedback"      (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Feedback</a>
       <a routerLink="/notifications" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Notifications</a>
       <a *ngIf="isAuthenticated()" routerLink="/profile" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-gray-700 hover:bg-primary/5">Profil</a>
       <a *ngIf="isAdmin()" routerLink="/admin/dashboard" (click)="toggleMobileMenu()" class="block rounded-lg px-4 py-2.5 text-primary font-semibold hover:bg-primary/5">Dashboard Admin</a>
