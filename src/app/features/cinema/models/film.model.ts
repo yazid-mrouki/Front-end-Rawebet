@@ -9,9 +9,13 @@ export interface Film {
   rating: string;
   releaseDate: string;
   posterUrl: string;
-  trailerUrl: string;   // ← AJOUTER
+  trailerUrl: string;
   averageRating: number;
   totalReviews: number;
+  // ── Prédiction ROI ──────────────────────────────────────────
+  profitable: boolean | null;
+  roiConfidence: number | null;
+  roiLabel: string | null;
 }
 
 export interface CreateFilmRequest {
@@ -27,4 +31,7 @@ export interface CreateFilmRequest {
   posterUrl: string;
   trailerUrl: string;
   imdbId: string;
+  // ── Champs ROI envoyés depuis TMDB ──────────────────────────
+  budget: number | null;
+  popularity: number | null;
 }

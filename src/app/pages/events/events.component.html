@@ -1,13 +1,91 @@
-<div class="min-h-screen bg-surface">
+<div class="min-h-screen bg-surface flex flex-col">
   <!-- Header -->
   <div class="bg-gradient-to-r from-primary to-primary-light py-16">
-    <div class="max-w-7xl mx-auto px-6">
-      <h1 class="font-serif text-4xl font-bold text-white mb-2">Events</h1>
-      <p class="text-white/80">Discover upcoming cultural events, watch parties, premieres, and more.</p>
+    <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
+      <div>
+        <h1 class="font-serif text-4xl font-bold text-white mb-2">Events</h1>
+        <p class="text-white/80">Discover upcoming cultural events, watch parties, premieres, and more.</p>
+      </div>
+      <button
+        (click)="toggleMyReservations()"
+        class="px-4 py-2.5 bg-white text-primary rounded-xl text-sm font-semibold hover:bg-gray-100 transition-colors whitespace-nowrap"
+      >
+        📋 My Reservations
+      </button>
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto px-6 py-10">
+  <!-- My Reservations Modal -->
+  <div *ngIf="showMyReservations" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-dark">My Reservations</h2>
+        <button
+          (click)="toggleMyReservations()"
+          class="text-gray-400 hover:text-gray-600 text-2xl"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Loading state -->
+      <div *ngIf="isLoadingReservations" class="text-center py-8">
+        <p class="text-gray-500">Loading your reservations...</p>
+      </div>
+
+      <!-- Reservations list -->
+      <div *ngIf="!isLoadingReservations && userReservations.length > 0" class="space-y-4">
+        <div *ngFor="let reservation of userReservations" class="border border-gray-200 rounded-xl p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <h3 class="font-semibold text-dark">{{ reservation.evenementTitre }}</h3>
+              <p class="text-sm text-gray-500">📅 {{ reservation.evenementDateDebut | date: 'dd MMM yyyy · HH:mm' }}</p>
+            </div>
+            <span [class]="'px-3 py-1 rounded-full text-xs font-semibold ' +
+              (reservation.statut === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+               reservation.statut === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+               'bg-red-100 text-red-700')">
+              {{ reservation.statut }}
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
+            <div>📞 {{ reservation.phoneNumber }}</div>
+            <div>🎫 Reserved on {{ reservation.dateReservation | date: 'dd MMM yyyy' }}</div>
+          </div>
+          <div *ngIf="reservation.enAttente" class="text-sm text-orange-600 font-medium mb-3">
+            ⏳ You are on the waitlist
+          </div>
+          <div *ngIf="!reservation.enAttente && reservation.dateExpiration" class="text-sm text-gray-500 mb-3">
+            Expires on {{ reservation.dateExpiration | date: 'dd MMM yyyy' }}
+          </div>
+
+          <!-- Cancel button for CONFIRMED and PENDING -->
+          <button
+            *ngIf="reservation.statut === 'CONFIRMED' || reservation.statut === 'PENDING'"
+            (click)="cancelReservation(reservation)"
+            class="w-full px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors border border-red-200"
+          >
+            Cancel Reservation
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="!isLoadingReservations && userReservations.length === 0" class="text-center py-12">
+        <p class="text-gray-500">You don't have any reservations yet</p>
+        <p class="text-sm text-gray-400 mt-2">Browse events and make your first reservation!</p>
+      </div>
+
+      <button
+        (click)="toggleMyReservations()"
+        class="w-full mt-6 px-4 py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-primary-light transition-colors"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+
+  <div class="flex-1 max-w-7xl mx-auto w-full px-6 py-10 pb-20">
     <!-- Category filters -->
     <div class="flex flex-wrap gap-2 mb-8">
       <button *ngFor="let cat of categories"
@@ -18,34 +96,47 @@
       </button>
     </div>
 
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <p class="text-gray-500">Loading events...</p>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+      {{ error }}
+    </div>
+
     <!-- Events grid -->
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      <div *ngFor="let event of filteredEvents" class="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 group">
-        <div class="h-36 bg-gradient-to-br flex items-center justify-center relative" [ngClass]="event.color">
-          <span class="text-5xl group-hover:scale-110 transition-transform">{{ event.emoji }}</span>
-          <span class="absolute top-3 right-3 px-2.5 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full font-medium">{{ event.category }}</span>
+    <div *ngIf="!isLoading && !error" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <a *ngFor="let event of filteredEvents"
+         [routerLink]="['/events', event.id]"
+         class="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 group cursor-pointer block">
+        <div class="h-36 bg-gradient-to-br from-primary to-primary-light flex items-center justify-center relative">
+          <span class="text-5xl group-hover:scale-110 transition-transform">{{ getCategoryIcon(event.categorie) }}</span>
         </div>
         <div class="p-5">
-          <h3 class="font-semibold text-dark mb-2">{{ event.title }}</h3>
+          <h3 class="font-semibold text-dark mb-2 line-clamp-2 group-hover:text-primary transition-colors">{{ event.titre }}</h3>
           <div class="space-y-1.5 text-sm text-gray-500 mb-4">
-            <div class="flex items-center gap-2">📅 {{ event.date }} · {{ event.time }}</div>
-            <div class="flex items-center gap-2">📍 {{ event.location }}</div>
-            <div class="flex items-center gap-2">🎟️ {{ event.price }}</div>
+            <div class="flex items-center gap-2">📅 {{ event.dateDebut | date: 'dd MMM yyyy' }} · {{ event.dateDebut | date: 'HH:mm' }}</div>
+            <div *ngIf="event.salleNom" class="flex items-center gap-2">📍 {{ event.salleNom }}</div>
+            <div class="flex items-center gap-2">💰 {{ event.prixUnitaire }} TND</div>
+            <div *ngIf="event.categorie" class="flex items-center gap-2">🎭 {{ event.categorie }}</div>
           </div>
-          <!-- Capacity bar -->
+          <!-- Badges -->
           <div class="mb-4">
-            <div class="flex justify-between text-xs text-gray-400 mb-1">
-              <span>{{ event.spots }} spots left</span>
-              <span>{{ event.totalSpots }} total</span>
-            </div>
-            <div class="w-full bg-gray-100 rounded-full h-1.5">
-              <div class="bg-primary rounded-full h-1.5 transition-all" [style.width.%]="((event.totalSpots - event.spots) / event.totalSpots) * 100"></div>
-            </div>
+            <span *ngIf="event.categorie" class="px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-semibold rounded-full">
+              {{ event.categorie }}
+            </span>
           </div>
           <button class="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-light transition-colors">
-            Reserve Spot
+            View Details
           </button>
         </div>
+      </a>
+
+      <!-- No events state -->
+      <div *ngIf="filteredEvents.length === 0 && !isLoading && !error" class="col-span-full text-center py-12">
+        <p class="text-gray-500">No published events found</p>
       </div>
     </div>
   </div>

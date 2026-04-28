@@ -1,0 +1,520 @@
+<div class="p-6 lg:p-8 min-h-full space-y-5" style="background:#faf8f5;">
+
+  <!-- Header -->
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <div style="width:6px;height:6px;background:#d99a2d;border-radius:50%;"></div>
+        <span style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Rawabet AI</span>
+      </div>
+      <h1 class="font-serif text-2xl lg:text-3xl font-bold" style="color:#1a1a2e;">Intelligence Artificielle</h1>
+      <p style="color:#6b7280;font-size:13px;margin-top:3px;">4 modèles ML · churn · anomalie · fidélité · récompenses</p>
+    </div>
+    <div class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold"
+         [class.text-green-800]="apiStatus==='online'"
+         [class.text-red-800]="apiStatus==='offline'"
+         [style]="apiStatus==='online'
+           ? 'background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#065f46;'
+           : apiStatus==='offline'
+           ? 'background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);color:#991b1b;'
+           : 'background:#f3f4f6;border:1px solid #e5e7eb;color:#6b7280;'">
+      <span class="w-2 h-2 rounded-full"
+            [style.background]="apiStatus==='online' ? '#10b981' : apiStatus==='offline' ? '#dc2626' : '#9ca3af'"></span>
+      API ML : {{ apiStatus==='online' ? 'En ligne' : apiStatus==='offline' ? 'Hors ligne' : '...' }}
+    </div>
+  </div>
+
+  <!-- API hors ligne -->
+  <div *ngIf="apiStatus==='offline'"
+       style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:14px;padding:14px 18px;">
+    <div style="font-size:13px;color:#991b1b;font-weight:600;margin-bottom:4px;">API ML hors ligne</div>
+    <code style="display:block;background:rgba(220,38,38,0.08);border-radius:8px;padding:8px 12px;font-size:11px;color:#7f1d1d;font-family:monospace;">
+      cd D:\ml_rawabet\api &amp;&amp; py -3.12 -m uvicorn main:app --port 8000
+    </code>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;background:white;border:0.5px solid #e8e4dd;border-radius:14px;padding:5px;width:fit-content;">
+    <button *ngFor="let tab of [
+      {id:'individual', label:'Analyse client', icon:'🔍'},
+      {id:'global',     label:'Vue globale',    icon:'📊'},
+      {id:'alerts',     label:'Alertes auto',   icon:'⚡'}
+    ]"
+            (click)="activeTab = tab.id"
+            [style]="activeTab===tab.id
+      ? 'background:#7b1f27;color:white;border:none;padding:8px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;'
+      : 'background:transparent;color:#6b7280;border:none;padding:8px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;'">
+      {{ tab.icon }} {{ tab.label }}
+    </button>
+  </div>
+
+  <!-- TAB 1 — ANALYSE INDIVIDUELLE -->
+  <div *ngIf="activeTab==='individual'" class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+    <!-- Liste clients -->
+    <div style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;padding:16px;" class="space-y-3">
+      <h2 class="font-semibold" style="color:#1a1a2e;font-size:14px;">Sélectionner un client</h2>
+      <input [(ngModel)]="searchQuery" placeholder="Rechercher..."
+             style="width:100%;padding:8px 12px;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;outline:none;background:#faf8f5;box-sizing:border-box;"/>
+      <div *ngIf="loading" style="text-align:center;color:#9ca3af;padding:16px;font-size:13px;">Chargement...</div>
+      <div style="max-height:480px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;">
+        <button *ngFor="let user of filteredUsers" (click)="analyzeUser(user)"
+                [style]="selectedUserId===user.id
+                  ? 'background:rgba(123,31,39,0.08);border:1px solid rgba(123,31,39,0.2);color:#7b1f27;width:100%;text-align:left;padding:10px 12px;border-radius:10px;font-size:13px;cursor:pointer;'
+                  : 'background:#faf8f5;border:0.5px solid #e8e4dd;color:#374151;width:100%;text-align:left;padding:10px 12px;border-radius:10px;font-size:13px;cursor:pointer;'">
+          <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ user.nom || user.name }}</div>
+          <div style="font-size:11px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ user.email }}</div>
+        </button>
+        <div *ngIf="!loading && filteredUsers.length===0" style="text-align:center;color:#9ca3af;padding:20px;font-size:13px;">Aucun client</div>
+      </div>
+    </div>
+
+    <!-- Résultats -->
+    <div class="lg:col-span-2 space-y-4">
+
+      <div *ngIf="!selectedUserId" style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;padding:64px;text-align:center;">
+        <div style="font-size:40px;margin-bottom:12px;">🤖</div>
+        <p style="color:#9ca3af;font-size:14px;">Sélectionne un client pour lancer l'analyse ML</p>
+      </div>
+
+      <div *ngIf="mlLoading" style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;padding:64px;text-align:center;">
+        <div class="ml-spinner" style="width:36px;height:36px;border:3px solid #7b1f27;border-top-color:transparent;border-radius:50%;margin:0 auto 12px;"></div>
+        <p style="color:#9ca3af;font-size:13px;">Analyse de {{ selectedUserName }}...</p>
+      </div>
+
+      <div *ngIf="predictions && !mlLoading" class="space-y-4">
+
+        <!-- Client header -->
+        <div style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;background:rgba(123,31,39,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;">🤖</div>
+            <div>
+              <div style="font-weight:700;color:#1a1a2e;font-size:15px;">{{ selectedUserName }}</div>
+              <div style="font-size:11px;color:#9ca3af;">Analyse ML complète — 4 modèles</div>
+            </div>
+          </div>
+          <button (click)="runAutoAction(selectedUserId!, selectedUserName)"
+                  [disabled]="autoActionLoading"
+                  style="padding:8px 16px;background:#7b1f27;color:white;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"
+                  [style.opacity]="autoActionLoading ? '0.5' : '1'">
+            <span *ngIf="autoActionLoading" class="ml-spinner" style="width:12px;height:12px;border:2px solid white;border-top-color:transparent;border-radius:50%;display:inline-block;"></span>
+            ⚡ Action auto
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <!-- Churn -->
+          <div style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;overflow:hidden;">
+            <div style="padding:14px 18px 10px;background:linear-gradient(135deg,rgba(123,31,39,0.04),transparent);border-bottom:0.5px solid #f0ece6;display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="width:30px;height:30px;background:rgba(123,31,39,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;">📉</div>
+                <span style="font-size:13px;font-weight:600;color:#1a1a2e;">Risque de départ</span>
+              </div>
+              <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;"
+                    [style]="predictions.churn.risk_level==='HIGH'
+                      ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca;'
+                      : predictions.churn.risk_level==='MEDIUM'
+                      ? 'background:#fef3c7;color:#92400e;border:1px solid #fde68a;'
+                      : 'background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;'">
+                {{ predictions.churn.risk_level }}
+              </span>
+            </div>
+            <div style="padding:14px 18px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:12px;color:#6b7280;">Probabilité churn</span>
+                <span style="font-size:14px;font-weight:700;"
+                      [style.color]="predictions.churn.probability > 0.5 ? '#dc2626' : '#059669'">
+                  {{ pct(predictions.churn.probability) }}
+                </span>
+              </div>
+              <div style="background:#f0ece6;border-radius:99px;height:8px;overflow:hidden;">
+                <div style="height:8px;border-radius:99px;transition:width .4s;"
+                     [style.width]="pct(predictions.churn.probability)"
+                     [style.background]="predictions.churn.probability > 0.7 ? '#dc2626' : predictions.churn.probability > 0.4 ? '#f59e0b' : '#059669'"></div>
+              </div>
+              <p style="font-size:11px;color:#9ca3af;margin-top:8px;">{{ predictions.churn.message }}</p>
+              <span style="display:inline-block;margin-top:6px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;"
+                    [style]="predictions.churn.churn===1 ? 'background:#fee2e2;color:#991b1b;' : 'background:#d1fae5;color:#065f46;'">
+                {{ predictions.churn.churn_label }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Anomalie -->
+          <div style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;overflow:hidden;">
+            <div style="padding:14px 18px 10px;background:linear-gradient(135deg,rgba(16,185,129,0.04),transparent);border-bottom:0.5px solid #f0ece6;display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="width:30px;height:30px;background:rgba(16,185,129,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;">🛡️</div>
+                <span style="font-size:13px;font-weight:600;color:#1a1a2e;">Détection anomalie</span>
+              </div>
+              <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;"
+                    [style]="predictions.anomaly.is_anomaly===1
+                      ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca;'
+                      : 'background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;'">
+                {{ predictions.anomaly.anomaly_label }}
+              </span>
+            </div>
+            <div style="padding:14px 18px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:12px;color:#6b7280;">Score anomalie</span>
+                <span style="font-size:14px;font-weight:700;"
+                      [style.color]="predictions.anomaly.probability > 0.5 ? '#dc2626' : '#059669'">
+                  {{ pct(predictions.anomaly.probability) }}
+                </span>
+              </div>
+              <div style="background:#f0ece6;border-radius:99px;height:8px;overflow:hidden;">
+                <div style="height:8px;border-radius:99px;transition:width .4s;"
+                     [style.width]="pct(predictions.anomaly.probability)"
+                     [style.background]="predictions.anomaly.probability > 0.7 ? '#dc2626' : predictions.anomaly.probability > 0.4 ? '#f59e0b' : '#059669'"></div>
+              </div>
+              <div style="margin-top:10px;display:flex;align-items:center;gap:6px;">
+                <span style="font-size:12px;color:#6b7280;">Action :</span>
+                <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;"
+                      [style]="predictions.anomaly.recommended_action==='BAN_TEMPORAIRE'
+                        ? 'background:#fee2e2;color:#991b1b;border:1px solid #fecaca;'
+                        : predictions.anomaly.recommended_action==='SURVEILLANCE'
+                        ? 'background:#fef3c7;color:#92400e;border:1px solid #fde68a;'
+                        : 'background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;'">
+                  {{ predictions.anomaly.recommended_action }}
+                </span>
+              </div>
+              <div style="margin-top:8px;font-size:11px;color:#9ca3af;">
+                Isolation Forest :
+                <span style="font-weight:600;" [style.color]="predictions.anomaly.consensus_anomaly ? '#dc2626' : '#059669'">
+                  {{ predictions.anomaly.consensus_anomaly ? 'Suspect' : 'Normal' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next Level -->
+          <div style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;overflow:hidden;">
+            <div style="padding:14px 18px 10px;background:linear-gradient(135deg,rgba(217,154,45,0.06),transparent);border-bottom:0.5px solid #f0ece6;display:flex;align-items:center;gap:8px;">
+              <div style="width:30px;height:30px;background:rgba(217,154,45,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;">⭐</div>
+              <span style="font-size:13px;font-weight:600;color:#1a1a2e;">Niveau fidélité prédit</span>
+            </div>
+            <div style="padding:14px 18px;">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                <div style="text-align:center;">
+                  <div style="font-size:10px;color:#9ca3af;margin-bottom:4px;">Actuel</div>
+                  <span style="font-size:12px;font-weight:600;padding:4px 12px;border-radius:99px;"
+                        [style]="predictions.next_level.current_level==='VIP'
+                          ? 'background:#ede9fe;color:#5b21b6;'
+                          : predictions.next_level.current_level==='GOLD'
+                          ? 'background:#fef3c7;color:#92400e;'
+                          : 'background:#f3f4f6;color:#374151;'">
+                    {{ predictions.next_level.current_level }}
+                  </span>
+                </div>
+                <div style="font-size:20px;color:#d1d5db;">→</div>
+                <div style="text-align:center;">
+                  <div style="font-size:10px;color:#9ca3af;margin-bottom:4px;">Dans 30j</div>
+                  <span style="font-size:12px;font-weight:600;padding:4px 12px;border-radius:99px;"
+                        [style]="predictions.next_level.predicted_level==='VIP'
+                          ? 'background:#ede9fe;color:#5b21b6;'
+                          : predictions.next_level.predicted_level==='GOLD'
+                          ? 'background:#fef3c7;color:#92400e;'
+                          : 'background:#f3f4f6;color:#374151;'">
+                    {{ predictions.next_level.predicted_level }}
+                  </span>
+                </div>
+                <div *ngIf="predictions.next_level.will_upgrade"
+                     style="margin-left:auto;background:#d1fae5;color:#059669;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;">
+                  ↑ Upgrade
+                </div>
+              </div>
+              <p style="font-size:11px;color:#9ca3af;font-style:italic;margin-bottom:10px;">{{ predictions.next_level.upgrade_message }}</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;color:#6b7280;border-top:0.5px solid #f0ece6;padding-top:10px;">
+                <div>GOLD : <strong style="color:#d97706;">{{ predictions.next_level.points_for_gold }} pts</strong></div>
+                <div>VIP : <strong style="color:#7c3aed;">{{ predictions.next_level.points_for_vip }} pts</strong></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:10px;">
+                <div *ngFor="let e of [
+                  {l:'SILVER', v:predictions.next_level.probabilities.SILVER, bg:'#f3f4f6', c:'#374151'},
+                  {l:'GOLD',   v:predictions.next_level.probabilities.GOLD,   bg:'#fef3c7', c:'#92400e'},
+                  {l:'VIP',    v:predictions.next_level.probabilities.VIP,    bg:'#ede9fe', c:'#5b21b6'}
+                ]" style="text-align:center;padding:6px;border-radius:8px;"
+                     [style.background]="e.bg">
+                  <div style="font-size:9px;margin-bottom:2px;" [style.color]="e.c">{{ e.l }}</div>
+                  <div style="font-size:13px;font-weight:700;" [style.color]="e.c">{{ pct(e.v) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reward -->
+          <div style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;overflow:hidden;">
+            <div style="padding:14px 18px 10px;background:linear-gradient(135deg,rgba(123,31,39,0.04),transparent);border-bottom:0.5px solid #f0ece6;display:flex;align-items:center;gap:8px;">
+              <div style="width:30px;height:30px;background:rgba(123,31,39,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;">🎁</div>
+              <span style="font-size:13px;font-weight:600;color:#1a1a2e;">Récompense recommandée</span>
+            </div>
+            <div style="padding:14px 18px;">
+              <div style="padding:10px 14px;background:rgba(123,31,39,0.05);border-radius:10px;border:1px solid rgba(123,31,39,0.12);margin-bottom:10px;">
+                <div style="font-size:10px;color:#9ca3af;margin-bottom:3px;">Meilleure recommandation</div>
+                <div style="font-size:13px;font-weight:600;color:#7b1f27;">{{ getRewardLabel(predictions.reward.best_reward) }}</div>
+                <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;"
+                        [style]="predictions.reward.can_redeem ? 'background:#d1fae5;color:#065f46;' : 'background:#f3f4f6;color:#6b7280;'">
+                    {{ predictions.reward.can_redeem ? 'Disponible' : 'Insuffisant' }}
+                  </span>
+                  <span style="font-size:11px;color:#9ca3af;">{{ predictions.reward.points_available }} / {{ predictions.reward.points_required }} pts</span>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <div *ngFor="let r of predictions.reward.top_rewards"
+                     style="display:flex;align-items:center;justify-content:space-between;padding-bottom:6px;border-bottom:0.5px solid #f0ece6;">
+                  <span style="font-size:11px;color:#374151;">{{ getRewardLabel(r.reward) }}</span>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <div style="width:48px;background:#f0ece6;border-radius:99px;height:4px;">
+                      <div style="height:4px;background:#7b1f27;border-radius:99px;" [style.width]="pct(r.probability)"></div>
+                    </div>
+                    <span style="font-size:11px;color:#6b7280;width:36px;text-align:right;">{{ pct(r.probability) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2 — VUE GLOBALE -->
+  <div *ngIf="activeTab==='global'" class="space-y-5">
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+      <button (click)="runScan()" [disabled]="scanLoading"
+              style="padding:10px 22px;background:#7b1f27;color:white;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;"
+              [style.opacity]="scanLoading ? '0.6' : '1'">
+        <span *ngIf="scanLoading" class="ml-spinner" style="width:14px;height:14px;border:2px solid white;border-top-color:transparent;border-radius:50%;display:inline-block;"></span>
+        {{ scanLoading ? 'Analyse en cours...' : '🔍 Lancer le scan global' }}
+      </button>
+      <span *ngIf="lastScanTime" style="font-size:12px;color:#9ca3af;">Dernier scan : {{ lastScanTime | date:'HH:mm:ss' }}</span>
+    </div>
+
+    <!-- KPIs -->
+    <div *ngIf="scanResults.length > 0" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div style="background:white;border-radius:14px;padding:14px;text-align:center;border:0.5px solid #e8e4dd;">
+        <div style="font-size:22px;font-weight:700;color:#1a1a2e;">{{ scanStats.total }}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px;">Analysés</div>
+      </div>
+      <div style="background:rgba(220,38,38,.06);border-radius:14px;padding:14px;text-align:center;border:0.5px solid rgba(220,38,38,.15);">
+        <div style="font-size:22px;font-weight:700;color:#991b1b;">{{ scanStats.highChurn }}</div>
+        <div style="font-size:11px;color:#991b1b;margin-top:2px;">Churn HIGH</div>
+      </div>
+      <div style="background:rgba(245,158,11,.06);border-radius:14px;padding:14px;text-align:center;border:0.5px solid rgba(245,158,11,.15);">
+        <div style="font-size:22px;font-weight:700;color:#92400e;">{{ scanStats.anomalies }}</div>
+        <div style="font-size:11px;color:#92400e;margin-top:2px;">Anomalies</div>
+      </div>
+      <div style="background:rgba(16,185,129,.06);border-radius:14px;padding:14px;text-align:center;border:0.5px solid rgba(16,185,129,.15);">
+        <div style="font-size:22px;font-weight:700;color:#065f46;">{{ scanStats.upgrades }}</div>
+        <div style="font-size:11px;color:#065f46;margin-top:2px;">Upgrades</div>
+      </div>
+      <div style="background:rgba(123,31,39,.05);border-radius:14px;padding:14px;text-align:center;border:0.5px solid rgba(123,31,39,.15);">
+        <div style="font-size:22px;font-weight:700;color:#7b1f27;">{{ scanStats.avgChurn }}%</div>
+        <div style="font-size:11px;color:#7b1f27;margin-top:2px;">Churn moy.</div>
+      </div>
+    </div>
+
+    <!-- Graphique -->
+    <div *ngIf="scanResults.length > 0" style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;padding:20px 22px;">
+      <h3 class="font-semibold" style="color:#1a1a2e;font-size:14px;margin-bottom:16px;">Distribution des risques churn</h3>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;font-weight:600;color:#991b1b;width:52px;">HIGH</span>
+          <div style="flex:1;background:#f0ece6;border-radius:99px;height:10px;overflow:hidden;">
+            <div style="height:10px;background:#dc2626;border-radius:99px;transition:width .4s;"
+                 [style.width.%]="scanResults.length > 0 ? scanStats.highChurn / scanResults.length * 100 : 0"></div>
+          </div>
+          <span style="font-size:12px;color:#6b7280;width:64px;text-align:right;">{{ scanStats.highChurn }} clients</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;font-weight:600;color:#92400e;width:52px;">MEDIUM</span>
+          <div style="flex:1;background:#f0ece6;border-radius:99px;height:10px;overflow:hidden;">
+            <div style="height:10px;background:#f59e0b;border-radius:99px;transition:width .4s;"
+                 [style.width.%]="scanResults.length > 0 ? getMediumCount() / scanResults.length * 100 : 0"></div>
+          </div>
+          <span style="font-size:12px;color:#6b7280;width:64px;text-align:right;">{{ getMediumCount() }} clients</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;font-weight:600;color:#065f46;width:52px;">LOW</span>
+          <div style="flex:1;background:#f0ece6;border-radius:99px;height:10px;overflow:hidden;">
+            <div style="height:10px;background:#059669;border-radius:99px;transition:width .4s;"
+                 [style.width.%]="scanResults.length > 0 ? getLowCount() / scanResults.length * 100 : 0"></div>
+          </div>
+          <span style="font-size:12px;color:#6b7280;width:64px;text-align:right;">{{ getLowCount() }} clients</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tableau -->
+    <div *ngIf="scanResults.length > 0" style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;overflow:hidden;">
+      <div style="padding:14px 18px;border-bottom:0.5px solid #f0ece6;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button *ngFor="let f of [
+            {id:'all',     label:'Tous'},
+            {id:'HIGH',    label:'Churn HIGH'},
+            {id:'MEDIUM',  label:'MEDIUM'},
+            {id:'anomaly', label:'Anomalies'},
+            {id:'upgrade', label:'Upgrades'}
+          ]" (click)="scanFilter = f.id"
+                  [style]="scanFilter===f.id
+            ? 'background:#7b1f27;color:white;border:none;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;'
+            : 'background:#faf8f5;color:#6b7280;border:0.5px solid #e8e4dd;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;'">
+            {{ f.label }}
+          </button>
+        </div>
+        <select [(ngModel)]="scanSort"
+                style="padding:6px 10px;border:0.5px solid #e8e4dd;border-radius:8px;font-size:12px;outline:none;background:#faf8f5;">
+          <option value="churn">Trier : Churn</option>
+          <option value="anomaly">Trier : Anomalie</option>
+          <option value="name">Trier : Nom</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+          <tr style="background:#faf8f5;border-bottom:0.5px solid #e8e4dd;">
+            <th style="padding:10px 16px;text-align:left;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Client</th>
+            <th style="padding:10px 16px;text-align:left;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Churn</th>
+            <th style="padding:10px 16px;text-align:left;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Anomalie</th>
+            <th style="padding:10px 16px;text-align:left;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Niveau</th>
+            <th style="padding:10px 16px;text-align:right;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Action</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let row of filteredScan" style="border-bottom:0.5px solid #f5f2ee;">
+            <td style="padding:12px 16px;">
+              <div style="font-weight:600;color:#1a1a2e;font-size:13px;">{{ row.nom }}</div>
+              <div style="font-size:11px;color:#9ca3af;">{{ row.email }}</div>
+            </td>
+            <td style="padding:12px 16px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="width:56px;background:#f0ece6;border-radius:99px;height:6px;overflow:hidden;">
+                  <div style="height:6px;border-radius:99px;"
+                       [style.width.%]="row.churnProba * 100"
+                       [style.background]="row.churnProba > 0.7 ? '#dc2626' : row.churnProba > 0.4 ? '#f59e0b' : '#059669'"></div>
+                </div>
+                <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;"
+                      [style]="row.churnRisk==='HIGH' ? 'background:#fee2e2;color:#991b1b;' : row.churnRisk==='MEDIUM' ? 'background:#fef3c7;color:#92400e;' : 'background:#d1fae5;color:#065f46;'">
+                    {{ fmt(row.churnProba) }}
+                  </span>
+              </div>
+            </td>
+            <td style="padding:12px 16px;">
+                <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;"
+                      [style]="row.anomalyLabel==='ANOMALY' ? 'background:#fee2e2;color:#991b1b;' : 'background:#d1fae5;color:#065f46;'">
+                  {{ row.anomalyLabel }} · {{ fmt(row.anomalyProba) }}
+                </span>
+            </td>
+            <td style="padding:12px 16px;">
+              <div style="display:flex;align-items:center;gap:4px;">
+                  <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;"
+                        [style]="row.currentLevel==='VIP' ? 'background:#ede9fe;color:#5b21b6;' : row.currentLevel==='GOLD' ? 'background:#fef3c7;color:#92400e;' : 'background:#f3f4f6;color:#374151;'">
+                    {{ row.currentLevel }}
+                  </span>
+                <span *ngIf="row.willUpgrade" style="font-size:11px;color:#059669;font-weight:700;">→ {{ row.nextLevel }}</span>
+              </div>
+            </td>
+            <td style="padding:12px 16px;text-align:right;">
+              <button (click)="runAutoAction(row.userId, row.nom)"
+                      style="padding:6px 14px;background:rgba(123,31,39,0.08);color:#7b1f27;border:1px solid rgba(123,31,39,0.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">
+                ⚡ Action
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredScan.length===0">
+            <td colspan="5" style="padding:32px;text-align:center;color:#9ca3af;font-size:13px;">Aucun résultat</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div *ngIf="scanResults.length===0 && !scanLoading"
+         style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;padding:64px;text-align:center;">
+      <div style="font-size:36px;margin-bottom:12px;">📊</div>
+      <p style="color:#9ca3af;font-size:13px;">Lance le scan pour analyser tous les clients</p>
+    </div>
+  </div>
+
+  <!-- TAB 3 — ALERTES AUTOMATIQUES -->
+  <div *ngIf="activeTab==='alerts'" class="space-y-5">
+
+    <div style="background:rgba(217,154,45,0.07);border:1px solid rgba(217,154,45,0.25);border-radius:14px;padding:16px 18px;">
+      <div style="font-weight:700;color:#1a1a2e;font-size:13px;margin-bottom:8px;">⚡ Règles d'action automatique</div>
+      <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:#374151;">
+        <div>🔴 <strong>Anomalie &gt; 80%</strong> — Ban temporaire 24h + notification email</div>
+        <div>🟡 <strong>Churn HIGH</strong> — Email d'alerte envoyé au SUPER_ADMIN</div>
+        <div>✅ <strong>Score normal</strong> — Aucune action</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
+      <button (click)="runAutoActionAll()" [disabled]="autoActionAllLoading || scanResults.length===0"
+              style="padding:10px 22px;background:#7b1f27;color:white;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;"
+              [style.opacity]="(autoActionAllLoading || scanResults.length===0) ? '0.5' : '1'">
+        <span *ngIf="autoActionAllLoading" class="ml-spinner" style="width:14px;height:14px;border:2px solid white;border-top-color:transparent;border-radius:50%;display:inline-block;"></span>
+        ⚡ Traiter tous les clients à risque ({{ highRiskUsers.length }})
+      </button>
+      <span *ngIf="scanResults.length===0" style="font-size:12px;color:#9ca3af;">Lance d'abord le scan dans "Vue globale"</span>
+    </div>
+
+    <div *ngIf="highRiskUsers.length > 0" style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;overflow:hidden;">
+      <div style="padding:14px 18px;border-bottom:0.5px solid #f0ece6;display:flex;align-items:center;justify-content:space-between;">
+        <h3 style="font-size:14px;font-weight:600;color:#1a1a2e;margin:0;">Clients à risque</h3>
+        <span style="font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;background:#fee2e2;color:#991b1b;">{{ highRiskUsers.length }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;">
+        <div *ngFor="let u of highRiskUsers"
+             style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:0.5px solid #f5f2ee;">
+          <div>
+            <span style="font-weight:600;color:#1a1a2e;font-size:13px;">{{ u.nom }}</span>
+            <span style="font-size:11px;color:#9ca3af;margin-left:8px;">{{ u.email }}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span *ngIf="u.churnRisk==='HIGH'" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#fee2e2;color:#991b1b;">
+              Churn HIGH {{ fmt(u.churnProba) }}
+            </span>
+            <span *ngIf="u.anomalyLabel==='ANOMALY'" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#fef3c7;color:#92400e;">
+              Anomalie {{ fmt(u.anomalyProba) }}
+            </span>
+            <button (click)="runAutoAction(u.userId, u.nom)"
+                    style="padding:5px 12px;background:rgba(123,31,39,0.08);color:#7b1f27;border:1px solid rgba(123,31,39,0.15);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">⚡</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;overflow:hidden;">
+      <div style="padding:14px 18px;border-bottom:0.5px solid #f0ece6;display:flex;align-items:center;justify-content:space-between;">
+        <h3 style="font-size:14px;font-weight:600;color:#1a1a2e;margin:0;">Journal des actions ML</h3>
+        <span style="font-size:12px;color:#9ca3af;">{{ alertsLog.length }} action(s)</span>
+      </div>
+      <div *ngIf="alertsLog.length===0" style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Aucune action exécutée</div>
+      <div style="display:flex;flex-direction:column;">
+        <div *ngFor="let log of alertsLog"
+             style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:0.5px solid #f5f2ee;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;background:rgba(123,31,39,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;">⚡</div>
+            <div>
+              <div style="font-weight:600;color:#1a1a2e;font-size:13px;">{{ log.nom }}</div>
+              <div style="font-size:11px;color:#9ca3af;">{{ log.time | date:'HH:mm:ss' }}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span *ngFor="let action of log.actions"
+                  style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;"
+                  [style]="getActionBadgeColor(action)">
+              {{ action }}
+            </span>
+            <span style="font-size:11px;color:#9ca3af;">{{ log.churnRisk }} · {{ fmt(log.anomalyScore) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<style>.ml-spinner { animation: ml-spin 1s linear infinite; } @keyframes ml-spin { to { transform: rotate(360deg); } }</style>

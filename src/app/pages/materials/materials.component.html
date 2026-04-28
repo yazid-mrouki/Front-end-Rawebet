@@ -1,0 +1,104 @@
+<div class="min-h-screen bg-surface flex flex-col">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-primary to-primary-light py-16">
+    <div class="max-w-7xl mx-auto px-6">
+      <h1 class="font-serif text-4xl font-bold text-white mb-2">Materials</h1>
+      <p class="text-white/80">Browse available materials for reservation by category.</p>
+    </div>
+  </div>
+
+  <div class="flex-1 max-w-7xl mx-auto w-full px-6 py-10 pb-20">
+    <!-- CATEGORIES VIEW -->
+    <div *ngIf="!showMaterialsView">
+      <!-- Loading state -->
+      <div *ngIf="isLoading" class="text-center py-12">
+        <p class="text-gray-500">Loading categories...</p>
+      </div>
+
+      <!-- Error state -->
+      <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+        {{ error }}
+      </div>
+
+      <!-- Categories grid -->
+      <div *ngIf="!isLoading && !error" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div *ngFor="let category of categories"
+             (click)="selectCategory(category)"
+             class="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 group cursor-pointer">
+          <div class="h-36 bg-gradient-to-br from-primary to-primary-light flex items-center justify-center relative">
+            <span class="text-5xl group-hover:scale-110 transition-transform">📦</span>
+          </div>
+          <div class="p-5">
+            <h3 class="font-semibold text-dark mb-2 line-clamp-2 group-hover:text-primary transition-colors">{{ category.nom }}</h3>
+            <p *ngIf="category.description" class="text-xs text-gray-600 mb-4 line-clamp-2">
+              {{ category.description }}
+            </p>
+            <button class="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-light transition-colors">
+              View Materials
+            </button>
+          </div>
+        </div>
+
+        <!-- No categories state -->
+        <div *ngIf="categories.length === 0 && !isLoading && !error" class="col-span-full text-center py-12">
+          <p class="text-gray-500">No material categories available</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MATERIALS VIEW -->
+    <div *ngIf="showMaterialsView">
+      <!-- Back button and category title -->
+      <div class="flex items-center gap-4 mb-8">
+        <button
+          (click)="goBack()"
+          class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center gap-2"
+        >
+          ← Back to Categories
+        </button>
+        <h2 class="text-2xl font-bold text-dark">{{ selectedCategory?.nom }}</h2>
+      </div>
+
+      <!-- Loading state -->
+      <div *ngIf="isLoadingMaterials" class="text-center py-12">
+        <p class="text-gray-500">Loading materials...</p>
+      </div>
+
+      <!-- Materials grid -->
+      <div *ngIf="!isLoadingMaterials" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div *ngFor="let material of materials"
+             class="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 group cursor-pointer">
+          <div class="h-36 bg-gradient-to-br from-primary to-primary-light flex items-center justify-center relative">
+            <span class="text-5xl group-hover:scale-110 transition-transform">🛠️</span>
+          </div>
+          <div class="p-5">
+            <h3 class="font-semibold text-dark mb-2 line-clamp-2 group-hover:text-primary transition-colors">{{ material.nom }}</h3>
+            <div class="space-y-1.5 text-sm text-gray-500 mb-4">
+              <div class="flex items-center gap-2">📌 {{ material.reference }}</div>
+              <div class="flex items-center gap-2">📦 Total: {{ material.quantiteTotale }}</div>
+              <div class="flex items-center gap-2">💰 {{ material.prixUnitaire }} TND/day</div>
+            </div>
+            <!-- Status Badge -->
+            <div class="mb-4">
+              <span class="px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-semibold rounded-full">
+                {{ material.status }}
+              </span>
+            </div>
+            <p *ngIf="material.description" class="text-xs text-gray-600 mb-4 line-clamp-2">
+              {{ material.description }}
+            </p>
+            <button class="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-light transition-colors">
+              View Details
+            </button>
+          </div>
+        </div>
+
+        <!-- No materials state -->
+        <div *ngIf="materials.length === 0 && !isLoadingMaterials" class="col-span-full text-center py-12">
+          <p class="text-gray-500">No active materials in this category</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

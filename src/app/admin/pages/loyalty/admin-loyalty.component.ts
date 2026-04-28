@@ -1,46 +1,59 @@
-import { ApplicationRef, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CarteService } from '../../../core/services/carte.service';
 import { UserService } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { UserResponse } from '../../../core/models/user.model';
+import { UserSummaryResponse } from '../../../core/models/user.model';
 import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin-loyalty',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './admin-loyalty.component.html',
+  templateUrl: './admin-loyalty.component.html'
 })
 export class AdminLoyaltyComponent implements OnInit {
   tiers = [
-    { name: 'VIP', min: 500, members: 0, color: 'bg-purple-500', perks: 'Tous les avantages + 30% de remise' },
-    { name: 'Gold', min: 200, members: 0, color: 'bg-accent', perks: 'Accès prioritaire + 20% de remise' },
-    { name: 'Silver', min: 0, members: 0, color: 'bg-gray-400', perks: '10% de remise + accès anticipé' },
+    {
+      name: 'VIP',
+      min: 500,
+      members: 0,
+      color: 'bg-purple-500',
+      perks: 'Tous les avantages + 30% de remise',
+    },
+    {
+      name: 'Gold',
+      min: 200,
+      members: 0,
+      color: 'bg-accent',
+      perks: 'Accès prioritaire + 20% de remise',
+    },
+    {
+      name: 'Silver',
+      min: 0,
+      members: 0,
+      color: 'bg-gray-400',
+      perks: '10% de remise + accès anticipé',
+    },
   ];
 
-  stats = {
-    totalClients: 0,
-    totalSilver: 0,
-    totalGold: 0,
-    totalVip: 0,
-    totalPointsDistribues: 0,
-  };
+  stats = { totalClients: 0, totalSilver: 0, totalGold: 0, totalVip: 0, totalPointsDistribues: 0 };
 
   topClients: Array<{ nom: string; email: string; points: number; level: string }> = [];
-  users: UserResponse[] = [];
+
+  // CORRECTION — UserSummaryResponse au lieu de UserResponse
+  users: UserSummaryResponse[] = [];
   currentUserId: number | null = null;
 
   addPointsForm = { target: '', points: null as number | null };
-  selectedUser: UserResponse | null = null;
+  selectedUser: UserSummaryResponse | null = null;
   addPointsMessage = '';
   addPointsError = '';
   addPointsLoading = false;
   loadingData = false;
 
   constructor(
-    private appRef: ApplicationRef,
     private carteService: CarteService,
     private userService: UserService,
     private auth: AuthService,
@@ -51,31 +64,30 @@ export class AdminLoyaltyComponent implements OnInit {
     this.currentUserId = this.auth.getCurrentUserId();
     this.loadData();
     this.loadUsers();
-    this.refreshView();
   }
 
-  private refreshView() {
-    this.cdr.detectChanges();
-    Promise.resolve().then(() => this.appRef.tick());
-  }
-
+  // CORRECTION — getAllUsers() retourne Page<UserSummaryResponse>, on lit .content
   loadUsers() {
-    this.userService.getAllUsers().subscribe({
-      next: (users) => {
-        this.users = users || [];
+    this.userService.getAllUsers(0, 200).subscribe({
+      next: (page) => {
+        this.users = page.content || [];
         this.applyTopClientFilter();
-        this.refreshView();
+        if (!this.loadingData && this.topClients.length === 0) {
+          this.loadTopClients();
+        }
+        this.cdr.markForCheck();
       },
       error: () => {
         this.users = [];
         this.applyTopClientFilter();
-        this.refreshView();
+        this.cdr.markForCheck();
       },
     });
   }
 
   loadData() {
     this.loadingData = true;
+    this.cdr.markForCheck();
     this.carteService.getAdminOverview().subscribe({
       next: ({ stats, topClients }) => {
         this.stats = stats;
@@ -84,13 +96,32 @@ export class AdminLoyaltyComponent implements OnInit {
         this.tiers[2].members = stats.totalSilver || 0;
         this.topClients = topClients || [];
         this.applyTopClientFilter();
+        if (this.topClients.length === 0) {
+          this.loadTopClients();
+        } else {
+          this.loadingData = false;
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {
+        this.topClients = [];
+        this.loadTopClients();
+      },
+    });
+  }
+
+  private loadTopClients() {
+    this.carteService.getTop(10).subscribe({
+      next: (topClients) => {
+        this.topClients = topClients || [];
+        this.applyTopClientFilter();
         this.loadingData = false;
-        this.refreshView();
+        this.cdr.markForCheck();
       },
       error: () => {
         this.topClients = [];
         this.loadingData = false;
-        this.refreshView();
+        this.cdr.markForCheck();
       },
     });
   }
@@ -106,18 +137,15 @@ export class AdminLoyaltyComponent implements OnInit {
   get matchingUsers() {
     const query = this.normalizeTarget(this.addPointsForm.target);
     if (!query) return [];
-
     return this.users
       .filter((user) => {
         if (!this.isClientUser(user)) return false;
-        const email = user.email.toLowerCase();
-        const name = user.nom.toLowerCase();
-        return email.includes(query) || name.includes(query);
+        return user.email.toLowerCase().includes(query) || user.nom.toLowerCase().includes(query);
       })
       .slice(0, 8);
   }
 
-  selectUser(user: UserResponse) {
+  selectUser(user: UserSummaryResponse) {
     this.selectedUser = user;
     this.addPointsForm.target = user.email;
     this.addPointsMessage = '';
@@ -128,14 +156,10 @@ export class AdminLoyaltyComponent implements OnInit {
     this.selectedUser = null;
     this.addPointsForm.target = '';
     this.addPointsError = '';
-    this.refreshView();
   }
 
   onTargetInput(value: string) {
-    if (this.selectedUser && value !== this.selectedUser.email) {
-      this.selectedUser = null;
-    }
-
+    if (this.selectedUser && value !== this.selectedUser.email) this.selectedUser = null;
     if (this.addPointsMessage || this.addPointsError) {
       this.addPointsMessage = '';
       this.addPointsError = '';
@@ -150,44 +174,31 @@ export class AdminLoyaltyComponent implements OnInit {
   }
 
   private applyTopClientFilter() {
-    if (!this.topClients.length || !this.users.length) {
-      return;
-    }
-
-    const allowedClientEmails = new Set(
-      this.users
-        .filter((user) => this.isClientUser(user))
-        .map((user) => user.email.toLowerCase()),
+    if (!this.topClients.length || !this.users.length) return;
+    const allowedEmails = new Set(
+      this.users.filter((u) => this.isClientUser(u)).map((u) => u.email.toLowerCase()),
     );
-
-    this.topClients = this.topClients.filter((client) => allowedClientEmails.has(client.email.toLowerCase()));
+    this.topClients = this.topClients.filter((c) => allowedEmails.has(c.email.toLowerCase()));
   }
 
-  private isClientUser(user: UserResponse): boolean {
+  private isClientUser(user: UserSummaryResponse): boolean {
     const roles = user.roles || [];
     return !roles.some((role) => role === 'SUPER_ADMIN' || role.startsWith('ADMIN_'));
   }
 
   private resolveUserId(target: string): number | null {
-    const normalizedTarget = this.normalizeTarget(target);
-    if (!normalizedTarget) return null;
-
-    const exactEmailMatch = this.users.find((user) => user.email.toLowerCase() === normalizedTarget);
-    if (exactEmailMatch) return exactEmailMatch.id;
-
-    const exactNameMatch = this.users.find((user) => user.nom.toLowerCase() === normalizedTarget);
-    if (exactNameMatch) return exactNameMatch.id;
-
-    const partialMatches = this.matchingUsers;
-
-    if (partialMatches.length === 1) return partialMatches[0].id;
-
-    return null;
+    const q = this.normalizeTarget(target);
+    if (!q) return null;
+    const exact =
+      this.users.find((u) => u.email.toLowerCase() === q) ||
+      this.users.find((u) => u.nom.toLowerCase() === q);
+    if (exact) return exact.id;
+    const partial = this.matchingUsers;
+    return partial.length === 1 ? partial[0].id : null;
   }
 
   addPoints() {
     if (this.addPointsLoading) return;
-
     this.addPointsMessage = '';
     this.addPointsError = '';
     if (!this.addPointsForm.target || !this.addPointsForm.points) return;
@@ -199,71 +210,54 @@ export class AdminLoyaltyComponent implements OnInit {
       this.addPointsError = 'Utilisateur introuvable. Choisis un client dans la liste.';
       return;
     }
-
     if (this.currentUserId === userId) {
       this.addPointsError = 'Tu ne peux pas ajouter des points à ton propre compte.';
       return;
     }
-
-    const targetUser = this.users.find((user) => user.id === userId);
+    const targetUser = this.users.find((u) => u.id === userId);
     if (targetUser && !this.isClientUser(targetUser)) {
-      this.addPointsError = 'Les points de fidélité ne peuvent être ajoutés qu’aux clients.';
+      this.addPointsError = "Les points ne peuvent être ajoutés qu'aux clients.";
       return;
     }
 
     this.addPointsLoading = true;
-    this.refreshView();
-
     this.carteService
       .addPoints(userId, points)
-      .pipe(finalize(() => {
-        this.addPointsLoading = false;
-        this.refreshView();
-      }))
+      .pipe(
+        finalize(() => {
+          this.addPointsLoading = false;
+          this.cdr.markForCheck();
+        }),
+      )
       .subscribe({
         next: () => {
-          const matchedUser = this.users.find((user) => user.id === userId);
-          const displayLabel = matchedUser ? `${matchedUser.nom} (${matchedUser.email})` : `#${userId}`;
+          const matchedUser = this.users.find((u) => u.id === userId);
+          const label = matchedUser ? `${matchedUser.nom} (${matchedUser.email})` : `#${userId}`;
           this.updateTopClientLocally(matchedUser, points);
-          this.addPointsMessage = `✅ +${points} points ajoutés à ${displayLabel}.`;
+          this.addPointsMessage = `+${points} points ajoutés à ${label}.`;
           this.addPointsForm = { target: '', points: null };
           this.selectedUser = null;
-          this.refreshView();
         },
         error: (err) => {
-          this.addPointsError = err?.error?.message || "Impossible d'ajouter les points.";
-          this.refreshView();
+          this.addPointsError =
+            err?.error?.error || err?.error?.message || "Impossible d'ajouter les points.";
         },
       });
   }
 
-  private updateTopClientLocally(targetUser: UserResponse | undefined, points: number) {
-    if (!targetUser || !this.isClientUser(targetUser)) {
-      return;
-    }
-
+  private updateTopClientLocally(targetUser: UserSummaryResponse | undefined, points: number) {
+    if (!targetUser || !this.isClientUser(targetUser)) return;
     const email = targetUser.email.toLowerCase();
-    const name = targetUser.nom.toLowerCase();
-    const currentTopClient = this.topClients.find(
-      (client) => client.email.toLowerCase() === email || client.nom.toLowerCase() === name,
-    );
-
-    if (currentTopClient) {
-      currentTopClient.points += points;
+    const existing = this.topClients.find((c) => c.email.toLowerCase() === email);
+    if (existing) {
+      existing.points += points;
     } else {
+      // UserSummaryResponse n'a pas loyaltyLevel — on met SILVER par défaut
       this.topClients = [
-        {
-          nom: targetUser.nom,
-          email: targetUser.email,
-          points,
-          level: (targetUser.loyaltyLevel || 'SILVER').toUpperCase(),
-        },
+        { nom: targetUser.nom, email: targetUser.email, points, level: 'SILVER' },
         ...this.topClients,
       ];
     }
-
-    this.topClients = [...this.topClients]
-      .sort((left, right) => right.points - left.points)
-      .slice(0, 10);
+    this.topClients = [...this.topClients].sort((a, b) => b.points - a.points).slice(0, 10);
   }
 }

@@ -1,5 +1,6 @@
 <div class="min-h-screen flex">
-  <!-- Left panel – Branding -->
+
+  <!-- ── Left panel — Branding (identique à l'original) ── -->
   <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-accent via-primary-light to-primary relative overflow-hidden items-center justify-center">
     <div class="absolute inset-0 opacity-10">
       <div class="absolute top-20 right-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
@@ -12,82 +13,334 @@
       <h1 class="font-serif text-4xl font-bold mb-4">Join Rawebet Today</h1>
       <p class="text-white/80 text-lg leading-relaxed">Become part of a vibrant cultural community. Access events, films, clubs, and exclusive membership benefits.</p>
       <div class="mt-10 grid grid-cols-2 gap-4 text-left">
-        <div class="bg-white/10 rounded-xl p-4">
-          <div class="text-2xl mb-1">🎬</div>
-          <div class="font-semibold text-sm">Films & Premieres</div>
+        <div class="bg-white/10 rounded-xl p-4"><div class="text-2xl mb-1">🎬</div><div class="font-semibold text-sm">Films & Premieres</div></div>
+        <div class="bg-white/10 rounded-xl p-4"><div class="text-2xl mb-1">🎭</div><div class="font-semibold text-sm">Live Events</div></div>
+        <div class="bg-white/10 rounded-xl p-4"><div class="text-2xl mb-1">👥</div><div class="font-semibold text-sm">Join Clubs</div></div>
+        <div class="bg-white/10 rounded-xl p-4"><div class="text-2xl mb-1">🏆</div><div class="font-semibold text-sm">Earn Rewards</div></div>
+      </div>
+
+      <!-- Step indicator dans le panel gauche -->
+      <div class="mt-10 space-y-3">
+        <div *ngFor="let s of steps"
+             class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all"
+             [class.bg-white]="currentStep === s.num"
+             [class.bg-white/10]="currentStep !== s.num">
+        <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+             [class.bg-primary]="currentStep === s.num"
+             [class.text-white]="currentStep === s.num"
+             [class.bg-white/30]="currentStep < s.num"
+        [class.text-white]="currentStep < s.num"
+        [class.bg-green-500]="currentStep > s.num"
+        [class.text-white]="currentStep > s.num">
+        <span *ngIf="currentStep <= s.num">{{ s.num }}</span>
+        <span *ngIf="currentStep > s.num">✓</span>
+      </div>
+      <span class="text-sm font-medium"
+            [class.text-primary]="currentStep === s.num"
+            [class.text-white/50]="currentStep < s.num"
+      [class.text-white]="currentStep > s.num">
+      {{ s.label }}
+      </span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── Right panel — Wizard ── -->
+<div class="flex-1 flex items-center justify-center p-8 bg-surface">
+  <div class="w-full max-w-md">
+
+    <!-- Logo mobile -->
+    <div class="lg:hidden flex items-center gap-3 mb-8">
+      <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+        <span class="text-white font-bold text-lg">R</span>
+      </div>
+      <span class="font-serif text-xl font-bold text-primary">Rawebet</span>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs text-gray-400 font-medium">Étape {{ currentStep }} sur 4</span>
+        <span class="text-xs text-primary font-semibold">{{ steps[currentStep - 1].label }}</span>
+      </div>
+      <div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+        <div class="h-full bg-primary rounded-full transition-all duration-500"
+             [style.width]="progressWidth">
         </div>
-        <div class="bg-white/10 rounded-xl p-4">
-          <div class="text-2xl mb-1">🎭</div>
-          <div class="font-semibold text-sm">Live Events</div>
-        </div>
-        <div class="bg-white/10 rounded-xl p-4">
-          <div class="text-2xl mb-1">👥</div>
-          <div class="font-semibold text-sm">Join Clubs</div>
-        </div>
-        <div class="bg-white/10 rounded-xl p-4">
-          <div class="text-2xl mb-1">⭐</div>
-          <div class="font-semibold text-sm">Earn Rewards</div>
+      </div>
+      <!-- Dots -->
+      <div class="flex justify-between mt-2">
+        <div *ngFor="let s of steps"
+             class="w-2 h-2 rounded-full transition-all duration-300"
+             [class.bg-primary]="currentStep >= s.num"
+             [class.bg-gray-200]="currentStep < s.num">
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Right panel – Form -->
-  <div class="flex-1 flex items-center justify-center p-8 bg-surface">
-    <div class="w-full max-w-md">
-      <div class="lg:hidden flex items-center gap-3 mb-8">
-        <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-          <span class="text-white font-bold text-lg">R</span>
-        </div>
-        <span class="font-serif text-xl font-bold text-primary">Rawebet</span>
+    <!-- ══ ÉTAPE 1 — Nom ══ -->
+    <div *ngIf="currentStep === 1" class="space-y-6">
+      <div>
+        <h2 class="font-serif text-3xl font-bold text-dark mb-1">Comment vous appelez-vous ?</h2>
+        <p class="text-gray-400 text-sm">Ce nom apparaîtra sur votre profil Rawebet.</p>
       </div>
 
-      <h2 class="font-serif text-3xl font-bold text-dark mb-2">Create Account</h2>
-      <p class="text-gray-500 mb-8">Start your cultural journey with Rawebet</p>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nom complet</label>
+        <input type="text"
+               [(ngModel)]="model.fullName"
+               name="fullName"
+               placeholder="Ex: Ahmed Ben Ali"
+               autofocus
+               (keyup.enter)="next()"
+               class="w-full px-4 py-3.5 rounded-xl border text-sm outline-none transition-all"
+               [class.border-red-300]="fieldError"
+               [class.bg-red-50]="fieldError"
+               [class.border-gray-200]="!fieldError"
+               [class.bg-white]="!fieldError"
+               [class.focus:border-primary]="true" />
 
-      <form (ngSubmit)="onSubmit()" class="space-y-5">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
-          <input type="text" name="fullName" [(ngModel)]="model.fullName" required
-            placeholder="John Doe"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm" />
+        <!-- Compteur de caractères -->
+        <div class="flex items-center justify-between mt-1.5">
+          <p *ngIf="fieldError" class="text-red-500 text-xs">{{ fieldError }}</p>
+          <p *ngIf="!fieldError" class="text-gray-400 text-xs">Minimum 3 caractères</p>
+          <span class="text-xs ml-auto"
+                [class.text-gray-300]="model.fullName.length < 3"
+                [class.text-green-500]="model.fullName.length >= 3">
+              {{ model.fullName.length }}/50
+            </span>
         </div>
+      </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-          <input type="email" name="email" [(ngModel)]="model.email" required
-            placeholder="you@example.com"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm" />
+      <!-- Preview -->
+      <div *ngIf="model.fullName.trim().length >= 3"
+           class="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-primary/10">
+        <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+          <span class="text-white font-bold text-sm">{{ model.fullName.trim().charAt(0).toUpperCase() }}</span>
         </div>
-
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-          <input [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="model.password" required
-            placeholder="••••••••"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm" />
+          <p class="text-sm font-semibold text-dark">{{ model.fullName.trim() }}</p>
+          <p class="text-xs text-gray-400">Aperçu de votre profil</p>
         </div>
+      </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password</label>
-          <input type="password" name="confirmPassword" [(ngModel)]="model.confirmPassword" required
-            placeholder="••••••••"
-            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm" />
-        </div>
+      <button type="button" (click)="next()"
+              class="w-full py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+        Continuer
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
 
-        <label class="flex items-start gap-2 text-gray-600 text-sm">
-          <input type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary/20 mt-0.5" />
-          <span>I agree to the <a href="#" class="text-primary font-medium">Terms of Service</a> and <a href="#" class="text-primary font-medium">Privacy Policy</a></span>
-        </label>
+    <!-- ══ ÉTAPE 2 — Email ══ -->
+    <div *ngIf="currentStep === 2" class="space-y-6">
+      <div>
+        <h2 class="font-serif text-3xl font-bold text-dark mb-1">Votre adresse email</h2>
+        <p class="text-gray-400 text-sm">Nous l'utiliserons pour vous connecter et vous envoyer des notifications.</p>
+      </div>
 
-        <button type="submit" class="w-full py-3 bg-accent text-white rounded-xl font-semibold hover:bg-accent-light hover:text-dark transition-colors shadow-lg shadow-accent/20">
-          Create Account
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+        <input type="email"
+               [(ngModel)]="model.email"
+               name="email"
+               placeholder="vous@exemple.com"
+               (keyup.enter)="next()"
+               class="w-full px-4 py-3.5 rounded-xl border text-sm outline-none transition-all"
+               [class.border-red-300]="fieldError"
+               [class.bg-red-50]="fieldError"
+               [class.border-gray-200]="!fieldError"
+               [class.bg-white]="!fieldError" />
+        <p *ngIf="fieldError" class="text-red-500 text-xs mt-1.5">{{ fieldError }}</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="button" (click)="back()"
+                class="flex-1 py-3.5 border border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Retour
         </button>
-        <p *ngIf="error" class="text-red-500 text-sm mt-2">{{ error }}</p>
-      </form>
-
-      <div class="mt-6 text-center">
-        <p class="text-gray-500 text-sm">Already have an account? <a routerLink="/auth/sign-in" class="text-primary font-semibold hover:text-primary-light">Sign in</a></p>
+        <button type="button" (click)="next()"
+                class="flex-1 py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+          Continuer
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
       </div>
     </div>
+
+    <!-- ══ ÉTAPE 3 — Mot de passe ══ -->
+    <div *ngIf="currentStep === 3" class="space-y-6">
+      <div>
+        <h2 class="font-serif text-3xl font-bold text-dark mb-1">Choisissez un mot de passe</h2>
+        <p class="text-gray-400 text-sm">Au moins 6 caractères. Un mot de passe fort protège votre compte.</p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Mot de passe</label>
+          <div class="relative">
+            <input [type]="showPassword ? 'text' : 'password'"
+                   [(ngModel)]="model.password"
+                   name="password"
+                   placeholder="••••••••"
+                   class="w-full px-4 py-3.5 pr-12 rounded-xl border border-gray-200 bg-white text-sm outline-none transition-all focus:border-primary" />
+            <button type="button" (click)="showPassword = !showPassword"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              {{ showPassword ? '🙈' : '👁️' }}
+            </button>
+          </div>
+
+          <!-- Force du mot de passe -->
+          <div *ngIf="model.password" class="mt-2 space-y-1">
+            <div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-300"
+                   [ngClass]="passwordStrength.color"
+                   [style.width]="passwordStrength.width">
+              </div>
+            </div>
+            <p class="text-xs" [class.text-red-500]="passwordStrength.level === 'weak'"
+               [class.text-yellow-600]="passwordStrength.level === 'medium'"
+               [class.text-green-600]="passwordStrength.level === 'strong'">
+              Force : {{ passwordStrength.label }}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Confirmer le mot de passe</label>
+          <div class="relative">
+            <input [type]="showConfirm ? 'text' : 'password'"
+                   [(ngModel)]="model.confirmPassword"
+                   name="confirmPassword"
+                   placeholder="••••••••"
+                   (keyup.enter)="next()"
+                   class="w-full px-4 py-3.5 pr-12 rounded-xl border text-sm outline-none transition-all"
+                   [class.border-red-300]="model.confirmPassword && model.password !== model.confirmPassword"
+                   [class.border-green-400]="model.confirmPassword && model.password === model.confirmPassword"
+                   [class.border-gray-200]="!model.confirmPassword" />
+            <button type="button" (click)="showConfirm = !showConfirm"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              {{ showConfirm ? '🙈' : '👁️' }}
+            </button>
+          </div>
+          <p *ngIf="model.confirmPassword && model.password === model.confirmPassword"
+             class="text-green-600 text-xs mt-1">✓ Les mots de passe correspondent</p>
+        </div>
+
+        <p *ngIf="fieldError" class="text-red-500 text-xs">{{ fieldError }}</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="button" (click)="back()"
+                class="flex-1 py-3.5 border border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Retour
+        </button>
+        <button type="button" (click)="next()"
+                class="flex-1 py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+          Continuer
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ ÉTAPE 4 — Résumé & Confirmation ══ -->
+    <div *ngIf="currentStep === 4" class="space-y-6">
+      <div>
+        <h2 class="font-serif text-3xl font-bold text-dark mb-1">Tout est prêt !</h2>
+        <p class="text-gray-400 text-sm">Vérifiez vos informations avant de créer votre compte.</p>
+      </div>
+
+      <!-- Résumé -->
+      <div class="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
+        <div class="flex items-center gap-4 p-4 border-b border-gray-100">
+          <div class="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center shrink-0">
+            <span class="text-white font-bold text-xl">{{ model.fullName.trim().charAt(0).toUpperCase() }}</span>
+          </div>
+          <div>
+            <p class="font-semibold text-dark">{{ model.fullName.trim() }}</p>
+            <p class="text-sm text-gray-400">{{ model.email.trim() }}</p>
+          </div>
+        </div>
+        <div class="p-4 space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+              <span class="text-green-500 text-sm">✓</span>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400">Nom</p>
+              <p class="text-sm font-medium text-dark">{{ model.fullName.trim() }}</p>
+            </div>
+            <button type="button" (click)="currentStep = 1"
+                    class="ml-auto text-xs text-primary hover:text-primary-light font-medium">Modifier</button>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+              <span class="text-green-500 text-sm">✓</span>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400">Email</p>
+              <p class="text-sm font-medium text-dark">{{ model.email.trim() }}</p>
+            </div>
+            <button type="button" (click)="currentStep = 2"
+                    class="ml-auto text-xs text-primary hover:text-primary-light font-medium">Modifier</button>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+              <span class="text-green-500 text-sm">✓</span>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400">Mot de passe</p>
+              <p class="text-sm font-medium text-dark">••••••••</p>
+            </div>
+            <button type="button" (click)="currentStep = 3"
+                    class="ml-auto text-xs text-primary hover:text-primary-light font-medium">Modifier</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CGU -->
+      <label class="flex items-start gap-2 text-gray-600 text-sm cursor-pointer">
+        <input type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary/20 mt-0.5" />
+        <span>J'accepte les <a href="#" class="text-primary font-medium">Conditions d'utilisation</a> et la <a href="#" class="text-primary font-medium">Politique de confidentialité</a></span>
+      </label>
+
+      <p *ngIf="error" class="text-red-500 text-sm p-3 bg-red-50 rounded-xl">{{ error }}</p>
+
+      <div class="flex gap-3">
+        <button type="button" (click)="back()"
+                class="flex-1 py-3.5 border border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Retour
+        </button>
+        <button type="button" (click)="onSubmit()" [disabled]="loading"
+                class="flex-1 py-3.5 bg-accent text-white rounded-xl font-semibold hover:bg-accent-light hover:text-dark transition-colors shadow-lg shadow-accent/20 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          <span *ngIf="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          {{ loading ? 'Création...' : 'Créer mon compte 🎉' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Lien connexion -->
+    <div class="mt-6 text-center">
+      <p class="text-gray-500 text-sm">
+        Déjà un compte ?
+        <a routerLink="/auth/sign-in" class="text-primary font-semibold hover:text-primary-light">Se connecter</a>
+      </p>
+    </div>
+
   </div>
+</div>
 </div>

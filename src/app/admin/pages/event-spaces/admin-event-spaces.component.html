@@ -1,0 +1,264 @@
+<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="font-serif text-2xl font-bold text-dark">Event Space Management</h1>
+      <p class="text-sm text-gray-400 mt-1">{{ eventSpaces.length }} event spaces total</p>
+    </div>
+    <button
+      (click)="openCreateModal()"
+      class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors flex items-center gap-2"
+    >
+      <span>＋</span> Create Event Space
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-col sm:flex-row gap-3">
+    <input
+      type="text"
+      placeholder="Search event spaces..."
+      (input)="searchSubject.next($event.target.value)"
+      class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-colors"
+    />
+    <select
+      [(ngModel)]="selectedStatusFilter"
+      (change)="onStatusFilterChange()"
+      class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-600"
+    >
+      <option value="all">All Statuses</option>
+      <option value="ACTIVE">Active</option>
+      <option value="MAINTENANCE">Maintenance</option>
+    </select>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="bg-white rounded-2xl border border-gray-100 p-8 text-center">
+    <p class="text-gray-500">Loading event spaces...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+    {{ error }}
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading && !error" class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+            <th class="px-6 py-3 font-medium">Name</th>
+            <th class="px-4 py-3 font-medium">Type</th>
+            <th class="px-4 py-3 font-medium">Capacity</th>
+            <th class="px-4 py-3 font-medium">Status</th>
+            <th class="px-4 py-3 font-medium text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let space of filteredSpaces"
+            class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+          >
+            <td class="px-6 py-4 font-medium text-dark max-w-xs truncate">{{ space.nom }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs">{{ getTypeLabel(space.type) }}</td>
+            <td class="px-4 py-4 text-gray-600 text-xs">{{ space.capacite }} seats</td>
+            <td class="px-4 py-4">
+              <span [class]="getStatusClass(space.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">
+                {{ space.status }}
+              </span>
+            </td>
+            <td class="px-4 py-4 text-right">
+              <div class="flex items-center justify-end gap-1">
+                <button
+                  (click)="viewSpaceEvents(space)"
+                  class="p-1.5 hover:bg-purple-50 rounded-lg text-purple-500 text-xs"
+                  title="View Events/Reservations"
+                >
+                  👁️
+                </button>
+                <button
+                  (click)="openEditModal(space)"
+                  class="p-1.5 hover:bg-blue-50 rounded-lg text-blue-500 text-xs"
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+                <button
+                  (click)="deleteSpace(space.id)"
+                  class="p-1.5 hover:bg-red-50 rounded-lg text-red-500 text-xs"
+                  title="Delete"
+                >
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredSpaces.length === 0" class="border-b border-gray-50">
+            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+              No event spaces found
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div *ngIf="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+      <!-- Modal Header -->
+      <h2 class="text-xl font-bold text-dark mb-4">
+        {{ modalStep === 'create' ? 'Create Event Space' : 'Edit Event Space' }}
+      </h2>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Form -->
+      <form (ngSubmit)="submitForm()" class="space-y-4">
+        <!-- Name -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Event Space Name *</label>
+          <input
+            type="text"
+            [(ngModel)]="form.nom"
+            name="nom"
+            placeholder="e.g., Grand Ballroom"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+          />
+        </div>
+
+        <!-- Capacity -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Capacity *</label>
+          <input
+            type="number"
+            [(ngModel)]="form.capacite"
+            name="capacite"
+            placeholder="e.g., 500"
+            min="1"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+          />
+        </div>
+
+        <!-- Type -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+          <select
+            [(ngModel)]="form.type"
+            name="type"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+          >
+            <option value="INTERIEUR">INTERIEUR</option>
+            <option value="EXTERIEUR">EXTERIEUR</option>
+          </select>
+        </div>
+
+        <!-- Status -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+          <select
+            [(ngModel)]="form.status"
+            name="status"
+            (change)="onStatusChange($event)"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+          >
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="MAINTENANCE">MAINTENANCE</option>
+          </select>
+        </div>
+      </form>
+
+      <!-- Modal Actions -->
+      <div class="flex gap-3 mt-6">
+        <button
+          (click)="closeModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="submitForm()"
+          [disabled]="isSubmitting"
+          class="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-light transition-colors disabled:opacity-50"
+        >
+          {{ isSubmitting ? 'Saving...' : (modalStep === 'create' ? 'Create' : 'Update') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Events Modal -->
+  <div *ngIf="showEventsModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-dark">
+          Events/Reservations for {{ selectedSpaceForEvents?.nom }}
+        </h2>
+        <button (click)="closeEventsModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="eventsLoading" class="bg-white rounded-2xl border border-gray-100 p-8 text-center">
+        <p class="text-gray-500">Loading events...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="eventsError && !eventsLoading" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+        {{ eventsError }}
+      </div>
+
+      <!-- Events Table -->
+      <div *ngIf="!eventsLoading && !eventsError" class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+              <th class="px-4 py-3 font-medium">Event Name</th>
+              <th class="px-4 py-3 font-medium">Start Date</th>
+              <th class="px-4 py-3 font-medium">End Date</th>
+              <th class="px-4 py-3 font-medium">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let event of events" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+              <td class="px-4 py-4 font-medium text-dark">{{ event.titre }}</td>
+              <td class="px-4 py-4 text-gray-600 text-xs">{{ event.dateDebut | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="px-4 py-4 text-gray-600 text-xs">{{ event.dateFin | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="px-4 py-4">
+                <span
+                  [ngClass]="{
+                    'bg-blue-100 text-blue-700': event.status === 'DRAFT',
+                    'bg-green-100 text-green-700': event.status === 'PUBLISHED',
+                    'bg-red-100 text-red-700': event.status === 'CANCELLED'
+                  }"
+                  class="px-2.5 py-1 rounded-full text-[10px] font-semibold"
+                >
+                  {{ event.status }}
+                </span>
+              </td>
+            </tr>
+            <tr *ngIf="events.length === 0" class="border-b border-gray-50">
+              <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+                No events/reservations found for this event space
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="flex gap-3 mt-6">
+        <button
+          (click)="closeEventsModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

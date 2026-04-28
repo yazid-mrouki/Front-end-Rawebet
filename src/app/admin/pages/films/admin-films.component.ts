@@ -9,6 +9,18 @@ import { TmdbService, TmdbMovie } from '../../../features/cinema/services/tmdb.s
 
 type ModalStep = 'search' | 'confirm';
 
+export interface RoiResult {
+  aiScore:             number;
+  temporalScore:       number;
+  finalScore:          number;
+  temporalLabel:       string;
+  temporalStatus:      string;
+  weeksSinceRelease:   number | null;
+  recommendation:      string;
+  recommendationLevel: string;
+  label:               string;
+}
+
 @Component({
   selector: 'app-admin-films',
   standalone: true,
@@ -17,19 +29,16 @@ type ModalStep = 'search' | 'confirm';
 })
 export class AdminFilmsComponent implements OnInit, OnDestroy {
 
-  // ── Liste films ──────────────────────────────────
   films: Film[] = [];
   isLoading = true;
   error = '';
   searchQuery = '';
 
-  // ── Modal état ───────────────────────────────────
   showModal = false;
   modalStep: ModalStep = 'search';
   isSubmitting = false;
   errorMessage = '';
 
-  // ── TMDB recherche ───────────────────────────────
   tmdbQuery = '';
   tmdbResults: TmdbMovie[] = [];
   isSearching = false;
@@ -37,7 +46,10 @@ export class AdminFilmsComponent implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
   private searchSub!: Subscription;
 
-  // ── Formulaire final ─────────────────────────────
+  // ── Prédiction ───────────────────────────────────────────────
+  isLoadingRoi = false;
+  roiResult: RoiResult | null = null;
+
   form: CreateFilmRequest = this.emptyForm();
 
   constructor(
@@ -48,8 +60,6 @@ export class AdminFilmsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadFilms();
-
-    // Recherche TMDB avec debounce
     this.searchSub = this.searchSubject.pipe(
       debounceTime(400),
       distinctUntilChanged(),
@@ -64,18 +74,12 @@ export class AdminFilmsComponent implements OnInit, OnDestroy {
         this.isSearching = false;
         this.cdr.detectChanges();
       },
-      error: () => {
-        this.isSearching = false;
-        this.cdr.detectChanges();
-      }
+      error: () => { this.isSearching = false; this.cdr.detectChanges(); }
     });
   }
 
-  ngOnDestroy(): void {
-    this.searchSub?.unsubscribe();
-  }
+  ngOnDestroy(): void { this.searchSub?.unsubscribe(); }
 
-  // ── Chargement liste ─────────────────────────────
   loadFilms(): void {
     this.isLoading = true;
     this.filmService.getAll().subscribe({
@@ -88,110 +92,133 @@ export class AdminFilmsComponent implements OnInit, OnDestroy {
     const q = this.searchQuery.toLowerCase();
     return this.films.filter(f =>
       f.title.toLowerCase().includes(q) ||
-      f.director.toLowerCase().includes(q)
+      (f.director?.toLowerCase().includes(q) ?? false)
     );
   }
 
-  // ── Modal ────────────────────────────────────────
   openModal(): void {
-    this.showModal = true;
-    this.modalStep = 'search';
-    this.tmdbQuery = '';
+    this.showModal   = true;
+    this.modalStep   = 'search';
+    this.tmdbQuery   = '';
     this.tmdbResults = [];
     this.selectedMovie = null;
-    this.form = this.emptyForm();
+    this.form        = this.emptyForm();
     this.errorMessage = '';
+    this.roiResult   = null;
+    this.isLoadingRoi = false;
   }
 
-  closeModal(): void {
-    this.showModal = false;
-    this.cdr.detectChanges();
-  }
+  closeModal(): void { this.showModal = false; this.cdr.detectChanges(); }
 
-  // ── Recherche TMDB ───────────────────────────────
   onTmdbSearch(): void {
-    if (this.tmdbQuery.trim().length < 2) {
-      this.tmdbResults = [];
-      return;
-    }
+    if (this.tmdbQuery.trim().length < 2) { this.tmdbResults = []; return; }
     this.searchSubject.next(this.tmdbQuery.trim());
   }
 
-  // ── Sélection d'un film TMDB ─────────────────────
   selectMovie(movie: TmdbMovie): void {
     this.selectedMovie = movie;
-    this.isSearching = true;
+    this.isSearching   = true;
+    this.roiResult     = null;
+    this.isLoadingRoi  = false;
     this.cdr.detectChanges();
 
-    // Charger détails + crédits + vidéos en parallèle
-    let detailsDone = false;
-    let creditsDone = false;
-    let videosDone = false;
-
+    let detailsDone = false, creditsDone = false, videosDone = false;
     const checkDone = () => {
       if (detailsDone && creditsDone && videosDone) {
         this.isSearching = false;
-        this.modalStep = 'confirm';
+        this.modalStep   = 'confirm';
         this.cdr.detectChanges();
+        this.fetchRoiPrediction();
       }
     };
 
-    // Détails complets
     this.tmdbService.getDetails(movie.id).subscribe({
       next: (details) => {
-        this.form.title         = details.title;
-        this.form.synopsis      = details.overview;
+        this.form.title           = details.title;
+        this.form.synopsis        = details.overview;
         this.form.durationMinutes = details.runtime ?? 0;
-        this.form.genre         = details.genres?.map(g => g.name).join(', ') ?? '';
-        this.form.releaseDate   = details.release_date;
-        this.form.posterUrl     = this.tmdbService.getPosterUrl(details.poster_path);
-        this.form.imdbId        = details.imdb_id ?? '';
-        this.form.language      = '';   // à remplir manuellement
-        this.form.rating        = '';   // à remplir manuellement
-        detailsDone = true;
-        checkDone();
+        this.form.genre           = details.genres?.map(g => g.name).join(', ') ?? '';
+        this.form.releaseDate     = details.release_date;
+        this.form.posterUrl       = this.tmdbService.getPosterUrl(details.poster_path);
+        this.form.imdbId          = details.imdb_id ?? '';
+        this.form.language        = '';
+        this.form.rating          = '';
+        this.form.budget          = details.budget ?? null;
+        this.form.popularity      = movie.popularity ?? null;
+        detailsDone = true; checkDone();
       },
       error: () => { detailsDone = true; checkDone(); }
     });
 
-    // Crédits (directeur + casting)
     this.tmdbService.getCredits(movie.id).subscribe({
       next: (credits) => {
-        const director = credits.crew.find(c => c.job === 'Director');
+        const director        = credits.crew.find(c => c.job === 'Director');
         this.form.director    = director?.name ?? '';
-        this.form.castSummary = credits.cast
-          .slice(0, 5)
-          .map(c => c.name)
-          .join(', ');
-        creditsDone = true;
-        checkDone();
+        this.form.castSummary = credits.cast.slice(0, 5).map(c => c.name).join(', ');
+        creditsDone = true; checkDone();
       },
       error: () => { creditsDone = true; checkDone(); }
     });
 
-    // Trailer YouTube
     this.tmdbService.getVideos(movie.id).subscribe({
       next: (videos) => {
-        const trailer = videos.results.find(
-          v => v.type === 'Trailer' && v.site === 'YouTube'
-        ) ?? videos.results[0];
-        this.form.trailerUrl = trailer
-          ? `https://www.youtube.com/watch?v=${trailer.key}`
-          : '';
-        videosDone = true;
-        checkDone();
+        const trailer = videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube')
+                     ?? videos.results[0];
+        this.form.trailerUrl = trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : '';
+        videosDone = true; checkDone();
       },
       error: () => { videosDone = true; checkDone(); }
+    });
+  }
+
+  fetchRoiPrediction(): void {
+    if (!this.form.budget || this.form.budget <= 0 || !this.form.releaseDate) return;
+
+    this.isLoadingRoi = true;
+    this.cdr.detectChanges();
+
+    const date         = new Date(this.form.releaseDate);
+    const releaseYear  = date.getFullYear();
+    const releaseMonth = date.getMonth() + 1;
+    const genres       = this.form.genre ? this.form.genre.split(',').map(g => g.trim()) : [];
+
+    this.filmService.predictRoi({
+      title:         this.form.title,
+      budget:        this.form.budget,
+      runtime:       this.form.durationMinutes,
+      release_year:  releaseYear,
+      release_month: releaseMonth,
+      release_date:  this.form.releaseDate,
+      language:      'en',
+      genres:        genres,
+      overview:      this.form.synopsis ?? ''
+    }).subscribe({
+      next: (r: any) => {
+        this.roiResult = {
+          aiScore:             r.ai_score,
+          temporalScore:       r.temporal_score,
+          finalScore:          r.final_score,
+          temporalLabel:       r.temporal_label,
+          temporalStatus:      r.temporal_status,
+          weeksSinceRelease:   r.weeks_since_release,
+          recommendation:      r.recommendation,
+          recommendationLevel: r.recommendation_level,
+          label:               r.label
+        };
+        this.isLoadingRoi = false;
+        this.cdr.detectChanges();
+      },
+      error: () => { this.roiResult = null; this.isLoadingRoi = false; this.cdr.detectChanges(); }
     });
   }
 
   backToSearch(): void {
     this.modalStep = 'search';
     this.selectedMovie = null;
+    this.roiResult = null;
     this.cdr.detectChanges();
   }
 
-  // ── Création film ────────────────────────────────
   submitFilm(): void {
     if (!this.form.title || !this.form.director) return;
     this.isSubmitting = true;
@@ -203,12 +230,14 @@ export class AdminFilmsComponent implements OnInit, OnDestroy {
       trailerUrl:  this.form.trailerUrl?.trim()  || null as any,
       posterUrl:   this.form.posterUrl?.trim()   || null as any,
       castSummary: this.form.castSummary?.trim() || null as any,
+      budget:      this.form.budget              ?? null,
+      popularity:  this.form.popularity          ?? null,
     };
 
     this.filmService.create(payload).subscribe({
       next: () => {
         this.isSubmitting = false;
-        this.showModal = false;
+        this.showModal    = false;
         this.loadFilms();
         this.cdr.detectChanges();
       },
@@ -222,7 +251,6 @@ export class AdminFilmsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Suppression ──────────────────────────────────
   deleteFilm(id: number): void {
     if (!confirm('Désactiver ce film ?')) return;
     this.filmService.disable(id).subscribe({
@@ -230,25 +258,32 @@ export class AdminFilmsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Utilitaires ──────────────────────────────────
+  // ── Utilitaires ──────────────────────────────────────────────
   getDurationLabel(min: number): string {
     if (!min) return '—';
     return `${Math.floor(min / 60)}h${min % 60 > 0 ? (min % 60) + 'min' : ''}`;
   }
 
-  getPosterUrl(path: string): string {
-    return this.tmdbService.getPosterUrl(path, 'w300');
-  }
+  getPosterUrl(path: string): string { return this.tmdbService.getPosterUrl(path, 'w300'); }
 
-  getYear(date: string): string {
-    return date ? new Date(date).getFullYear().toString() : '';
+  getYear(date: string): string { return date ? new Date(date).getFullYear().toString() : ''; }
+
+  getPct(score: number): number { return Math.round(score * 100); }
+
+  getRecoColor(): string {
+    if (!this.roiResult) return 'gray';
+    const level = this.roiResult.recommendationLevel;
+    if (level === 'strong_yes' || level === 'yes') return 'green';
+    if (level === 'maybe' || level === 'special' || level === 'wait') return 'amber';
+    return 'red';
   }
 
   private emptyForm(): CreateFilmRequest {
     return {
       title: '', synopsis: '', durationMinutes: 0,
       language: '', genre: '', director: '', castSummary: '',
-      rating: '', releaseDate: '', posterUrl: '', trailerUrl: '', imdbId: ''
+      rating: '', releaseDate: '', posterUrl: '', trailerUrl: '',
+      imdbId: '', budget: null, popularity: null
     };
   }
 }

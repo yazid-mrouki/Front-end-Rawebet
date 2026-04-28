@@ -1,36 +1,157 @@
-<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div><h1 class="font-serif text-2xl font-bold text-dark">Subscription Management</h1><p class="text-sm text-gray-400 mt-1">{{ subscribers.length }} paid subscribers</p></div>
-  </div>
+<div class="min-h-screen bg-white overflow-hidden w-full">
+  <!-- Header Section -->
+  <div class="relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-purple-50">
+    <div class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 blur-3xl"></div>
+    <div class="relative px-4 sm:px-6 py-12 w-full">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+        <div class="w-full">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-4xl">👥</span>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
+              User Subscriptions
+            </h1>
+          </div>
+          <p class="text-gray-600 text-lg">Manage and monitor all active user subscriptions</p>
+        </div>
+        <div class="hidden md:block text-center">
+          <div class="text-5xl font-bold text-purple-600">{{ subscriptions.length }}</div>
+          <div class="text-gray-600 text-sm uppercase tracking-widest">Total Active</div>
+        </div>
+      </div>
 
-  <!-- Plan summary cards -->
-  <div class="grid sm:grid-cols-3 gap-4">
-    <div *ngFor="let s of stats" class="bg-white rounded-2xl border border-gray-100 p-5">
-      <div class="flex items-center gap-3 mb-2"><div class="w-3 h-3 rounded-full" [ngClass]="s.color"></div><span class="text-sm font-medium text-dark">{{ s.label }}</span></div>
-      <div class="text-2xl font-bold text-dark">{{ s.count }}</div>
-      <p class="text-xs text-gray-400 mt-1">{{ s.pct }}% of users<span *ngIf="s.revenue"> · {{ s.revenue }} TND/mo revenue</span></p>
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-value">{{ subscriptions.length }}</div>
+          <div class="stat-label">Total Subscriptions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-value">{{ subscriptions.length }}</div>
+          <div class="stat-label">Active Plans</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-value">{{ subscriptions.length }}</div>
+          <div class="stat-label">Queued Plans</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💎</div>
+          <div class="stat-value">Premium</div>
+          <div class="stat-label">Most Popular</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <input [(ngModel)]="searchQuery" type="text" placeholder="Search subscribers..." class="w-full sm:w-80 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary" />
+  <!-- Main Content -->
+  <div class="px-4 sm:px-6 py-12 w-full bg-white">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <div class="loading-box">
+        <div class="spinner-large"></div>
+        <h3 class="text-gray-800 text-xl font-semibold mt-6">Loading subscriptions...</h3>
+        <p class="text-gray-500 mt-2">This may take a moment</p>
+      </div>
+    </div>
 
-  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
-          <th class="px-6 py-3 font-medium">User</th><th class="px-4 py-3 font-medium">Plan</th><th class="px-4 py-3 font-medium">Started</th><th class="px-4 py-3 font-medium">Renews</th><th class="px-4 py-3 font-medium">Amount</th><th class="px-4 py-3 font-medium">Status</th>
-        </tr></thead>
-        <tbody>
-          <tr *ngFor="let s of filteredSubs" class="border-b border-gray-50 hover:bg-gray-50/50">
-            <td class="px-6 py-4 font-medium text-dark text-xs">{{ s.user }}</td>
-            <td class="px-4 py-4 text-xs"><span [class]="s.plan === 'Patron' ? 'text-accent font-semibold' : 'text-primary font-semibold'">{{ s.plan }}</span></td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ s.started }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ s.renews }}</td>
-            <td class="px-4 py-4 text-dark font-semibold text-xs">{{ s.amount }} TND/mo</td>
-            <td class="px-4 py-4"><span [class]="getStatusClass(s.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ s.status }}</span></td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="error-container">
+      <div class="error-box">
+        <div class="error-icon">⚠️</div>
+        <h3 class="text-gray-800 text-xl font-semibold">Oops! Something went wrong</h3>
+        <p class="text-gray-700 mt-2">{{ error }}</p>
+        <button (click)="loadUserSubscriptions()" class="btn-retry mt-6">
+          🔄 Try Again
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && !error && subscriptions.length === 0" class="empty-container">
+      <div class="empty-box">
+        <div class="empty-icon">📭</div>
+        <h3 class="text-gray-800 text-2xl font-semibold">No subscriptions yet</h3>
+        <p class="text-gray-500 mt-2">Users will appear here once they subscribe to a plan</p>
+      </div>
+    </div>
+
+    <!-- Subscriptions Grid -->
+    <div *ngIf="!loading && !error && subscriptions.length > 0" class="subscriptions-grid w-full">
+      <div *ngFor="let sub of subscriptions"
+           [class.deleting]="deleting.has(sub.subscriptionId)"
+           class="subscription-card">
+
+        <!-- Status Badge -->
+        <div class="absolute top-4 right-4 z-20">
+          <span [class]="'status-badge ' + getStatusColor(sub.status)">
+            {{ sub.status }}
+          </span>
+        </div>
+
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="plan-icon">
+            <span class="text-3xl">
+              {{ sub.abonnementType === 'VIP' ? '💎' : sub.abonnementType === 'Premium' ? '🥇' : '🪙' }}
+            </span>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-xl font-bold text-gray-800">{{ sub.abonnementName }}</h3>
+            <p class="text-sm text-gray-500">ID: #{{ sub.subscriptionId }}</p>
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          <!-- Plan Type Badge -->
+          <div class="plan-type-badge"
+               [class]="sub.abonnementType === 'VIP' ? 'type-vip' : sub.abonnementType === 'Premium' ? 'type-premium' : 'type-standard'">
+            {{ sub.abonnementType }}
+          </div>
+
+          <!-- Info Grid -->
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">📅 Start Date</span>
+              <span class="info-value">{{ sub.dateDebut | date: 'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">⏰ End Date</span>
+              <span class="info-value">{{ sub.dateFin | date: 'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">🎫 Tickets</span>
+              <span class="info-value">
+                <span *ngIf="sub.illimited" class="unlimited-badge">♾️ Unlimited</span>
+                <span *ngIf="!sub.illimited">{{ sub.ticketsRestants }}</span>
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">🔐 QR Code</span>
+              <span class="info-value qr-code-text" [title]="sub.qrCode">
+                {{ sub.qrCode | slice: 0:8 }}...
+              </span>
+            </div>
+          </div>
+
+          <!-- QR Code Preview (small) -->
+          <div class="qr-preview">
+            <span class="text-xs text-gray-500 font-mono">{{ sub.qrCode | slice: 0:12 }}...</span>
+          </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="card-footer">
+          <button (click)="deleteSubscription(sub.subscriptionId)"
+                  [disabled]="deleting.has(sub.subscriptionId)"
+                  class="btn-delete">
+            <span *ngIf="!deleting.has(sub.subscriptionId)">🗑️ Delete</span>
+            <span *ngIf="deleting.has(sub.subscriptionId)" class="spinner-mini"></span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
