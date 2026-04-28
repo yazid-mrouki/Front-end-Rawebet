@@ -1,0 +1,640 @@
+<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+  <!-- Categories View -->
+  <div *ngIf="viewMode === 'categories'">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="font-serif text-2xl font-bold text-dark">Materials Management</h1>
+        <p class="text-sm text-gray-400 mt-1">{{ categories.length }} categories total</p>
+      </div>
+      <button
+        (click)="openCreateCategoryModal()"
+        class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors flex items-center gap-2"
+      >
+        <span>＋</span> New Category
+      </button>
+    </div>
+
+    <!-- Search -->
+    <input
+      type="text"
+      placeholder="Search categories..."
+      (input)="categoriesSearchSubject.next($event.target.value)"
+      class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-colors"
+    />
+
+    <!-- Loading State -->
+    <div *ngIf="categoriesLoading" class="bg-white rounded-2xl border border-gray-100 p-8 text-center">
+      <p class="text-gray-500">Loading categories...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="categoriesError && !categoriesLoading" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+      {{ categoriesError }}
+    </div>
+
+    <!-- Categories Table -->
+    <div *ngIf="!categoriesLoading && !categoriesError" class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+              <th class="px-6 py-3 font-medium">Category Name</th>
+              <th class="px-4 py-3 font-medium">Description</th>
+              <th class="px-4 py-3 font-medium text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let category of filteredCategories"
+              class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+            >
+              <td class="px-6 py-4 font-medium text-dark">{{ category.nom }}</td>
+              <td class="px-4 py-4 text-gray-600 text-sm">{{ category.description }}</td>
+              <td class="px-4 py-4 text-right">
+                <div class="flex items-center justify-end gap-1">
+                  <button
+                    (click)="viewMaterials(category)"
+                    class="p-1.5 hover:bg-blue-50 rounded-lg text-blue-500 text-sm"
+                    title="View Materials"
+                  >
+                    👁️
+                  </button>
+                  <button
+                    (click)="openEditCategoryModal(category)"
+                    class="p-1.5 hover:bg-blue-50 rounded-lg text-blue-500 text-sm"
+                    title="Edit"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    (click)="deleteCategory(category.id)"
+                    class="p-1.5 hover:bg-red-50 rounded-lg text-red-500 text-sm"
+                    title="Delete"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="filteredCategories.length === 0" class="border-b border-gray-50">
+              <td colspan="3" class="px-6 py-8 text-center text-gray-500">
+                No categories found
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Materials View (within category) -->
+  <div *ngIf="viewMode === 'materials'">
+    <!-- Header with Back Button -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <button
+          (click)="backToCategories()"
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors flex items-center gap-2"
+        >
+          ← Back to Categories
+        </button>
+        <div>
+          <h1 class="font-serif text-2xl font-bold text-dark">{{ selectedCategory?.nom }}</h1>
+          <p class="text-sm text-gray-400 mt-1">{{ filteredMateriels.length }} materials</p>
+        </div>
+      </div>
+      <button
+        (click)="openCreateMaterielModal()"
+        class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors flex items-center gap-2"
+      >
+        <span>＋</span> New Material
+      </button>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="flex flex-col sm:flex-row gap-3">
+      <input
+        type="text"
+        placeholder="Search by name or reference..."
+        (input)="materielsSearchSubject.next($event.target.value)"
+        class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-colors"
+      />
+      <select
+        [(ngModel)]="selectedStatusFilter"
+        (change)="filterMateriels()"
+        class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-600"
+      >
+        <option value="all">All Status</option>
+        <option value="ACTIVE">Active</option>
+        <option value="MAINTENANCE">Maintenance</option>
+        <option value="DAMAGED">Damaged</option>
+      </select>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="materielsLoading" class="bg-white rounded-2xl border border-gray-100 p-8 text-center">
+      <p class="text-gray-500">Loading materials...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="materielsError && !materielsLoading" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+      {{ materielsError }}
+    </div>
+
+    <!-- Materials Table -->
+    <div *ngIf="!materielsLoading && !materielsError" class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+              <th class="px-6 py-3 font-medium">Material Name</th>
+              <th class="px-4 py-3 font-medium">Reference</th>
+              <th class="px-4 py-3 font-medium">Available Qty</th>
+              <th class="px-4 py-3 font-medium">Unit Price</th>
+              <th class="px-4 py-3 font-medium">Status</th>
+              <th class="px-4 py-3 font-medium text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let material of filteredMateriels"
+              class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+            >
+              <td class="px-6 py-4 font-medium text-dark max-w-xs truncate">{{ material.nom }}</td>
+              <td class="px-4 py-4 text-gray-600 text-xs">{{ material.reference }}</td>
+              <td class="px-4 py-4 text-gray-600 font-semibold">{{ material.quantiteTotale }}</td>
+              <td class="px-4 py-4 text-gray-600">{{ material.prixUnitaire.toFixed(2) }} TND</td>
+              <td class="px-4 py-4">
+                <span
+                  [ngClass]="{
+                    'bg-green-100 text-green-700': material.status === 'ACTIVE',
+                    'bg-yellow-100 text-yellow-700': material.status === 'MAINTENANCE',
+                    'bg-red-100 text-red-700': material.status === 'DAMAGED'
+                  }"
+                  class="px-2.5 py-1 rounded-full text-[10px] font-semibold"
+                >
+                  {{ material.status }}
+                </span>
+              </td>
+              <td class="px-4 py-4 text-right">
+                <div class="flex items-center justify-end gap-1">
+                  <button
+                    (click)="viewMaterielReservations(material)"
+                    class="p-1.5 hover:bg-purple-50 rounded-lg text-purple-500 text-sm"
+                    title="View Reservations"
+                  >
+                    👁️
+                  </button>
+                  <button
+                    (click)="openEditMaterielModal(material)"
+                    class="p-1.5 hover:bg-blue-50 rounded-lg text-blue-500 text-sm"
+                    title="Edit"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    (click)="deleteMateriel(material.id)"
+                    class="p-1.5 hover:bg-red-50 rounded-lg text-red-500 text-sm"
+                    title="Delete"
+                  >
+                    🗑️
+                  </button>
+                  <button
+                    (click)="openAIRiskModal(material)"
+                    type="button"
+                    [ngClass]="getAIRiskForMaterial(material).color"
+                    class="inline-flex h-7 min-w-16 items-center justify-center gap-1 rounded-full px-2.5 text-[10px] font-semibold transition-opacity hover:opacity-80"
+                    title="View AI Risk Assessment"
+                    aria-label="View AI Risk Assessment"
+                  >
+                    {{ material.riskBadge || getAIRiskForMaterial(material).riskBadge }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="filteredMateriels.length === 0" class="border-b border-gray-50">
+              <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                No materials found
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div *ngIf="showModal && (modalStep === 'create' || modalStep === 'edit') && !selectedMateriel" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6">
+      <h2 class="text-xl font-bold text-dark mb-4">
+        {{ modalStep === 'create' ? 'Create Category' : 'Edit Category' }}
+      </h2>
+
+      <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+        {{ errorMessage }}
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Category Name *</label>
+          <input
+            type="text"
+            [(ngModel)]="categoryForm.nom"
+            name="nom"
+            placeholder="e.g., Electronics"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+          <textarea
+            [(ngModel)]="categoryForm.description"
+            name="description"
+            placeholder="Category description"
+            rows="3"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button
+          (click)="closeModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="modalStep === 'create' ? createCategory() : updateCategory()"
+          [disabled]="isSubmitting"
+          class="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-light transition-colors disabled:opacity-50"
+        >
+          {{ isSubmitting ? 'Saving...' : (modalStep === 'create' ? 'Create' : 'Update') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Material Modal -->
+  <div *ngIf="showModal && (modalStep === 'create' || modalStep === 'edit') && viewMode === 'materials'" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+      <h2 class="text-xl font-bold text-dark mb-4">
+        {{ modalStep === 'create' ? 'Create Material' : 'Edit Material' }}
+      </h2>
+
+      <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+        {{ errorMessage }}
+      </div>
+
+      <form class="space-y-4">
+        <!-- Name & Reference -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Material Name *</label>
+            <input
+              type="text"
+              [(ngModel)]="materielForm.nom"
+              name="nom"
+              placeholder="e.g., Projector"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Reference *</label>
+            <input
+              type="text"
+              [(ngModel)]="materielForm.reference"
+              name="reference"
+              placeholder="e.g., PROJ-2024-001"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+            />
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+          <textarea
+            [(ngModel)]="materielForm.description"
+            name="description"
+            placeholder="Material description"
+            rows="3"
+            class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+          ></textarea>
+        </div>
+
+        <!-- Price & Quantity -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Unit Price *</label>
+            <input
+              type="number"
+              [(ngModel)]="materielForm.prixUnitaire"
+              name="prixUnitaire"
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Total Quantity *</label>
+            <input
+              type="number"
+              [(ngModel)]="materielForm.quantiteTotale"
+              name="quantiteTotale"
+              placeholder="0"
+              min="0"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+            />
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+            <select
+              [(ngModel)]="materielForm.status"
+              name="status"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+            >
+              <option value="ACTIVE">Active</option>
+              <option value="MAINTENANCE">Maintenance</option>
+              <option value="DAMAGED">Damaged</option>
+            </select>
+          </div>
+        </div>
+      </form>
+
+      <div class="flex gap-3 mt-6">
+        <button
+          (click)="closeModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="modalStep === 'create' ? createMateriel() : updateMateriel()"
+          [disabled]="isSubmitting"
+          class="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-light transition-colors disabled:opacity-50"
+        >
+          {{ isSubmitting ? 'Saving...' : (modalStep === 'create' ? 'Create' : 'Update') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reservations Modal -->
+  <div *ngIf="showReservationsModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-dark">
+          Reservations for {{ selectedMaterielForReservations?.nom }}
+        </h2>
+        <button (click)="closeReservationsModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="reservationsLoading" class="bg-white rounded-2xl border border-gray-100 p-8 text-center">
+        <p class="text-gray-500">Loading reservations...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="reservationsError && !reservationsLoading" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+        {{ reservationsError }}
+      </div>
+
+      <!-- Reservations Content -->
+      <div *ngIf="!reservationsLoading && !reservationsError" class="space-y-6">
+        <!-- Event Reservations Section -->
+        <div *ngIf="eventReservations.length > 0">
+          <h3 class="text-lg font-semibold text-dark mb-3">Event Reservations</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+                  <th class="px-4 py-3 font-medium">Event</th>
+                  <th class="px-4 py-3 font-medium">User</th>
+                  <th class="px-4 py-3 font-medium">Quantity</th>
+                  <th class="px-4 py-3 font-medium">Start Date</th>
+                  <th class="px-4 py-3 font-medium">End Date</th>
+                  <th class="px-4 py-3 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let reservation of eventReservations" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                  <td class="px-4 py-4 font-medium text-blue-600">{{ reservation.evenementTitre || 'Unknown Event' }}</td>
+                  <td class="px-4 py-4 font-medium text-dark">{{ reservation.userNom || 'N/A' }}</td>
+                  <td class="px-4 py-4 text-gray-600">{{ reservation.quantite }}</td>
+                  <td class="px-4 py-4 text-gray-600 text-xs">{{ reservation.dateDebut | date: 'dd/MM/yyyy' }}</td>
+                  <td class="px-4 py-4 text-gray-600 text-xs">{{ reservation.dateFin | date: 'dd/MM/yyyy' }}</td>
+                  <td class="px-4 py-4">
+                    <span
+                      [ngClass]="{
+                        'bg-blue-100 text-blue-700': reservation.statut === 'PENDING',
+                        'bg-green-100 text-green-700': reservation.statut === 'CONFIRMED',
+                        'bg-red-100 text-red-700': reservation.statut === 'CANCELLED',
+                        'bg-gray-100 text-gray-700': reservation.statut === 'COMPLETED'
+                      }"
+                      class="px-2.5 py-1 rounded-full text-[10px] font-semibold"
+                    >
+                      {{ reservation.statut }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Standalone Material Reservations Section -->
+        <div *ngIf="standaloneReservations.length > 0">
+          <h3 class="text-lg font-semibold text-dark mb-3">Standalone Reservations</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+                  <th class="px-4 py-3 font-medium">User</th>
+                  <th class="px-4 py-3 font-medium">Quantity</th>
+                  <th class="px-4 py-3 font-medium">Start Date</th>
+                  <th class="px-4 py-3 font-medium">End Date</th>
+                  <th class="px-4 py-3 font-medium">Status</th>
+                  <th class="px-4 py-3 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let reservation of standaloneReservations" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                  <td class="px-4 py-4 font-medium text-dark">{{ reservation.userNom || 'N/A' }}</td>
+                  <td class="px-4 py-4 text-gray-600">{{ reservation.quantite }}</td>
+                  <td class="px-4 py-4 text-gray-600 text-xs">{{ reservation.dateDebut | date: 'dd/MM/yyyy' }}</td>
+                  <td class="px-4 py-4 text-gray-600 text-xs">{{ reservation.dateFin | date: 'dd/MM/yyyy' }}</td>
+                  <td class="px-4 py-4">
+                    <span
+                      [ngClass]="{
+                        'bg-blue-100 text-blue-700': reservation.statut === 'PENDING',
+                        'bg-green-100 text-green-700': reservation.statut === 'CONFIRMED',
+                        'bg-red-100 text-red-700': reservation.statut === 'CANCELLED',
+                        'bg-gray-100 text-gray-700': reservation.statut === 'COMPLETED'
+                      }"
+                      class="px-2.5 py-1 rounded-full text-[10px] font-semibold"
+                    >
+                      {{ reservation.statut }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-4 text-right">
+                    <button
+                      (click)="openStatusModificationModal(reservation)"
+                      class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Change Status"
+                    >
+                      ⚙️ Modify
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="eventReservations.length === 0 && standaloneReservations.length === 0" class="text-center py-8">
+          <p class="text-gray-500">No reservations found for this material</p>
+        </div>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="flex gap-3 mt-6">
+        <button
+          (click)="closeReservationsModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Risk Assessment Modal -->
+  <div *ngIf="showAIRiskModal && selectedAIRisk" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-dark flex items-center gap-2">
+          <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">AI</span>
+          <span>AI Risk Assessment</span>
+        </h2>
+        <button (click)="closeAIRiskModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+
+      <div class="rounded-xl bg-gray-50 p-4 space-y-2 mb-4">
+        <p class="text-xs font-semibold uppercase tracking-wide text-gray-400">Selected Material</p>
+        <p class="text-sm font-semibold text-dark">{{ selectedMaterielForAI?.nom }}</p>
+        <p class="text-xs text-gray-500">{{ selectedAIRisk.riskLevel }}</p>
+      </div>
+
+      <div [ngClass]="selectedAIRisk.color" class="rounded-xl p-4 mb-4 text-center">
+        <p class="text-sm font-semibold">{{ selectedAIRisk.riskBadge }}</p>
+        <p class="text-xs mt-2">Probability: {{ selectedAIRisk.damageProbabilityPct || 'N/A' }}</p>
+      </div>
+
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <p class="text-xs font-medium text-blue-700 uppercase">AI Analysis</p>
+        <p class="text-sm text-blue-800 mt-2">{{ selectedAIRisk.riskMessage }}</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-600 font-medium">Status</p>
+          <p class="text-sm font-semibold text-dark mt-1">{{ selectedMaterielForAI?.status }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-xs text-gray-600 font-medium">Maintenance</p>
+          <p class="text-sm font-semibold text-dark mt-1">
+            {{ selectedAIRisk.needsMaintenance ? 'Required' : 'Not required' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+        <p class="text-xs font-medium text-amber-700 uppercase">ML Availability</p>
+        <p class="text-sm text-amber-800 mt-2">
+          {{ selectedAIRisk.mlAvailable ? 'Available' : 'Not available' }}
+        </p>
+      </div>
+
+      <button
+        (click)="closeAIRiskModal()"
+        class="mt-1 w-full px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+
+  <!-- Status Modification Modal for Standalone Reservations -->
+  <div *ngIf="showStatusModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-dark">Modify Reservation Status</h2>
+        <button (click)="closeStatusModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="statusModificationError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <p class="text-sm text-red-700">{{ statusModificationError }}</p>
+      </div>
+
+      <!-- Current Status Info -->
+      <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+        <p class="text-sm text-gray-600">
+          <strong>Current Status:</strong>
+          <span class="ml-2 px-2 py-1 rounded text-xs font-semibold"
+            [ngClass]="{
+              'bg-blue-100 text-blue-700': selectedReservationForStatusChange?.statut === 'PENDING',
+              'bg-green-100 text-green-700': selectedReservationForStatusChange?.statut === 'CONFIRMED',
+              'bg-red-100 text-red-700': selectedReservationForStatusChange?.statut === 'CANCELLED'
+            }">
+            {{ selectedReservationForStatusChange?.statut }}
+          </span>
+        </p>
+      </div>
+
+      <!-- Status Dropdown -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-dark mb-2">New Status</label>
+        <select
+          [(ngModel)]="newReservationStatus"
+          class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary"
+        >
+          <option *ngFor="let status of reservationStatusOptions" [value]="status">
+            {{ status }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="flex gap-3">
+        <button
+          (click)="closeStatusModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+          [disabled]="statusModificationSubmitting"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="submitStatusChange()"
+          class="flex-1 px-4 py-2 text-white bg-primary rounded-lg font-medium hover:bg-primary-light transition-colors disabled:opacity-50"
+          [disabled]="statusModificationSubmitting"
+        >
+          {{ statusModificationSubmitting ? 'Updating...' : 'Update Status' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -36,7 +36,10 @@
             "server": "src/main.server.ts",
             "outputMode": "server",
             "security": {
-              "allowedHosts": []
+              "allowedHosts": [
+              "7364-196-238-159-88.ngrok-free.app",
+              "localhost"
+             ]
             },
             "ssr": {
               "entry": "src/server.ts"
@@ -73,7 +76,13 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular/build:dev-server",
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "allowedHosts": [
+              "7364-196-238-159-88.ngrok-free.app",
+              "localhost"
+            ]
+          },
           "configurations": {
             "production": {
               "buildTarget": "hello-claude:build:production"

@@ -1,65 +1,588 @@
 <div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+  <!-- Header -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
       <h1 class="font-serif text-2xl font-bold text-dark">Event Management</h1>
-      <p class="text-sm text-gray-400 mt-1">{{ events.length }} events total</p>
+      <p class="text-sm text-gray-400 mt-1">{{ evenements.length }} events total</p>
     </div>
-    <button class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors flex items-center gap-2">
+    <button
+      (click)="openCreateModal()"
+      class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors flex items-center gap-2"
+    >
       <span>＋</span> Create Event
     </button>
   </div>
 
   <!-- Filters -->
   <div class="flex flex-col sm:flex-row gap-3">
-    <input [(ngModel)]="searchQuery" type="text" placeholder="Search events..." class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-colors" />
-    <select [(ngModel)]="selectedStatus" class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-600">
+    <input
+      type="text"
+      placeholder="Search events..."
+      (input)="searchSubject.next($event.target.value)"
+      class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-colors"
+    />
+    <select
+      [(ngModel)]="selectedStatusFilter"
+      (change)="onStatusFilterChange()"
+      class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-600"
+    >
       <option value="all">All Statuses</option>
-      <option value="Planning">Planning</option>
-      <option value="On Sale">On Sale</option>
-      <option value="Open">Open</option>
-      <option value="Upcoming">Upcoming</option>
+      <option value="DRAFT">Draft</option>
+      <option value="PUBLISHED">Published</option>
+      <option value="CANCELLED">Cancelled</option>
     </select>
   </div>
 
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="bg-white rounded-2xl border border-gray-100 p-8 text-center">
+    <p class="text-gray-500">Loading events...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+    {{ error }}
+  </div>
+
   <!-- Table -->
-  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+  <div *ngIf="!isLoading && !error" class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
-            <th class="px-6 py-3 font-medium">Event</th>
-            <th class="px-4 py-3 font-medium">Type</th>
+            <th class="px-6 py-3 font-medium">Title</th>
+            <th class="px-4 py-3 font-medium">Description</th>
             <th class="px-4 py-3 font-medium">Date</th>
-            <th class="px-4 py-3 font-medium">Tickets</th>
-            <th class="px-4 py-3 font-medium">Price</th>
+            <th class="px-4 py-3 font-medium">Places</th>
             <th class="px-4 py-3 font-medium">Status</th>
             <th class="px-4 py-3 font-medium text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let e of filteredEvents" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-            <td class="px-6 py-4 font-medium text-dark max-w-xs truncate">{{ e.name }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ e.type }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs whitespace-nowrap">{{ e.date }} {{ e.time }}</td>
+          <tr
+            *ngFor="let event of filteredEvenements"
+            class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+          >
+            <td class="px-6 py-4 font-medium text-dark max-w-xs truncate">{{ event.titre }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs max-w-xs truncate">{{ event.description }}</td>
+            <td class="px-4 py-4 text-gray-500 text-xs whitespace-nowrap">{{ formatDateTime(event.dateDebut) }}</td>
+            <td class="px-4 py-4 text-gray-600 text-xs">{{ event.placesRestantes !== undefined ? event.placesRestantes : event.nombreDePlaces }}/{{ event.nombreDePlaces }}</td>
             <td class="px-4 py-4">
-              <div class="flex items-center gap-2">
-                <div class="w-16 bg-gray-100 rounded-full h-1.5"><div class="bg-primary rounded-full h-1.5" [style.width.%]="(e.sold / e.capacity) * 100"></div></div>
-                <span class="text-xs text-gray-500">{{ e.sold }}/{{ e.capacity }}</span>
-              </div>
-            </td>
-            <td class="px-4 py-4 text-gray-600 text-xs">{{ e.price > 0 ? e.price + ' TND' : 'Free' }}</td>
-            <td class="px-4 py-4">
-              <span [class]="getStatusClass(e.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ e.status }}</span>
+              <span [class]="getStatusClass(event.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">
+                {{ event.status }}
+              </span>
             </td>
             <td class="px-4 py-4 text-right">
               <div class="flex items-center justify-end gap-1">
-                <button class="p-1.5 hover:bg-blue-50 rounded-lg text-blue-500 text-xs" title="Edit">✏️</button>
-                <button class="p-1.5 hover:bg-red-50 rounded-lg text-red-500 text-xs" title="Delete" (click)="deleteEvent(e.id)">🗑️</button>
+                <button
+                  (click)="viewEvenementReservations(event)"
+                  class="p-1.5 hover:bg-purple-50 rounded-lg text-purple-500 text-xs"
+                  title="View Reservations & Waitlist"
+                >
+                  👁️
+                </button>
+                <button
+                  (click)="openEditModal(event)"
+                  class="p-1.5 hover:bg-blue-50 rounded-lg text-blue-500 text-xs"
+                  title="Edit Event & Materials"
+                >
+                  ✏️
+                </button>
+                <button
+                  (click)="deleteEvenement(event.id)"
+                  class="p-1.5 hover:bg-red-50 rounded-lg text-red-500 text-xs"
+                  title="Delete"
+                >
+                  🗑️
+                </button>
               </div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredEvenements.length === 0" class="border-b border-gray-50">
+            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+              No events found
             </td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
+
+  <!-- Unified Modal (Event + Materials) -->
+  <div *ngIf="showModal && modalStep === 'form'" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+      <!-- Modal Header -->
+      <h2 class="text-xl font-bold text-dark mb-4">
+        {{ selectedEvenement ? 'Edit Event & Materials' : 'Create New Event & Materials' }}
+      </h2>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Form -->
+      <form (ngSubmit)="submitForm()" class="space-y-6">
+        <!-- EVENT DETAILS SECTION -->
+        <div class="border-b pb-6">
+          <h3 class="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <span>📋</span> Event Details
+          </h3>
+
+          <!-- Title -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Event Title *</label>
+            <input
+              type="text"
+              [(ngModel)]="form.titre"
+              name="titre"
+              placeholder="e.g., Tech Conference 2026"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+            />
+          </div>
+
+          <!-- Description -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+            <textarea
+              [(ngModel)]="form.description"
+              name="description"
+              placeholder="Event description"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+            ></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <!-- Date Begin -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+              <input
+                type="datetime-local"
+                [(ngModel)]="form.dateDebut"
+                name="dateDebut"
+                [min]="getCurrentDateTime()"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+              />
+              <p class="text-xs text-gray-500 mt-1">Must be in the future</p>
+            </div>
+
+            <!-- Date End -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+              <input
+                type="datetime-local"
+                [(ngModel)]="form.dateFin"
+                name="dateFin"
+                [min]="form.dateDebut || getCurrentDateTime()"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+              />
+              <p class="text-xs text-gray-500 mt-1">Must be after start date</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Places -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Number of Places *</label>
+              <input
+                type="number"
+                [(ngModel)]="form.nombreDePlaces"
+                name="nombreDePlaces"
+                placeholder="e.g., 100"
+                min="1"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+              />
+            </div>
+
+            <!-- Salle -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Event Space *</label>
+              <select
+                [(ngModel)]="form.salleId"
+                name="salleId"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+              >
+                <option [value]="0">Select a space</option>
+                <option *ngFor="let salle of salles" [value]="salle.id">
+                  {{ salle.nom }} ({{ salle.capacite }} seats)
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+            <select
+              [(ngModel)]="form.status"
+              name="status"
+              (change)="onStatusChange($event)"
+              class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+            >
+              <option *ngFor="let status of statusOptions" [ngValue]="status">
+                {{ status }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Category and Price -->
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Category -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+              <select
+                [(ngModel)]="form.categorie"
+                name="categorie"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+              >
+                <option [ngValue]="">Select a category</option>
+                <option *ngFor="let cat of categorieOptions" [ngValue]="cat">
+                  {{ cat }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Unit Price -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Unit Price (TND) *</label>
+              <input
+                type="number"
+                [(ngModel)]="form.prixUnitaire"
+                name="prixUnitaire"
+                placeholder="e.g., 25.50"
+                step="0.01"
+                min="0"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- MATERIALS SECTION -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <span>🔧</span> Assigned Materials ({{ eventMateriels.length }})
+          </h3>
+
+          <!-- Error Message for Materials -->
+          <div *ngIf="materielErrorMessage" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+            {{ materielErrorMessage }}
+          </div>
+
+          <!-- Add Material Form -->
+          <div class="bg-gray-50 p-4 rounded-lg mb-4">
+            <p class="text-xs text-gray-600 mb-3">Add a new material to this event</p>
+            <div class="grid grid-cols-3 gap-3 items-end">
+              <!-- Material Selection -->
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Material *</label>
+                <select
+                  [(ngModel)]="selectedMaterielId"
+                  name="materielId"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+                >
+                  <option [value]="0">Select a material</option>
+                  <option *ngFor="let mat of materiels" [value]="mat.id">
+                    {{ mat.nom }} ({{ mat.quantiteTotale }} available)
+                  </option>
+                </select>
+              </div>
+
+              <!-- Quantity -->
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Quantity *</label>
+                <input
+                  type="number"
+                  [(ngModel)]="selectedMaterielQuantite"
+                  name="materielQuantite"
+                  placeholder="e.g., 5"
+                  min="1"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
+                />
+              </div>
+
+              <!-- Add Button -->
+              <button
+                type="button"
+                (click)="assignMateriel()"
+                class="px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors text-sm"
+              >
+                Add Material
+              </button>
+            </div>
+          </div>
+
+          <!-- Assigned Materials List -->
+          <div *ngIf="eventMateriels.length === 0" class="text-center py-6 text-gray-500 bg-gray-50 rounded-lg">
+            No materials assigned yet
+          </div>
+
+          <div *ngIf="eventMateriels.length > 0" class="space-y-2">
+            <div
+              *ngFor="let mat of eventMateriels"
+              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+            >
+              <div class="flex-1">
+                <p class="font-medium text-dark text-sm">{{ mat.materielNom }}</p>
+                <p class="text-xs text-gray-500">Ref: {{ mat.materielReference }}</p>
+              </div>
+
+              <!-- Display Mode -->
+              <div *ngIf="editingMaterielId !== mat.id" class="flex items-center gap-2">
+                <span class="text-sm font-semibold text-primary px-3 py-1 bg-blue-50 rounded">Qty: {{ mat.quantite }}</span>
+                <button
+                  type="button"
+                  (click)="startEditMateriel(mat)"
+                  class="p-1.5 hover:bg-blue-50 rounded-lg text-blue-500 text-sm"
+                  title="Edit quantity"
+                >
+                  ✏️
+                </button>
+                <button
+                  type="button"
+                  (click)="removeMaterielFromEvent(mat.id)"
+                  class="p-1.5 hover:bg-red-50 rounded-lg text-red-500 text-sm"
+                  title="Remove"
+                >
+                  🗑️
+                </button>
+              </div>
+
+              <!-- Edit Mode -->
+              <div *ngIf="editingMaterielId === mat.id" class="flex items-center gap-2">
+                <input
+                  type="number"
+                  [(ngModel)]="editingMaterielQuantite"
+                  [ngModelOptions]="{ standalone: true }"
+                  min="1"
+                  class="w-20 px-2 py-1 border border-gray-300 rounded text-sm outline-none focus:border-primary"
+                />
+                <button
+                  type="button"
+                  (click)="saveEditMateriel(mat)"
+                  class="px-3 py-1 bg-green-500 text-white text-xs rounded font-medium hover:bg-green-600 transition-colors"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  (click)="cancelEditMateriel()"
+                  class="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded font-medium hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- Modal Actions -->
+      <div class="flex gap-3 mt-6 border-t pt-4">
+        <button
+          (click)="closeModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="submitForm()"
+          [disabled]="isSubmitting"
+          class="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-light transition-colors disabled:opacity-50"
+        >
+          {{ isSubmitting ? 'Saving...' : (selectedEvenement ? 'Update Event' : 'Create Event') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reservations Modal -->
+  <div *ngIf="showReservationsModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-xl font-bold text-dark">{{ selectedEvenementForReservations?.titre }}</h2>
+          <p class="text-sm text-gray-400 mt-1">Total reservations</p>
+        </div>
+        <button (click)="closeReservationsModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="reservationsLoading" class="bg-white rounded-2xl border border-gray-100 p-8 text-center">
+        <p class="text-gray-500">Loading reservations...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="reservationsError && !reservationsLoading" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+        {{ reservationsError }}
+      </div>
+
+      <!-- Reservations Table -->
+      <div *ngIf="!reservationsLoading && !reservationsError" class="space-y-6">
+        <!-- Confirmed Reservations -->
+        <!-- Confirmed Reservations -->
+<div>
+  <h3 class="text-sm font-semibold text-dark mb-3">✅ Confirmed Reservations</h3>
+  <div class="overflow-x-auto rounded-lg border border-gray-200">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+          <th class="px-4 py-3 font-medium">User</th>
+          <th class="px-4 py-3 font-medium">Status</th>
+          <th class="px-4 py-3 font-medium">Attribute</th>
+          <th class="px-4 py-3 font-medium">Reserved Date</th>
+          <th class="px-4 py-3 font-medium">Expiration</th>
+          <th class="px-4 py-3 font-medium text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let res of confirmedReservations" class="border-b border-gray-50 hover:bg-gray-50/50">
+          <td class="px-4 py-4 font-medium text-dark">{{ res.userNom }}</td>
+          <td class="px-4 py-4">
+            <span [ngClass]="res.statut === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">
+              {{ res.statut }}
+            </span>
+          </td>
+          <!-- NEW: Display the attribute (Confirmed / Already Used) -->
+          <td class="px-4 py-4">
+            <span [ngClass]="res.attribut === 'Confirmed' ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700'" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">
+              {{ res.attribut }}
+            </span>
+          </td>
+          <td class="px-4 py-4 text-gray-600 text-xs">{{ res.dateReservation | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td class="px-4 py-4 text-gray-600 text-xs">{{ res.dateExpiration ? (res.dateExpiration | date: 'dd/MM/yyyy HH:mm') : '-' }}</td>
+          <td class="px-4 py-4 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <!-- NEW: Mark as Already Used button -->
+              <button
+                *ngIf="res.attribut === 'Confirmed'"
+                (click)="markAsAlreadyUsed(res.id)"
+                class="px-2.5 py-1 hover:bg-yellow-50 rounded text-yellow-600 text-xs font-medium border border-yellow-200"
+                title="Mark as Already Used"
+              >
+                ✓ Mark Used
+              </button>
+              <button
+                (click)="modifyReservationStatus(res)"
+                class="px-3 py-1.5 hover:bg-blue-50 rounded-lg text-blue-500 text-xs font-medium border border-blue-200"
+                title="Modify Status"
+              >
+                Modify
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="confirmedReservations.length === 0" class="border-b border-gray-50">
+          <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+            No confirmed reservations
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
+        <!-- Waitlist -->
+        <div>
+          <h3 class="text-sm font-semibold text-dark mb-3">⏳ Waitlist</h3>
+          <div class="overflow-x-auto rounded-lg border border-gray-200">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+                  <th class="px-4 py-3 font-medium">Position</th>
+                  <th class="px-4 py-3 font-medium">User</th>
+                  <th class="px-4 py-3 font-medium">Reserved Date</th>
+                  <th class="px-4 py-3 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let res of waitlistReservations; let i = index" class="border-b border-gray-50 hover:bg-gray-50/50">
+                  <td class="px-4 py-4 font-medium text-dark">{{ i + 1 }}</td>
+                  <td class="px-4 py-4 text-gray-600">{{ res.userNom }}</td>
+                  <td class="px-4 py-4 text-gray-600 text-xs">{{ res.dateReservation | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="px-4 py-4 text-right">
+                    <button
+                      (click)="cancelReservation(res.id)"
+                      class="p-1.5 hover:bg-red-50 rounded-lg text-red-500 text-xs"
+                      title="Remove from Waitlist"
+                    >
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="waitlistReservations.length === 0" class="border-b border-gray-50">
+                  <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+                    No users on waitlist
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="flex gap-3 mt-6">
+        <button
+          (click)="closeReservationsModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Change Modal -->
+  <div *ngIf="showStatusModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6">
+      <h2 class="text-lg font-bold text-dark mb-4">Change Reservation Status</h2>
+      <p class="text-sm text-gray-600 mb-4">User: <strong>{{ selectedReservationForStatusChange?.userNom }}</strong></p>
+
+      <!-- Error message if trying to modify cancelled -->
+      <div *ngIf="statusModificationError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        {{ statusModificationError }}
+      </div>
+
+      <div class="mb-4" [class.opacity-50]="!!statusModificationError" [class.pointer-events-none]="!!statusModificationError">
+        <label class="block text-sm font-medium text-gray-700 mb-2">New Status</label>
+        <select
+          [(ngModel)]="newReservationStatus"
+          [disabled]="!!statusModificationError"
+          class="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+        >
+          <!-- Show current status first -->
+          <option [value]="selectedReservationForStatusChange?.statut">{{ selectedReservationForStatusChange?.statut }}</option>
+
+          <!-- If current status is CONFIRMED, only allow CANCELLED -->
+          <option *ngIf="selectedReservationForStatusChange?.statut === 'CONFIRMED'" value="CANCELLED">CANCELLED</option>
+
+          <!-- If current status is EN_ATTENTE or PENDING, allow CONFIRMED or CANCELLED -->
+          <option *ngIf="selectedReservationForStatusChange?.statut === 'EN_ATTENTE' || selectedReservationForStatusChange?.statut === 'PENDING'" value="CONFIRMED">CONFIRMED</option>
+          <option *ngIf="selectedReservationForStatusChange?.statut === 'EN_ATTENTE' || selectedReservationForStatusChange?.statut === 'PENDING'" value="CANCELLED">CANCELLED</option>
+        </select>
+        <p *ngIf="selectedReservationForStatusChange?.statut === 'CONFIRMED'" class="text-xs text-gray-500 mt-1">
+          Confirmed reservations can only be cancelled
+        </p>
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          (click)="closeStatusModal()"
+          class="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          Close
+        </button>
+        <button
+          (click)="submitStatusChange()"
+          [disabled]="!!statusModificationError"
+          class="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-light transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+        >
+          Update Status
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
