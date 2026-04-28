@@ -1,12 +1,54 @@
 import { Routes } from '@angular/router';
+import { SignInComponent } from './pages/auth/sign-in/sign-in.component';
+import { SignUpComponent } from './pages/auth/sign-up/sign-up.component';
+import { HomeComponent } from './pages/home/home.component';
+import { EventsComponent } from './pages/events/events.component';
+import { FilmsComponent } from './pages/films/films.component';
+import { CinemasComponent } from './pages/cinemas/cinemas.component';
+import { TicketsComponent } from './pages/tickets/tickets.component';
+import { ClubsComponent } from './pages/clubs/clubs.component';
+import { SubscriptionsComponent } from './pages/subscriptions/subscriptions.component';
+import { LoyaltyComponent } from './pages/loyalty/loyalty.component';
+import { LogisticsComponent } from './pages/logistics/logistics.component';
+import { FeedbackComponent } from './pages/feedback/feedback.component';
+import { ProfileComponent } from './pages/profile/profile.component';
+import { NotificationsComponent } from './pages/notifications/notifications.component';
+import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './pages/auth/reset-password/reset-password.component';
+import { TicketVerifyComponent } from './pages/ticket-verify/ticket-verify.component';
+// ✅ AJOUT : import manquant qui causait l'erreur TS
 import { MarkReservationUsedComponent } from './pages/mark-reservation-used/mark-reservation-used';
 import { authGuard } from './core/guards/auth.guard';
+
+import { AdminLayoutComponent } from './admin/admin-layout/admin-layout.component';
+import { AdminDashboardComponent } from './admin/pages/dashboard/admin-dashboard.component';
+import { AdminEventsComponent } from './admin/pages/events/admin-events.component';
+import { AdminFilmsComponent } from './admin/pages/films/admin-films.component';
+import { AdminCinemasComponent } from './admin/pages/cinemas/admin-cinemas.component';
+import { AdminTicketsComponent } from './admin/pages/tickets/admin-tickets.component';
+import { AdminSeancesComponent } from './admin/pages/seances/admin-seances.component';
+import { AdminClubComponent } from './admin/pages/club/admin-club.component';
+import { AdminSubscriptionsComponent } from './admin/pages/subscriptions/admin-subscriptions.component';
+import { AdminUsersComponent } from './admin/pages/users/admin-users.component';
+import { AdminLoyaltyComponent } from './admin/pages/loyalty/admin-loyalty.component';
+import { AdminLogisticsComponent } from './admin/pages/logistics/admin-logistics.component';
+import { AdminFeedbackComponent } from './admin/pages/feedback/admin-feedback.component';
+import { AdminNotificationsComponent } from './admin/pages/notifications/admin-notifications.component';
+import { AdminChatComponent } from './admin/pages/chat/admin-chat.component';
 import { adminGuard } from './core/guards/admin.guard';
 import { permissionGuard } from './core/guards/permission.guard';
+
+// Permissions réelles définies dans DataInitializer.java :
+// SUPER_ADMIN  → toutes les permissions
+// ADMIN_CINEMA → CINEMA_CREATE, CINEMA_READ, CINEMA_UPDATE, CINEMA_DELETE
+// ADMIN_EVENT  → EVENT_CREATE, EVENT_READ, EVENT_UPDATE, EVENT_DELETE
+// ADMIN_CLUB   → CLUB_CREATE, CLUB_READ, CLUB_UPDATE, CLUB_DELETE, CLUB_MANAGE
+// CLIENT       → FIDELITY_READ, FIDELITY_UPDATE
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
 
+  // ── Auth (public) ────────────────────────────────────────────────
   {
     path: 'auth/sign-in',
     loadComponent: () =>
@@ -32,62 +74,26 @@ export const routes: Routes = [
       ),
   },
 
-  {
-    path: 'home',
-    loadComponent: () => import('./pages/home/home.component').then((m) => m.HomeComponent),
-  },
-  {
-    path: 'events',
-    loadComponent: () => import('./pages/events/events.component').then((m) => m.EventsComponent),
-  },
-  {
-    path: 'films',
-    loadComponent: () => import('./pages/films/films.component').then((m) => m.FilmsComponent),
-  },
-  {
-    path: 'films/:id',
-    loadComponent: () =>
-      import('./pages/films/film-detail/film-detail.component').then(
-        (m) => m.FilmDetailComponent,
-      ),
-  },
-  {
-    path: 'cinemas',
-    loadComponent: () =>
-      import('./pages/cinemas/cinemas.component').then((m) => m.CinemasComponent),
-  },
-  {
-    path: 'materials',
-    loadComponent: () =>
-      import('./pages/materials/materials.component').then((m) => m.MaterialsComponent),
-  },
-  {
-    path: 'clubs',
-    loadComponent: () => import('./pages/clubs/clubs.component').then((m) => m.ClubsComponent),
-  },
-  {
-    path: 'subscriptions',
-    loadComponent: () =>
-      import('./pages/subscriptions/subscriptions.component').then(
-        (m) => m.SubscriptionsComponent,
-      ),
-  },
-  {
-    path: 'logistics',
-    loadComponent: () =>
-      import('./pages/logistics/logistics.component').then((m) => m.LogisticsComponent),
-  },
+  { path: 'home', component: HomeComponent },
+  { path: 'events', component: EventsComponent },
+  { path: 'films', component: FilmsComponent },
+  { path: 'cinemas', component: CinemasComponent },
+  { path: 'tickets', component: TicketsComponent, canActivate: [authGuard] },
+  { path: 'ticket/verify/:id', component: TicketVerifyComponent },
+  { path: 'clubs', component: ClubsComponent },
+  { path: 'subscriptions', component: SubscriptionsComponent },
+  { path: 'loyalty', component: LoyaltyComponent, canActivate: [authGuard] },
+  { path: 'logistics', component: LogisticsComponent },
+  { path: 'feedback', component: FeedbackComponent, canActivate: [authGuard] },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
+  { path: 'notifications', component: NotificationsComponent },
 
+  // ── Pages client (connecté requis) ───────────────────────────────
   {
     path: 'tickets',
     loadComponent: () =>
       import('./pages/tickets/tickets.component').then((m) => m.TicketsComponent),
     canActivate: [authGuard],
-  },
-  {
-    path: 'ticket/verify/:id',
-    loadComponent: () =>
-      import('./pages/ticket-verify/ticket-verify.component').then((m) => m.TicketVerifyComponent),
   },
   {
     path: 'loyalty',
@@ -116,6 +122,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
 
+  // ── Features (lazy) ──────────────────────────────────────────────
   {
     path: 'club',
     loadChildren: () => import('./features/club/club.routes').then((m) => m.CLUB_ROUTES),
@@ -129,6 +136,9 @@ export const routes: Routes = [
     component: MarkReservationUsedComponent,
   },
 
+  // ════════════════════════════════════════════════════════════════
+  // ESPACE ADMIN
+  // ════════════════════════════════════════════════════════════════
   {
     path: 'admin',
     loadComponent: () =>
@@ -136,6 +146,14 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: AdminDashboardComponent },
+      { path: 'events', component: AdminEventsComponent },
+      { path: 'films', component: AdminFilmsComponent },
+      { path: 'cinemas', component: AdminCinemasComponent },
+      { path: 'seances', component: AdminSeancesComponent },
+      { path: 'tickets', component: AdminTicketsComponent },
+      { path: 'club', component: AdminClubComponent },
+      { path: 'subscriptions', component: AdminSubscriptionsComponent },
       {
         path: 'unauthorized',
         loadComponent: () =>
@@ -143,6 +161,7 @@ export const routes: Routes = [
             (m) => m.AdminUnauthorizedComponent,
           ),
       },
+
       {
         path: 'dashboard',
         loadComponent: () =>
@@ -150,6 +169,7 @@ export const routes: Routes = [
             (m) => m.AdminDashboardComponent,
           ),
       },
+
       {
         path: 'events',
         loadComponent: () =>
@@ -158,20 +178,14 @@ export const routes: Routes = [
           ),
         canActivate: [permissionGuard(['CINEMA_CREATE', 'EVENT_CREATE', 'ADMIN_MANAGE'])],
       },
-      {
-        path: 'event-spaces',
-        loadComponent: () =>
-          import('./admin/pages/event-spaces/admin-event-spaces.component').then(
-            (m) => m.AdminEventSpacesComponent,
-          ),
-        canActivate: [permissionGuard(['EVENT_CREATE', 'ADMIN_MANAGE'])],
-      },
+
       {
         path: 'films',
         loadComponent: () =>
           import('./admin/pages/films/admin-films.component').then((m) => m.AdminFilmsComponent),
         canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
       },
+
       {
         path: 'cinemas',
         loadComponent: () =>
@@ -180,12 +194,7 @@ export const routes: Routes = [
           ),
         canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
       },
-      {
-        path: 'seances',
-        loadComponent: () =>
-          import('./admin/pages/seances/admin-seances.component').then((m) => m.AdminSeancesComponent),
-        canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
-      },
+
       {
         path: 'tickets',
         loadComponent: () =>
@@ -194,18 +203,14 @@ export const routes: Routes = [
           ),
         canActivate: [permissionGuard(['CINEMA_CREATE', 'EVENT_CREATE', 'ADMIN_MANAGE'])],
       },
+
       {
         path: 'club',
         loadComponent: () =>
           import('./admin/pages/club/admin-club.component').then((m) => m.AdminClubComponent),
         canActivate: [permissionGuard(['CLUB_MANAGE', 'ADMIN_MANAGE'])],
       },
-      {
-        path: 'clubs',
-        loadComponent: () =>
-          import('./admin/pages/clubs/admin-clubs.component').then((m) => m.AdminClubsComponent),
-        canActivate: [permissionGuard(['CLUB_MANAGE', 'ADMIN_MANAGE'])],
-      },
+
       {
         path: 'club/events/:id',
         loadComponent: () =>
@@ -214,12 +219,14 @@ export const routes: Routes = [
           ),
         canActivate: [permissionGuard(['CLUB_MANAGE', 'ADMIN_MANAGE'])],
       },
+
       {
         path: 'chat',
         loadComponent: () =>
           import('./admin/pages/chat/admin-chat.component').then((m) => m.AdminChatComponent),
         canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
       },
+
       {
         path: 'chat/:id',
         loadComponent: () =>
@@ -228,6 +235,7 @@ export const routes: Routes = [
           ),
         canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
       },
+
       {
         path: 'subscriptions',
         loadComponent: () =>
@@ -236,6 +244,7 @@ export const routes: Routes = [
           ),
         canActivate: [permissionGuard(['ADMIN_MANAGE'])],
       },
+
       {
         path: 'materiels',
         loadComponent: () =>
@@ -244,14 +253,7 @@ export const routes: Routes = [
           ),
         canActivate: [permissionGuard(['EVENT_CREATE', 'ADMIN_MANAGE'])],
       },
-      {
-        path: 'categories',
-        loadComponent: () =>
-          import('./admin/pages/categories/admin-categories.component').then(
-            (m) => m.AdminCategoriesComponent,
-          ),
-        canActivate: [permissionGuard(['EVENT_CREATE', 'ADMIN_MANAGE'])],
-      },
+
       {
         path: 'reservations',
         loadComponent: () =>
@@ -260,12 +262,14 @@ export const routes: Routes = [
           ),
         canActivate: [permissionGuard(['EVENT_CREATE', 'ADMIN_MANAGE'])],
       },
+
       {
         path: 'users',
         loadComponent: () =>
           import('./admin/pages/users/admin-users.component').then((m) => m.AdminUsersComponent),
         canActivate: [permissionGuard(['ADMIN_MANAGE'])],
       },
+
       {
         path: 'loyalty',
         loadComponent: () =>
@@ -274,12 +278,14 @@ export const routes: Routes = [
           ),
         canActivate: [permissionGuard(['FIDELITY_UPDATE', 'ADMIN_MANAGE'])],
       },
+
       {
         path: 'roles',
         loadComponent: () =>
           import('./admin/pages/roles/admin-roles.component').then((m) => m.AdminRolesComponent),
         canActivate: [permissionGuard(['ADMIN_MANAGE'])],
       },
+
       {
         path: 'logistics',
         loadComponent: () =>
@@ -288,6 +294,7 @@ export const routes: Routes = [
           ),
         canActivate: [permissionGuard(['CINEMA_CREATE', 'ADMIN_MANAGE'])],
       },
+
       {
         path: 'feedback',
         loadComponent: () =>
@@ -296,12 +303,14 @@ export const routes: Routes = [
           ),
         canActivate: [permissionGuard(['CINEMA_CREATE', 'EVENT_CREATE', 'ADMIN_MANAGE'])],
       },
+
       {
         path: 'ml',
         loadComponent: () =>
           import('./admin/pages/ml/admin-ml.component').then((m) => m.AdminMlComponent),
         canActivate: [permissionGuard(['ADMIN_MANAGE'])],
       },
+
       {
         path: 'notifications',
         loadComponent: () =>
@@ -312,5 +321,7 @@ export const routes: Routes = [
     ],
   },
 
+  // ── Wildcard ─────────────────────────────────────────────────────
   { path: '**', redirectTo: 'home' },
 ];
+

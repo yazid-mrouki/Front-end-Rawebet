@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FeedbackService } from '../../../core/services/feedback.service';
 import { FeedbackResponse } from '../../../core/models/feedback.model';
-import { UserResponse } from '../../../core/models/user.model';
+import { UserSummaryResponse } from '../../../core/models/user.model';
 import { Film } from '../../../features/cinema/models/film.model';
 import { UserService } from '../../../core/services/user.service';
 import { FilmService } from '../../../features/cinema/services/film.service';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, map, of } from 'rxjs';
 
 type SortField = 'id' | 'rating' | 'date' | 'author';
 type SortOrder = 'asc' | 'desc';
@@ -21,7 +21,7 @@ type SortOrder = 'asc' | 'desc';
 export class AdminFeedbackComponent implements OnInit {
   Math = Math;
   feedbacks: FeedbackResponse[] = [];
-  users: UserResponse[] = [];
+  users: UserSummaryResponse[] = [];
   films: Film[] = [];
   loading = false;
   errorMessage = '';
@@ -165,7 +165,10 @@ export class AdminFeedbackComponent implements OnInit {
 
     forkJoin({
       feedbacks: this.feedbackService.getAll().pipe(catchError(() => of([] as FeedbackResponse[]))),
-      users: this.userService.getAllUsers().pipe(catchError(() => of([] as UserResponse[]))),
+      users: this.userService.getAllUsers(0, 200).pipe(
+        map((page) => page.content ?? []),
+        catchError(() => of([] as UserSummaryResponse[])),
+      ),
       films: this.filmService.getAll().pipe(catchError(() => of([] as Film[]))),
     }).subscribe({
       next: ({ feedbacks, users, films }) => {

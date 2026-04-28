@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm, NgModel } from '@angular/forms';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, map, of } from 'rxjs';
 import {
   CancellationPredictionResult,
   CancellationPredictionTicketInput,
@@ -208,7 +208,10 @@ export class AdminTicketsComponent implements OnInit {
   }
 
   loadUsers(): void {
-    this.userService.getAllUsers().pipe(catchError(() => of([] as UserResponse[]))).subscribe({
+    this.userService.getAllUsers(0, 200).pipe(
+      map((page) => (page.content ?? []) as UserResponse[]),
+      catchError(() => of([] as UserResponse[]))
+    ).subscribe({
       next: (users) => {
         this.users = users;
         this.cdr.detectChanges();
