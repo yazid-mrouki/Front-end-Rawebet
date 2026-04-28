@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
@@ -16,14 +16,20 @@ export class ForgotPasswordComponent {
   message = '';
   error = '';
 
-  constructor(private auth: AuthService) {}
+  constructor(private auth: AuthService, private router: Router) {}
 
   onSubmit() {
     this.message = '';
     this.error = '';
+    const safeEmail = this.email.trim();
     this.auth.forgotPassword(this.email).subscribe({
-      next: () => this.message = 'Un lien de réinitialisation a été envoyé à votre adresse email.',
-      error: () => this.error = 'Impossible d’envoyer le lien de réinitialisation.'
+      next: () => {
+        this.message = 'Si cet email existe, un code OTP vous a été envoyé.';
+        this.router.navigate(['/auth/reset-password'], {
+          queryParams: { email: safeEmail },
+        });
+      },
+      error: () => this.error = 'Impossible d’envoyer le code OTP.'
     });
   }
 }

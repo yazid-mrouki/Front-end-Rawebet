@@ -1,33 +1,500 @@
-<div class="min-h-screen bg-surface">
-  <div class="bg-gradient-to-r from-accent to-primary py-16">
-    <div class="max-w-7xl mx-auto px-6 text-center">
-      <h1 class="font-serif text-4xl font-bold text-white mb-2">💳 Subscriptions</h1>
-      <p class="text-white/80 max-w-xl mx-auto">Choose a plan that matches your cultural appetite and unlock exclusive benefits.</p>
-    </div>
-  </div>
 
-  <div class="max-w-5xl mx-auto px-6 py-16">
-    <div class="grid md:grid-cols-3 gap-8">
-      <div *ngFor="let plan of plans"
-        class="bg-white rounded-2xl p-8 border-2 transition-all duration-300 relative"
-        [ngClass]="[plan.color, plan.highlighted ? 'shadow-xl scale-105' : 'hover:shadow-lg']">
-        <div *ngIf="plan.highlighted" class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-white text-xs font-bold rounded-full">MOST POPULAR</div>
-        <h3 class="font-serif text-2xl font-bold text-dark mb-1">{{ plan.name }}</h3>
-        <p class="text-gray-500 text-sm mb-6">{{ plan.desc }}</p>
-        <div class="mb-6">
-          <span class="text-4xl font-bold text-dark">{{ plan.price === 'Free' ? 'Free' : plan.price + ' TND' }}</span>
-          <span *ngIf="plan.period" class="text-gray-400 text-sm">{{ plan.period }}</span>
-        </div>
-        <ul class="space-y-3 mb-8">
-          <li *ngFor="let feature of plan.features" class="flex items-center gap-2 text-sm text-gray-600">
-            <span class="w-5 h-5 bg-green-50 rounded-full flex items-center justify-center text-green-500 text-xs shrink-0">✓</span>
-            {{ feature }}
-          </li>
-        </ul>
-        <button [class]="plan.highlighted ? 'bg-primary text-white hover:bg-primary-light' : 'bg-gray-50 text-dark hover:bg-gray-100'" class="w-full py-3 rounded-xl font-semibold transition-colors text-sm">
-          {{ plan.cta }}
-        </button>
+
+<!-- 🔵 TOAST -->
+<ng-container *ngFor="let toast of toastService.toasts(); let last = last">
+  <div *ngIf="last"
+       class="fixed top-6 right-6 z-50">
+    <div class="px-5 py-4 rounded-2xl shadow-2xl text-white text-sm
+                animate-in slide-in-from-right duration-300
+                backdrop-blur-lg border border-white/10"
+         [ngClass]="{
+           'bg-green-500': toast.type === 'success',
+           'bg-red-500': toast.type === 'error',
+           'bg-gray-800': toast.type === 'info'
+         }">
+      <div class="flex items-center gap-2">
+        <span>{{ toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : 'ℹ' }}</span>
+        <span>{{ toast.message }}</span>
       </div>
     </div>
   </div>
+</ng-container>
+
+<!-- PAGE WRAPPER -->
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+
+  <!-- 🎯 HERO SECTION -->
+  <div class="relative overflow-hidden bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] py-20 px-6 text-white">
+    <div class="max-w-6xl mx-auto">
+      <h1 class="text-4xl md:text-5xl font-bold mb-2">Your Subscription</h1>
+      <p class="text-lg opacity-90">{{ getStatusMessage() }}</p>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="px-6 py-12">
+
+    <!-- LIFECYCLE SUMMARY -->
+    <div class="max-w-6xl mx-auto mb-10 grid gap-4 md:grid-cols-3">
+      <div class="rounded-2xl border border-white/60 bg-white/80 p-5 shadow-sm backdrop-blur-sm">
+        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Current</p>
+        <p class="mt-2 text-xl font-bold text-gray-900">
+          {{ currentSubscription ? getPlanName(currentSubscription.abonnementId) : 'None' }}
+        </p>
+        <p class="text-sm text-gray-600 mt-1">
+          {{ currentSubscription ? (currentSubscription.dateFin || 'No end date') : 'No active subscription' }}
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5 p-5 shadow-sm backdrop-blur-sm">
+        <p class="text-xs font-semibold uppercase tracking-wide text-[var(--color-primary)]">Queued</p>
+        <p class="mt-2 text-xl font-bold text-gray-900">
+          {{ getQueuedCount() }}
+        </p>
+        <p class="text-sm text-gray-600 mt-1">
+          {{ queuedSubscription ? getPlanName(queuedSubscription.abonnementId) + ' next' : 'No queued subscription' }}
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm backdrop-blur-sm">
+        <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">History</p>
+        <p class="mt-2 text-xl font-bold text-gray-900">
+          {{ getHistoryCount() }}
+        </p>
+        <p class="text-sm text-gray-600 mt-1">
+          Expired or exhausted subscriptions kept for audit
+        </p>
+      </div>
+    </div>
+
+    <!-- NO SUBSCRIPTION MESSAGE (Only show after data loads AND no subscription) -->
+    <ng-template #noSub>
+      <div class="max-w-6xl mx-auto text-center py-20">
+        <p class="text-2xl text-gray-500 mb-6">No subscription found</p>
+        <p class="text-gray-400">Choose a plan below to get started</p>
+      </div>
+    </ng-template>
+
+    <!-- LOADING STATE -->
+    <div *ngIf="loadingSubscription && !userAbonnement"
+         class="max-w-6xl mx-auto text-center py-20">
+      <div class="inline-block">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary)] mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading your subscription...</p>
+      </div>
+    </div>
+
+    <!-- 💎 CURRENT SUBSCRIPTION SHOWCASE -->
+    <div *ngIf="currentSubscription as sub"
+         class="max-w-6xl mx-auto mb-16">
+
+      <!-- SHOWCASE CARD WITH GLOW -->
+      <div class="relative mb-8 animate-fade-in">
+
+        <!-- GLOW BLUR EFFECTS -->
+        <div class="showcase-glow showcase-glow-top" [ngClass]="getGlowColorClass(sub.abonnementId)"></div>
+        <div class="showcase-glow showcase-glow-bottom" [ngClass]="getGlowColorClass(sub.abonnementId)"></div>
+
+        <!-- SHOWCASE CARD -->
+        <div class="relative z-10 rounded-3xl overflow-hidden backdrop-blur-xl border-2"
+             [ngClass]="[
+               getShowcaseStyle(sub.abonnementId),
+               'shadow-2xl'
+             ]">
+
+          <!-- GRADIENT OVERLAY -->
+          <div class="absolute inset-0 opacity-10"
+               [ngClass]="getShowcaseGradient(sub.abonnementId)"></div>
+
+          <!-- CARD CONTENT -->
+          <div class="relative z-20 p-8 md:p-12">
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+
+              <!-- LEFT: VISUAL SHOWCASE -->
+              <div class="flex flex-col items-center justify-center md:items-start">
+                <div class="text-7xl mb-4 animate-bounce-slow">
+                  {{ getPlanEmoji(sub.abonnementId) }}
+                </div>
+                <h2 class="text-3xl md:text-4xl font-bold mb-2">
+                  {{ getPlanName(sub.abonnementId) }}
+                </h2>
+                <p class="text-sm opacity-75 mb-4">
+                  Your premium tier
+                </p>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="inline-block px-4 py-2 rounded-full text-xs font-bold
+                               bg-green-500 text-white animate-pulse">
+                    ● ACTIVE
+                  </span>
+                  <!-- ✅ SHOW QR BUTTON -->
+                  <button (click)="openQRModal()"
+                          class="inline-block px-4 py-2 rounded-full text-xs font-bold
+                                 bg-blue-500 text-white hover:bg-blue-600 transition-all
+                                 hover:shadow-lg">
+                    📱 Show QR
+                  </button>
+                </div>
+              </div>
+
+              <!-- RIGHT: STATS & INFO -->
+              <div class="space-y-6">
+
+                <!-- PLAN DETAILS GRID -->
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="p-4 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
+                    <p class="text-xs opacity-70 mb-1">PLAN START</p>
+                    <p class="font-semibold text-lg">{{ sub.dateDebut }}</p>
+                  </div>
+                  <div class="p-4 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
+                    <p class="text-xs opacity-70 mb-1">PLAN END</p>
+                    <p class="font-semibold text-lg">{{ sub.dateFin }}</p>
+                  </div>
+                </div>
+
+                <!-- USAGE BAR SECTION -->
+                <div class="space-y-3">
+                  <div class="flex justify-between items-baseline">
+                    <span class="font-semibold">Tickets Remaining</span>
+                    <span class="text-2xl font-bold">{{ sub.ticketsRestants }}</span>
+                  </div>
+                  <div class="h-3 bg-white/30 rounded-full overflow-hidden backdrop-blur-sm border border-white/20">
+                    <div class="h-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-500 rounded-full transition-all duration-500"
+                         [style.width.%]="getTicketsPercent(sub?.ticketsRestants ?? 0)">
+                    </div>
+                  </div>
+                  <p class="text-xs opacity-70">{{ getUsageText(sub?.ticketsRestants ?? 0) }}</p>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div *ngIf="!loadingSubscription && !currentSubscription && !queuedSubscription">
+      <ng-container *ngTemplateOutlet="noSub"></ng-container>
+    </div>
+
+    <!-- ⏭️ UPCOMING SUBSCRIPTION -->
+    <div *ngIf="queuedSubscription as upcoming"
+         class="max-w-6xl mx-auto mb-12">
+      <div class="rounded-2xl border border-dashed border-[var(--color-primary)]/40 bg-white/80 p-6 md:p-8 shadow-sm">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[var(--color-primary)]">Upcoming Plan</p>
+            <h4 class="text-2xl font-bold text-gray-800 mt-1">{{ getPlanName(upcoming.abonnementId) }}</h4>
+            <p class="text-sm text-gray-600 mt-2">
+              This subscription is queued and will automatically start after your current one ends.
+            </p>
+            <p class="text-xs text-gray-500 mt-2">
+              Queue position {{ getQueuedCount() > 0 ? 1 : 0 }} of {{ getQueuedCount() }}
+            </p>
+          </div>
+          <span class="inline-block px-4 py-2 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+            QUEUED
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <div class="p-4 rounded-xl bg-gray-50 border border-gray-200">
+            <p class="text-xs text-gray-500 mb-1">START DATE</p>
+            <p class="font-semibold text-gray-900">{{ upcoming.dateDebut }}</p>
+          </div>
+          <div class="p-4 rounded-xl bg-gray-50 border border-gray-200">
+            <p class="text-xs text-gray-500 mb-1">END DATE</p>
+            <p class="font-semibold text-gray-900">{{ upcoming.dateFin }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🤖 AI RECOMMENDATION SECTION -->
+    <div class="max-w-6xl mx-auto mb-12">
+      <div class="ai-reco-shell">
+        <div class="ai-reco-grid">
+          <div>
+            <p class="ai-kicker">AI Subscription Advisor</p>
+            <h3 class="ai-title">Get a plan suggestion tuned to your profile</h3>
+            <p class="ai-subtitle">
+              Our Flask model analyzes your habits and suggests the plan with the highest confidence.
+            </p>
+            <div class="ai-actions">
+              <button class="ai-cta" (click)="openAiModal()">Launch AI Analysis</button>
+              <p class="ai-hint">Model endpoint: /recommend</p>
+            </div>
+          </div>
+
+          <div class="ai-preview" *ngIf="aiResult as result; else noAiResult">
+            <p class="text-xs uppercase tracking-wide text-gray-500 font-semibold">Latest Prediction</p>
+            <div class="mt-2 flex items-center gap-3">
+              <span class="prediction-badge" [ngClass]="getPredictionBadgeClass(result.prediction)">
+                {{ result.prediction | uppercase }}
+              </span>
+              <span class="text-sm text-gray-600">Confidence {{ (result.confidence * 100) | number:'1.0-1' }}%</span>
+            </div>
+
+            <div class="mt-4 space-y-2">
+              <div class="prob-row" *ngFor="let item of getAiSortedProbabilities()">
+                <div class="prob-meta">
+                  <span>{{ item.label | uppercase }}</span>
+                  <span>{{ (item.value * 100) | number:'1.0-1' }}%</span>
+                </div>
+                <div class="prob-track">
+                  <div class="prob-fill" [style.width.%]="item.value * 100"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noAiResult>
+            <div class="ai-preview ai-preview-empty">
+              <p class="text-sm text-gray-600">No recommendation yet. Start an analysis to see probability by plan.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+
+    <!-- 📦 AVAILABLE PLANS SECTION -->
+    <div class="max-w-6xl mx-auto">
+      <div class="mb-12">
+        <h3 class="text-3xl font-bold mb-2">All Plans</h3>
+        <p class="text-gray-600">Choose the perfect plan for you</p>
+      </div>
+
+      <!-- PLANS GRID -->
+      <div class="grid md:grid-cols-3 gap-8 mb-12">
+        <div *ngFor="let plan of plans"
+             class="plan-card"
+             [ngClass]="[
+               getPlanStyle(plan.id),
+               isCurrentPlan(plan.id) ? 'ring-4 ring-black/20 scale-105' : ''
+             ]">
+
+          <!-- ACTIVE BADGE -->
+          <div *ngIf="isCurrentPlan(plan.id)"
+               class="absolute top-3 right-3 bg-black text-white text-xs px-3 py-1 rounded-full z-20">
+            ACTIVE
+          </div>
+
+          <h3 class="text-xl font-bold relative z-10">
+            {{ plan.name }}
+          </h3>
+
+          <p class="text-sm opacity-80 relative z-10">
+            {{ plan.desc }}
+          </p>
+
+          <div class="mt-3 text-3xl font-extrabold relative z-10">
+            ${{ plan.price }}
+          </div>
+
+          <ul class="mt-4 text-sm relative z-10 space-y-2">
+            <li *ngFor="let f of plan.features">
+              ✔ {{ f }}
+            </li>
+          </ul>
+
+          <button class="w-full mt-6 py-3 rounded-xl font-semibold relative z-10 transition-all duration-300 hover:shadow-lg"
+                  (click)="subscribe(plan)"
+                  [disabled]="loading || !userId || isCurrentPlan(plan.id)"
+                  [ngClass]="{
+                    'bg-green-500 text-white cursor-default': isCurrentPlan(plan.id),
+                    'bg-[var(--color-primary)] text-white hover:shadow-xl': !loading && userId && !isCurrentPlan(plan.id),
+                    'bg-gray-400 text-gray-700 cursor-not-allowed': (loading || !userId) && !isCurrentPlan(plan.id)
+                  }">
+            <span *ngIf="isCurrentPlan(plan.id)" class="flex items-center justify-center gap-2">
+              ✓ YOUR CURRENT PLAN
+            </span>
+            <span *ngIf="!isCurrentPlan(plan.id) && !loading">Subscribe</span>
+            <span *ngIf="!isCurrentPlan(plan.id) && loading">Loading...</span>
+          </button>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ✅ AI RECOMMENDATION MODAL -->
+<div *ngIf="showAiModal"
+     class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+  <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full p-8 relative animate-in zoom-in-50 duration-300 max-h-[90vh] overflow-y-auto">
+    <button (click)="closeAiModal()"
+            class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-all">
+      ✕
+    </button>
+
+    <h3 class="text-2xl font-bold text-gray-900">AI Recommendation Studio</h3>
+    <p class="text-sm text-gray-600 mt-2 mb-6">Fill in user behavior and let the model rank the best subscription plan.</p>
+
+    <form [formGroup]="recommendationForm" class="grid md:grid-cols-2 gap-4">
+      <label class="field-card">
+        <span>Age</span>
+        <input type="number" formControlName="age" min="12" max="100" />
+      </label>
+
+      <label class="field-card">
+        <span>Budget</span>
+        <input type="number" formControlName="budget" min="0" step="1" />
+      </label>
+
+      <label class="field-card">
+        <span>Monthly Cinema Visits</span>
+        <input type="number" formControlName="monthly_cinema_visits" min="0" step="1" />
+      </label>
+
+      <label class="field-card">
+        <span>Average Ticket Price</span>
+        <input type="number" formControlName="avg_ticket_price" min="0" step="0.1" />
+      </label>
+
+      <label class="field-card">
+        <span>Preferred Genre</span>
+        <select formControlName="preferred_genre">
+          <option value="action">Action</option>
+          <option value="comedy">Comedy</option>
+          <option value="drama">Drama</option>
+          <option value="horror">Horror</option>
+          <option value="animation">Animation</option>
+          <option value="sci-fi">Sci-Fi</option>
+          <option value="romance">Romance</option>
+        </select>
+      </label>
+
+      <label class="field-card">
+        <span>Watch Time Preference</span>
+        <select formControlName="watch_time_pref">
+          <option value="morning">Morning</option>
+          <option value="afternoon">Afternoon</option>
+          <option value="evening">Evening</option>
+          <option value="night">Night</option>
+        </select>
+      </label>
+
+      <label class="field-card">
+        <span>Group Size</span>
+        <input type="number" formControlName="group_size" min="1" step="1" />
+      </label>
+
+      <label class="field-card">
+        <span>Distance (km)</span>
+        <input type="number" formControlName="distance_km" min="0" step="0.1" />
+      </label>
+
+      <label class="field-card">
+        <span>App Sessions / Week</span>
+        <input type="number" formControlName="app_sessions_per_week" min="0" step="1" />
+      </label>
+
+      <label class="field-card">
+        <span>Last Booking (days ago)</span>
+        <input type="number" formControlName="last_booking_days_ago" min="0" step="1" />
+      </label>
+
+      <label class="field-card">
+        <span>Promo Sensitivity (0 to 1)</span>
+        <input type="number" formControlName="promo_sensitivity" min="0" max="1" step="0.01" />
+      </label>
+
+      <label class="field-card">
+        <span>Has Streaming Subscription</span>
+        <select formControlName="has_streaming_subscription">
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </label>
+
+      <label class="field-card md:col-span-2">
+        <span>Satisfaction Score (0 to 5)</span>
+        <input type="number" formControlName="satisfaction_score" min="0" max="5" step="0.1" />
+      </label>
+    </form>
+
+    <p *ngIf="aiError" class="mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+      {{ aiError }}
+    </p>
+
+    <div class="mt-6 flex items-center justify-end gap-3">
+      <button class="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200" (click)="closeAiModal()">
+        Cancel
+      </button>
+      <button class="px-5 py-2 rounded-xl bg-[var(--color-primary)] text-white hover:opacity-90 disabled:opacity-60"
+              [disabled]="aiLoading"
+              (click)="submitRecommendation()">
+        {{ aiLoading ? 'Analyzing...' : 'Get Recommendation' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ QR CODE MODAL -->
+<div *ngIf="showQRModal"
+     class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4
+            animate-in fade-in duration-300">
+
+  <!-- MODAL CARD -->
+  <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 relative
+              animate-in zoom-in-50 duration-300">
+
+    <!-- CLOSE BUTTON -->
+    <button (click)="closeQRModal()"
+            class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center
+                   rounded-full bg-gray-100 hover:bg-gray-200 transition-all">
+      ✕
+    </button>
+
+    <!-- TITLE -->
+    <h3 class="text-2xl font-bold text-center mb-6 text-gray-800">Scan QR Code</h3>
+
+    <!-- LOADING STATE -->
+    <div *ngIf="loadingQR" class="text-center py-12">
+      <div class="inline-block">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading QR code...</p>
+      </div>
+    </div>
+
+    <!-- QR CODE CONTENT -->
+    <div *ngIf="!loadingQR && qrImage" class="space-y-6">
+
+      <!-- QR IMAGE -->
+      <div class="bg-gray-50 p-4 rounded-2xl border-2 border-dashed border-gray-300 flex justify-center">
+        <img [src]="qrImage" alt="QR Code" class="w-64 h-64 object-contain">
+      </div>
+
+      <!-- QR CODE TEXT (copyable) -->
+      <div class="bg-gray-100 p-3 rounded-lg text-xs text-center text-gray-600 break-all">
+        {{ qrCode }}
+      </div>
+
+      <!-- ERROR MESSAGE -->
+      <div *ngIf="scanError" class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+        <p class="text-sm text-red-700">{{ scanError }}</p>
+      </div>
+
+      <!-- SCAN BUTTON -->
+      <button (click)="scanQR()"
+              [disabled]="scanningQR"
+              class="w-full py-3 rounded-xl font-semibold transition-all
+                     bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed
+                     flex items-center justify-center gap-2">
+        <span *ngIf="!scanningQR">📱 Confirm & Use Ticket</span>
+        <span *ngIf="scanningQR" class="flex items-center gap-2">
+          <span class="inline-block animate-spin">⏳</span> Processing...
+        </span>
+      </button>
+
+    </div>
+
+  </div>
+
 </div>

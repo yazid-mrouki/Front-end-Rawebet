@@ -8,6 +8,8 @@ export interface ClubParticipation {
 
   reservedPlaces: number;
 
+  remainingPlaces: number;
+
   status: 'CONFIRMED' | 'CANCELLED';
 
   reservationDate: string;

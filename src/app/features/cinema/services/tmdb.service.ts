@@ -16,6 +16,9 @@ export interface TmdbMovie {
   vote_average: number;
   original_language: string;
   imdb_id?: string;
+  // ── Champs présents dans /movie/{id} (détails complets) ──────
+  budget?: number;
+  popularity?: number;
 }
 
 export interface TmdbCredits {

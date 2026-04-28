@@ -1,15 +1,24 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
+import { GuestPreviewService } from '../services/guest-preview.service';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
+  const auth  = inject(AuthService);
+  const guest = inject(GuestPreviewService);
 
-  // ← Ne pas toucher les requêtes TMDB
-  if (req.url.includes('api.themoviedb.org')) {
+  // ── Requêtes TMDB → jamais de withCredentials ni de token backend ──
+  const isTmdb = req.url.includes('api.themoviedb.org');
+  if (isTmdb) {
     return next(req);
   }
 
-  const auth = inject(AuthService);
+  // ── Mode visiteur anonyme → aucun token ───────────────────────────
+  if (guest.isGuestPreview()) {
+    return next(req.clone({ withCredentials: false }));
+  }
+
+  // ── Mode normal ou mode client ────────────────────────────────────
   const token = auth.getToken();
   const isAuthRequest =
     req.url.includes('/auth/login') ||
@@ -20,10 +29,5 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
     ? { Authorization: `Bearer ${token}` }
     : undefined;
 
-  req = req.clone({
-    withCredentials: true,
-    setHeaders: headers,
-  });
-
-  return next(req);
+  return next(req.clone({ withCredentials: true, setHeaders: headers }));
 };

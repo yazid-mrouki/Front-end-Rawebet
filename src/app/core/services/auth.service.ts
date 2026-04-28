@@ -14,6 +14,8 @@ interface DecodedToken {
   userId?: number;
   name?: string;
   email?: string;
+  impersonation?: boolean;
+  impersonatedBy?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -22,18 +24,24 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
   private readonly platformId = inject(PLATFORM_ID);
+
   private readonly tokenKey = 'token';
+  private readonly guestKey = 'rawabet_guest_preview';
+  private readonly impersonationKey = 'rawabet_impersonation_token';
 
   public authState = new BehaviorSubject<boolean>(this.hasValidToken());
 
+  // ── Auth ──────────────────────────────────────────────────────────────
   login(body: LoginRequest) {
     this.clearStoredSession(false);
-    return this.http.post<AuthResponse>(`${this.api}/auth/login`, body).pipe(
-      tap((res) => {
-        this.persistToken(res.accessToken);
-        this.authState.next(true);
-      }),
-    );
+    return this.http
+      .post<AuthResponse>(`${this.api}/auth/login`, body)
+      .pipe(tap((res) => this.completeAuthSession(res)));
+  }
+
+  completeAuthSession(response: AuthResponse) {
+    this.persistToken(response.accessToken);
+    this.authState.next(true);
   }
 
   register(body: RegisterRequest) {
@@ -42,14 +50,13 @@ export class AuthService {
 
   logout(redirectToLogin = true) {
     this.clearStoredSession(false);
+    if (this.isBrowser()) sessionStorage.removeItem(this.impersonationKey);
     this.http.post(`${this.api}/auth/logout`, {}, { withCredentials: true }).subscribe({
       complete: () => undefined,
       error: () => undefined,
     });
     this.authState.next(false);
-    if (redirectToLogin) {
-      this.router.navigate(['/auth/sign-in']);
-    }
+    if (redirectToLogin) this.router.navigate(['/auth/sign-in']);
   }
 
   handleUnauthorized() {
@@ -58,18 +65,50 @@ export class AuthService {
     this.router.navigate(['/auth/sign-in']);
   }
 
+  // ── Alerte tentative suspecte ─────────────────────────────────────────
+  sendSuspectAlert(email: string, photoBase64: string, timestamp: string) {
+    return this.http.post(
+      `${this.api}/auth/suspect-alert`,
+      {
+        email,
+        photoBase64,
+        timestamp,
+        clientIp: null,
+      },
+      { responseType: 'text' },
+    );
+  }
+
+  // ── Token actif ───────────────────────────────────────────────────────
+  /**
+   * Retourne le token actif avec priorité :
+   * 1. Token d'impersonation (sessionStorage) → mode client
+   * 2. Token normal (localStorage) → mode admin/client standard
+   *
+   * Tous les appels HTTP et getRoles() / isAdmin() lisent TOUJOURS ce token.
+   * → En mode client : isAdmin() = false, adminGuard bloque /admin/*
+   */
   getToken(): string | null {
     if (!this.isBrowser()) return null;
+    if (this.isGuestMode()) return null;
+    return this.getActiveToken();
+  }
 
+  private getActiveToken(): string | null {
+    if (!this.isBrowser()) return null;
+
+    // Priorité 1 — token d'impersonation (mode client)
+    const impToken = sessionStorage.getItem(this.impersonationKey);
+    if (impToken && !this.isTokenExpired(impToken)) return impToken;
+
+    // Priorité 2 — token normal
     const token = localStorage.getItem(this.tokenKey);
     if (!token) return null;
-
     if (this.isTokenExpired(token)) {
       this.clearStoredSession(false);
       this.authState.next(false);
       return null;
     }
-
     return token;
   }
 
@@ -77,6 +116,19 @@ export class AuthService {
     return !!this.getToken();
   }
 
+  // ── Modes spéciaux ────────────────────────────────────────────────────
+  isGuestMode(): boolean {
+    if (!this.isBrowser()) return false;
+    return sessionStorage.getItem(this.guestKey) === 'true';
+  }
+
+  isImpersonating(): boolean {
+    if (!this.isBrowser()) return false;
+    const t = sessionStorage.getItem(this.impersonationKey);
+    return !!t && !this.isTokenExpired(t);
+  }
+
+  // ── Roles / Permissions ───────────────────────────────────────────────
   getRoles(): string[] {
     return this.getDecodedToken()?.roles || [];
   }
@@ -86,54 +138,79 @@ export class AuthService {
   }
 
   getCurrentUserId(): number | null {
-    const userId = this.getDecodedToken()?.userId;
-    return typeof userId === 'number' ? userId : null;
+    const id = this.getDecodedToken()?.userId;
+    return typeof id === 'number' ? id : null;
+  }
+
+  getUserId(): number | null {
+    return this.getCurrentUserId();
   }
 
   getCurrentUserName(): string {
-    const decoded = this.getDecodedToken();
-    if (decoded?.name) {
-      return decoded.name;
-    }
-
-    const subject = decoded?.sub || decoded?.email || '';
-    return subject.includes('@') ? subject.split('@')[0] : subject;
+    const d = this.getDecodedToken();
+    if (d?.name) return d.name;
+    const s = d?.sub || d?.email || '';
+    return s.includes('@') ? s.split('@')[0] : s;
   }
 
   getCurrentUserEmail(): string {
-    const decoded = this.getDecodedToken();
-    return decoded?.email || decoded?.sub || '';
+    const d = this.getDecodedToken();
+    return d?.email || d?.sub || '';
   }
 
-  hasPermission(permission: string): boolean {
-    return this.isSuperAdmin() || this.getPermissions().includes(permission);
+  hasPermission(p: string): boolean {
+    return this.isSuperAdmin() || this.getPermissions().includes(p);
   }
 
   hasAnyPermission(permissions: string[]): boolean {
-    return permissions.some((permission) => this.hasPermission(permission));
+    return permissions.some((p) => this.hasPermission(p));
   }
 
+  /**
+   * isAdmin() lit le token ACTIF.
+   * En mode impersonation, le token actif est le token CLIENT → isAdmin() = false.
+   * C'est ce comportement voulu qui isole complètement le mode client.
+   */
   isAdmin(): boolean {
-    const roles = this.getRoles();
-    return roles.some((role) => ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'].includes(role));
+    return this.getRoles().some((r) =>
+      ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'].includes(r),
+    );
   }
 
   isSuperAdmin(): boolean {
     return this.getRoles().includes('SUPER_ADMIN');
   }
 
+  // ── Password reset ────────────────────────────────────────────────────
   forgotPassword(email: string) {
-    return this.http.post(`${this.api}/auth/forgot-password?email=${email}`, {}, { withCredentials: true });
+    return this.http.post(
+      `${this.api}/auth/forgot-password?email=${encodeURIComponent(email.trim())}`,
+      {},
+      { withCredentials: true, responseType: 'text' },
+    );
   }
 
-  resetPassword(token: string, newPassword: string) {
-    return this.http.post(`${this.api}/auth/reset-password?token=${token}&newPassword=${newPassword}`, {}, { withCredentials: true });
+  resetPasswordWithSession(newPassword: string) {
+    return this.http.post(
+      `${this.api}/auth/reset-password/session`,
+      { newPassword },
+      { withCredentials: true, responseType: 'text' },
+    );
   }
 
+  resetPasswordWithOtp(email: string, code: string, newPassword: string) {
+    return this.http.post(
+      `${this.api}/auth/reset-password/otp`,
+      { email: email.trim(), code: code.trim(), newPassword },
+      { responseType: 'text' },
+    );
+  }
+
+  // ── Privé ─────────────────────────────────────────────────────────────
   private getDecodedToken(): DecodedToken | null {
-    const token = this.peekStoredToken();
+    if (!this.isBrowser() || this.isGuestMode()) return null;
+    const token = this.getActiveToken();
     if (!token) return null;
-
     try {
       return JSON.parse(atob(token.split('.')[1]));
     } catch {
@@ -143,37 +220,27 @@ export class AuthService {
   }
 
   private hasValidToken(): boolean {
-    const token = this.peekStoredToken();
-    return !!token && !this.isTokenExpired(token);
+    if (!this.isBrowser()) return false;
+    return !!this.getActiveToken();
   }
 
   private isTokenExpired(token: string): boolean {
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (!payload?.exp) return false;
-      return payload.exp * 1000 <= Date.now();
+      const p = JSON.parse(atob(token.split('.')[1]));
+      if (!p?.exp) return false;
+      return p.exp * 1000 <= Date.now();
     } catch {
       return true;
     }
   }
 
   private persistToken(token: string) {
-    if (!this.isBrowser()) return;
-    localStorage.setItem(this.tokenKey, token);
-  }
-
-  private peekStoredToken(): string | null {
-    if (!this.isBrowser()) return null;
-    return localStorage.getItem(this.tokenKey);
+    if (this.isBrowser()) localStorage.setItem(this.tokenKey, token);
   }
 
   private clearStoredSession(updateState = true) {
-    if (this.isBrowser()) {
-      localStorage.removeItem(this.tokenKey);
-    }
-    if (updateState) {
-      this.authState.next(false);
-    }
+    if (this.isBrowser()) localStorage.removeItem(this.tokenKey);
+    if (updateState) this.authState.next(false);
   }
 
   private isBrowser(): boolean {

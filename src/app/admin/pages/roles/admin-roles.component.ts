@@ -300,4 +300,23 @@ export class AdminRolesComponent implements OnInit {
       case 'DELETE': return 'Delete';
     }
   }
+
+  // ── Helpers pour le nouveau design colonnes par module ────────────────
+
+  /** Retourne les permissions d'un module donné (CINEMA, CLUB, EVENT, FIDELITY) */
+  getPermsByModule(module: string): PermissionResponse[] {
+    return this.permissions.filter(p => (p.module || '').toUpperCase() === module.toUpperCase());
+  }
+
+  /** Vérifie si un rôle possède une permission MODULE_ACTION */
+  hasPermission(role: RoleResponse, module: string, action: string): boolean {
+    const permName = `${module.toUpperCase()}_${action.toUpperCase()}`;
+    return (role.permissions || []).includes(permName);
+  }
+
+  /** Vérifie si un rôle a au moins une permission dans un module */
+  hasCategoryPerms(role: RoleResponse, module: string): boolean {
+    return (role.permissions || []).some(p => p.startsWith(module.toUpperCase() + '_'));
+  }
+
 }
