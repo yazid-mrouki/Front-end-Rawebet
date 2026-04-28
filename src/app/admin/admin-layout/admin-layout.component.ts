@@ -153,8 +153,6 @@ export class AdminLayoutComponent implements OnInit {
     return `${environment.apiUrl.replace(/\/$/, '')}${v.startsWith('/') ? v : '/' + v}`;
   }
 
-
-
   private getAdminRoleLabel(): string {
     const roles = this.auth.getRoles();
     if (roles.includes('SUPER_ADMIN'))  return 'Super Admin';
@@ -163,7 +161,4 @@ export class AdminLayoutComponent implements OnInit {
     if (roles.includes('ADMIN_CLUB'))   return 'Admin Club';
     return 'Admin';
   }
-
-  toggleSidebar() { this.sidebarCollapsed = !this.sidebarCollapsed; }
-  logout() { this.auth.logout(); }
 }
