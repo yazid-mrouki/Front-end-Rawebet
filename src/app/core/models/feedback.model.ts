@@ -21,3 +21,10 @@ export interface UpdateFeedbackRequest {
   commentaire: string;
   note: number;
 }
+
+export interface FeedbackMutationResult {
+  success: boolean;
+  message: string;
+  containsBadWords: boolean;
+  feedback: FeedbackResponse | null;
+}

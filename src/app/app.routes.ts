@@ -15,6 +15,7 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { NotificationsComponent } from './pages/notifications/notifications.component';
 import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './pages/auth/reset-password/reset-password.component';
+import { TicketVerifyComponent } from './pages/ticket-verify/ticket-verify.component';
 import { authGuard } from './core/guards/auth.guard';
 
 import { AdminLayoutComponent } from './admin/admin-layout/admin-layout.component';
@@ -23,6 +24,7 @@ import { AdminEventsComponent } from './admin/pages/events/admin-events.componen
 import { AdminFilmsComponent } from './admin/pages/films/admin-films.component';
 import { AdminCinemasComponent } from './admin/pages/cinemas/admin-cinemas.component';
 import { AdminTicketsComponent } from './admin/pages/tickets/admin-tickets.component';
+import { AdminSeancesComponent } from './admin/pages/seances/admin-seances.component';
 import { AdminClubComponent } from './admin/pages/club/admin-club.component';
 import { AdminSubscriptionsComponent } from './admin/pages/subscriptions/admin-subscriptions.component';
 import { AdminUsersComponent } from './admin/pages/users/admin-users.component';
@@ -47,6 +49,7 @@ export const routes: Routes = [
   { path: 'films', component: FilmsComponent },
   { path: 'cinemas', component: CinemasComponent },
   { path: 'tickets', component: TicketsComponent, canActivate: [authGuard] },
+  { path: 'ticket/verify/:id', component: TicketVerifyComponent },
   { path: 'clubs', component: ClubsComponent },
   { path: 'subscriptions', component: SubscriptionsComponent },
   { path: 'loyalty', component: LoyaltyComponent, canActivate: [authGuard] },
@@ -77,6 +80,7 @@ export const routes: Routes = [
       { path: 'events', component: AdminEventsComponent },
       { path: 'films', component: AdminFilmsComponent },
       { path: 'cinemas', component: AdminCinemasComponent },
+      { path: 'seances', component: AdminSeancesComponent },
       { path: 'tickets', component: AdminTicketsComponent },
       { path: 'club', component: AdminClubComponent },
       { path: 'subscriptions', component: AdminSubscriptionsComponent },
