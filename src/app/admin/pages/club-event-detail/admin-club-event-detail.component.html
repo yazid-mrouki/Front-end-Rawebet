@@ -1,0 +1,202 @@
+<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+
+  <!-- ═══ Back + Header ═══ -->
+  <div class="flex items-center gap-4">
+    <a routerLink="/admin/club"
+       [queryParams]="{tab: 'events'}"
+       class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-500 hover:bg-gray-50 transition-colors">
+      ← Back
+    </a>
+    <div class="flex-1">
+      <h1 class="font-serif text-2xl font-bold text-dark">Event Detail</h1>
+    </div>
+    <div *ngIf="event && !isEditing" class="flex gap-2">
+      <button (click)="startEdit()"
+              class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
+        ✏️ Edit
+      </button>
+      <button (click)="confirmDelete()"
+              class="px-4 py-2 bg-red-50 text-red-600 border border-red-100 rounded-xl text-sm font-semibold hover:bg-red-100 transition-colors">
+        🗑 Delete
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ Loading ═══ -->
+  <div *ngIf="loading" class="bg-white rounded-2xl border border-gray-100 p-20 text-center">
+    <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+    <p class="text-gray-400 text-sm">Loading event...</p>
+  </div>
+
+  <!-- ═══ Feedback ═══ -->
+  <div *ngIf="successMessage"
+       class="p-3 bg-green-50 text-green-700 rounded-xl text-sm flex items-center justify-between gap-2">
+    <span>✅ {{ successMessage }}</span>
+    <button (click)="successMessage = null" class="text-green-400 hover:text-green-600 font-bold text-lg leading-none">✕</button>
+  </div>
+  <div *ngIf="errorMessage"
+       class="p-3 bg-red-50 text-red-600 rounded-xl text-sm flex items-center justify-between gap-2">
+    <span>⚠️ {{ errorMessage }}</span>
+    <button (click)="errorMessage = null" class="text-red-400 hover:text-red-600 font-bold text-lg leading-none">✕</button>
+  </div>
+
+  <ng-container *ngIf="!loading && event">
+
+    <div class="grid lg:grid-cols-3 gap-6">
+
+      <!-- ═══ Left : Info / Edit form ═══ -->
+      <div class="lg:col-span-2 space-y-4">
+
+        <!-- VIEW MODE -->
+        <div *ngIf="!isEditing" class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div *ngIf="event.posterUrl" class="w-full h-48 overflow-hidden">
+            <img [src]="event.posterUrl" [alt]="event.title" class="w-full h-full object-cover">
+          </div>
+          <div *ngIf="!event.posterUrl"
+               class="w-full h-48 bg-primary/10 flex items-center justify-center text-6xl">
+            🎭
+          </div>
+          <div class="p-6 space-y-4">
+            <div>
+              <h2 class="text-xl font-bold text-dark">{{ event.title }}</h2>
+              <p class="text-xs text-gray-400 mt-1">Created {{ event.createdAt | date:'mediumDate' }}</p>
+            </div>
+            <p *ngIf="event.description" class="text-sm text-gray-600 leading-relaxed">
+              {{ event.description }}
+            </p>
+            <p *ngIf="!event.description" class="text-sm text-gray-300 italic">No description.</p>
+            <div class="grid grid-cols-2 gap-4 pt-2">
+              <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-xs text-gray-400 mb-1">Date</p>
+                <p class="font-semibold text-dark text-sm">{{ event.eventDate | date:'mediumDate' }}</p>
+                <p class="text-xs text-gray-400">{{ event.eventDate | date:'shortTime' }}</p>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-xs text-gray-400 mb-1">Max Places</p>
+                <p class="font-semibold text-dark text-sm">{{ event.maxPlaces }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDIT MODE -->
+        <div *ngIf="isEditing" class="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+          <h3 class="font-semibold text-dark">Edit Event</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input [(ngModel)]="form.title" placeholder="Title *"
+                   class="md:col-span-2 px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-gray-50" />
+            <input [(ngModel)]="form.eventDate" type="datetime-local"
+                   class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-gray-50" />
+            <input [(ngModel)]="form.maxPlaces" type="number" min="1" placeholder="Max places *"
+                   class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-gray-50" />
+            <div class="md:col-span-2 flex gap-2 items-center">
+              <input [(ngModel)]="form.posterUrl" placeholder="Poster URL (optional)"
+                     class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-gray-50" />
+              <img *ngIf="form.posterUrl" [src]="form.posterUrl" alt="Preview"
+                   class="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0"
+                   (error)="form.posterUrl = ''">
+            </div>
+            <textarea [(ngModel)]="form.description" placeholder="Description (optional)" rows="3"
+                      class="md:col-span-2 px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-gray-50 resize-none"></textarea>
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button (click)="save()" [disabled]="saving"
+                    class="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
+              {{ saving ? 'Saving...' : '✓ Save Changes' }}
+            </button>
+            <button (click)="cancelEdit()" [disabled]="saving"
+                    class="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50">
+              Cancel
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══ Right : Stats + Participants ═══ -->
+      <div class="space-y-4">
+
+        <!-- Stats -->
+        <div class="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+          <h3 class="font-semibold text-dark text-sm">Capacity</h3>
+          <div class="space-y-2">
+            <div class="flex justify-between text-xs text-gray-500">
+              <span>{{ event.reservedPlaces }} reserved</span>
+              <span>{{ event.maxPlaces }} max</span>
+            </div>
+            <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all"
+                   [class.bg-primary]="event.remainingPlaces > 5"
+                   [class.bg-amber-400]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                   [class.bg-red-400]="event.remainingPlaces === 0"
+                   [style.width.%]="capacityPercent()"></div>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="font-semibold text-dark">{{ capacityPercent() }}% filled</span>
+              <span [class.text-green-500]="event.remainingPlaces > 5"
+                    [class.text-amber-500]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                    [class.text-red-500]="event.remainingPlaces === 0"
+                    class="font-semibold">
+                {{ event.remainingPlaces === 0 ? 'Full' : event.remainingPlaces + ' spots left' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Participants -->
+        <div class="bg-white rounded-2xl border border-gray-100 p-5">
+          <h3 class="font-semibold text-dark text-sm mb-4">
+            Participants
+            <span class="ml-2 bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full font-semibold">
+              {{ event.participants?.length ?? 0 }}
+            </span>
+          </h3>
+
+          <div *ngIf="!event.participants || event.participants.length === 0"
+               class="text-center py-8 text-gray-300 text-sm">
+            No participants yet.
+          </div>
+
+          <div *ngIf="event.participants && event.participants.length > 0" class="space-y-2">
+            <div *ngFor="let p of event.participants"
+                 class="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+              <div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center font-bold text-primary text-xs shrink-0">
+                {{ p.userName.charAt(0).toUpperCase() }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-dark truncate">{{ p.userName }}</p>
+                <p class="text-xs text-gray-400">{{ p.reservationDate | date:'mediumDate' }}</p>
+              </div>
+              <span class="text-xs text-gray-400 shrink-0">×{{ p.reservedPlaces }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ═══ Delete Confirmation Modal ═══ -->
+  <div *ngIf="showDeleteConfirm"
+       class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+    <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
+      <div class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">🗑</div>
+      <h3 class="font-serif text-xl font-bold text-dark text-center mb-2">Delete this event?</h3>
+      <p class="text-gray-500 text-sm text-center mb-6">
+        This action cannot be undone. All reservations will be lost.
+      </p>
+      <div class="flex gap-3">
+        <button (click)="cancelDelete()" [disabled]="deleting"
+                class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50">
+          Cancel
+        </button>
+        <button (click)="deleteEvent()" [disabled]="deleting"
+                class="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50">
+          {{ deleting ? 'Deleting...' : 'Yes, Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

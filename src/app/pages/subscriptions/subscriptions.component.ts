@@ -13,7 +13,7 @@ import {
   UserAbonnement
 } from '../../core/models/subscription.model';
 import { RecommendationApiResponse, RecommendationPayload, RecommendationResult } from '../../core/models/recommendation.model';
-import { ToastService } from '../../core/services/toast';
+import { ToastService } from '../../core/services/toast.service';
 import { QrService } from '../../core/services/qr.service';
 import { RecommendationService } from '../../core/services/recommendation.service';
 

@@ -1,6 +1,40 @@
 <!-- Rawebet App Shell -->
+<!-- Toast global -->
+<app-toast></app-toast>
+
+<!-- Bannière mode visiteur anonyme -->
+<div *ngIf="isGuestMode"
+     class="sticky top-0 z-[9998] flex items-center justify-between gap-4 bg-amber-500 px-6 py-2.5 text-sm font-medium text-white shadow-md">
+  <div class="flex items-center gap-2">
+    <span class="text-base">👁️</span>
+    <span>Mode visiteur — Vous visualisez le site comme un utilisateur anonyme. Aucun token n'est envoyé.</span>
+  </div>
+  <button (click)="exitGuestMode()"
+          class="shrink-0 rounded-lg border border-white/40 px-3 py-1 text-xs font-semibold hover:bg-white/20 transition-colors">
+    Quitter
+  </button>
+</div>
+
+<!-- Bannière mode client (impersonation) -->
+<div *ngIf="isImpersonating"
+     class="sticky top-0 z-[9998] flex items-center justify-between gap-4 bg-primary px-6 py-2.5 text-sm font-medium text-white shadow-md">
+  <div class="flex items-center gap-2">
+    <span class="text-base">🎭</span>
+    <span>
+      Mode client — Vous naviguez en tant que
+      <strong>{{ impersonationInfo?.targetUserName }}</strong>
+      ({{ impersonationInfo?.targetUserEmail }}).
+      Durée max : 30 min.
+    </span>
+  </div>
+  <button (click)="exitClientMode()"
+          class="shrink-0 rounded-lg border border-white/40 px-3 py-1 text-xs font-semibold hover:bg-white/20 transition-colors">
+    Quitter le mode client
+  </button>
+</div>
+
 <app-navbar *ngIf="showLayout"></app-navbar>
 <main>
   <router-outlet />
 </main>
-<app-footer *ngIf="showLayout"></app-footer>
+<app-footer *ngIf="showFooter && showLayout"></app-footer>

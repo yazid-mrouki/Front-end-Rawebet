@@ -1,18 +1,22 @@
 /* ============================================
-   ADMIN SUBSCRIPTIONS - WHITE THEME
+   ADMIN SUBSCRIPTIONS
    ============================================ */
 
 * {
   box-sizing: border-box;
 }
 
-/* Main Background */
 :host {
-  background: #ffffff;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
+/* Main Background */
 .min-h-screen {
   background: #ffffff;
+  width: 100%;
+  min-height: 100%;
 }
 
 /* Primary Color Variables */
@@ -163,9 +167,11 @@
 /* Subscriptions Grid */
 .subscriptions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
   animation: fadeIn 0.5s ease;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 @keyframes fadeIn {

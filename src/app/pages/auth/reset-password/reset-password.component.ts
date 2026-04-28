@@ -12,21 +12,26 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./reset-password.component.scss']
 })
 export class ResetPasswordComponent implements OnInit {
-  token = '';
+  email = '';
+  code = '';
   password = '';
   confirmPassword = '';
   message = '';
   error = '';
 
-  constructor(private route: ActivatedRoute, private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) {}
 
   ngOnInit() {
-    this.token = this.route.snapshot.queryParamMap.get('token') || '';
+    this.error = '';
+    const emailFromQuery = this.route.snapshot.queryParamMap.get('email');
+    if (emailFromQuery) {
+      this.email = emailFromQuery;
+    }
   }
 
   onSubmit() {
-    if (!this.token) {
-      this.error = 'Token invalide.';
+    if (!this.email || !this.code) {
+      this.error = 'Email et code OTP obligatoires.';
       return;
     }
 
@@ -36,7 +41,7 @@ export class ResetPasswordComponent implements OnInit {
     }
 
     this.error = '';
-    this.auth.resetPassword(this.token, this.password).subscribe({
+    this.auth.resetPasswordWithOtp(this.email, this.code, this.password).subscribe({
       next: () => {
         this.message = 'Mot de passe réinitialisé avec succès.';
         this.router.navigate(['/auth/sign-in']);

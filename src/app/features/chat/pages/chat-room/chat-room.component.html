@@ -1,0 +1,415 @@
+<!-- ═══ ÉCRAN D'ACCUEIL ═══ -->
+<div *ngIf="!joined" class="flex items-center justify-center px-4 bg-gradient-to-br from-dark via-primary to-primary-light" style="min-height: calc(100vh - 64px);">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">💬</div>
+      <h1 class="font-serif text-2xl font-bold text-dark">Rejoindre le chat</h1>
+      <p class="text-gray-500 text-sm mt-2">Entrez le code affiché dans la salle de cinéma</p>
+    </div>
+    <div class="space-y-4">
+      <input [(ngModel)]="codeInput" (keyup.enter)="joinChat()" type="text" maxlength="4" placeholder="0000"
+        class="w-full text-center text-4xl font-bold tracking-[1rem] border-2 border-gray-200 rounded-xl py-4 focus:border-primary focus:outline-none transition-colors"/>
+      <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">{{ errorMessage }}</div>
+      <button (click)="joinChat()" [disabled]="loading || codeInput.length !== 4"
+        class="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+        {{ loading ? 'Connexion...' : 'Rejoindre →' }}
+      </button>
+    </div>
+    <p class="text-center text-xs text-gray-400 mt-6">Mode lecture disponible sans connexion</p>
+  </div>
+</div>
+
+<!-- ═══ CHAT ROOM — Layout immersif ═══ -->
+<div *ngIf="joined && session" class="flex h-full overflow-hidden" (click)="closeAll()">
+
+  <!-- ── Panneau gauche : ambiance cinéma ── -->
+  <div class="hidden lg:flex flex-col justify-between w-80 xl:w-96 flex-shrink-0 relative overflow-hidden"
+       style="background: linear-gradient(160deg, #1a1a2e 0%, #2d1b1b 50%, #7b1f27 100%);">
+    <div class="absolute inset-0 opacity-10"
+         style="background-image: repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.05) 40px, rgba(255,255,255,0.05) 41px),
+                                  repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.05) 40px, rgba(255,255,255,0.05) 41px);">
+    </div>
+    <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full opacity-20"
+         style="background: radial-gradient(circle, #a3333d 0%, transparent 70%); filter: blur(40px);">
+    </div>
+
+    <div class="relative z-10 p-8">
+      <div class="flex items-center gap-3 mb-10">
+        <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+          <span class="text-white font-bold text-lg font-serif">R</span>
+        </div>
+        <span class="text-white font-serif font-bold text-xl tracking-wide">Rawebet</span>
+      </div>
+      <div class="space-y-2">
+        <p class="text-primary-light text-xs font-semibold uppercase tracking-widest">Séance en cours</p>
+        <h2 class="text-white font-serif text-2xl xl:text-3xl font-bold leading-tight">{{ session.name }}</h2>
+      </div>
+      <div class="mt-8 space-y-3">
+        <div class="flex items-center gap-3 text-white/70 text-sm">
+          <span class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-base">🎬</span>
+          <span>Chat en direct</span>
+          <span class="ml-auto flex items-center gap-1.5">
+            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            <span class="text-green-400 text-xs font-semibold">Live</span>
+          </span>
+        </div>
+        <div class="flex items-center gap-3 text-white/70 text-sm">
+          <span class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-base">⏱️</span>
+          <span>{{ timeRemainingLabel }}</span>
+        </div>
+        <div class="flex items-center gap-3 text-white/70 text-sm">
+          <span class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-base">🔑</span>
+          <span>Code <span class="font-mono font-bold text-white ml-1">{{ session.code }}</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="sessionExpired" class="relative z-10 px-8 pb-4">
+      <button (click)="generateSummary(); $event.stopPropagation()"
+              [disabled]="summaryLoading"
+              class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 disabled:opacity-50">
+        <span *ngIf="!summaryLoading">✨ Résumer la discussion</span>
+        <span *ngIf="summaryLoading" class="flex items-center gap-2">
+          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+          </svg>
+          Génération en cours…
+        </span>
+      </button>
+      <div *ngIf="summary" (click)="$event.stopPropagation()" class="mt-4 bg-white/10 border border-white/20 rounded-xl p-4 max-h-64 overflow-y-auto">
+        <p class="text-white/60 text-xs font-semibold uppercase tracking-wide mb-2">✨ Résumé IA</p>
+        <p class="text-white/90 text-sm leading-relaxed whitespace-pre-line">{{ summary }}</p>
+      </div>
+      <p *ngIf="summaryError" class="mt-2 text-red-300 text-xs text-center">{{ summaryError }}</p>
+    </div>
+
+    <div class="relative z-10 p-8 border-t border-white/10">
+      <div *ngIf="isLoggedIn" class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+          {{ currentUsername.charAt(0).toUpperCase() }}
+        </div>
+        <div>
+          <p class="text-white font-semibold text-sm">{{ currentUsername }}</p>
+          <p class="text-white/50 text-xs">Connecté</p>
+        </div>
+        <div class="ml-auto w-2 h-2 bg-green-400 rounded-full"></div>
+      </div>
+      <div *ngIf="!isLoggedIn" class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white/50 text-lg">👁️</div>
+        <div>
+          <p class="text-white/70 text-sm font-medium">Mode lecture</p>
+          <button (click)="goToLogin()" class="text-primary-light text-xs hover:text-white transition-colors underline">Se connecter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Panneau droit : zone de chat ── -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden" style="background: #faf8f5;">
+
+    <!-- Header mobile uniquement -->
+    <div class="lg:hidden bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm flex-shrink-0">
+      <div>
+        <h2 class="font-serif font-bold text-dark text-base">{{ session.name }}</h2>
+        <div class="flex items-center gap-2 mt-0.5">
+          <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse inline-block"></span>
+          <span class="text-xs text-gray-400">{{ timeRemainingLabel }} · Code {{ session.code }}</span>
+        </div>
+      </div>
+      <div *ngIf="isLoggedIn" class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold">
+        {{ currentUsername.charAt(0).toUpperCase() }}
+      </div>
+    </div>
+
+    <!-- Bandeaux statut -->
+    <div *ngIf="sessionExpired" class="bg-amber-50 border-b border-amber-200 px-6 py-2.5 text-center text-sm text-amber-700 font-medium flex-shrink-0">
+      Cette session de chat est terminée. Vous êtes en mode lecture.
+    </div>
+    <div *ngIf="!wsConnected && !sessionExpired" class="bg-red-50 border-b border-red-200 px-6 py-2 flex items-center justify-center gap-2 text-sm text-red-600 font-medium flex-shrink-0">
+      <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse inline-block"></span>
+      Connexion perdue — reconnexion en cours…
+    </div>
+
+    <!-- Zone messages -->
+    <div class="relative flex-1 overflow-hidden">
+      <div #messagesContainer (scroll)="onMessagesScroll($event)"
+           class="h-full overflow-y-auto px-6 py-6 space-y-2">
+
+        <div class="flex flex-col items-center gap-3 mb-6">
+          <button *ngIf="hasMore" (click)="loadMoreMessages()" [disabled]="loadingMore"
+                  class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-500 hover:border-primary hover:text-primary transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg *ngIf="!loadingMore" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 11l7-7 7 7M5 19l7-7 7 7"/>
+            </svg>
+            <svg *ngIf="loadingMore" class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            {{ loadingMore ? 'Chargement…' : 'Charger les messages précédents' }}
+          </button>
+          <div *ngIf="!hasMore" class="flex items-center gap-3 w-full">
+            <div class="flex-1 h-px bg-gray-200"></div>
+            <span class="text-xs text-gray-400 font-medium px-2">🎬 Début du chat</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+          </div>
+        </div>
+
+        <div *ngIf="messages.length === 0" class="text-center text-gray-400 text-sm mt-16">
+          <div class="text-5xl mb-4">🍿</div>
+          <p class="font-serif text-lg text-gray-500">Aucun message pour l'instant.</p>
+          <p class="text-xs mt-2">Soyez le premier à réagir !</p>
+        </div>
+
+        <!-- ── Message ── -->
+        <div *ngFor="let msg of messages"
+             [class]="isMyMessage(msg) ? 'flex justify-end group mb-2' : 'flex justify-start group mb-2'">
+
+          <div class="flex flex-col max-w-sm xl:max-w-md"
+               [class.items-end]="isMyMessage(msg)"
+               [class.items-start]="!isMyMessage(msg)">
+
+            <div class="flex items-end gap-2" [class.flex-row-reverse]="isMyMessage(msg)">
+
+              <div *ngIf="!isMyMessage(msg)"
+                   class="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold flex-shrink-0 mb-0.5">
+                {{ msg.username.charAt(0).toUpperCase() }}
+              </div>
+
+              <div>
+                <!-- Message bot -->
+                <div *ngIf="msg.username === '🎬 RawaBot'"
+                     class="bg-gradient-to-br from-dark to-primary text-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-md max-w-xs lg:max-w-md border border-primary/30">
+                  <p class="text-xs font-bold mb-1.5 text-accent flex items-center gap-1">
+                    🎬 RawaBot <span class="text-white/40 font-normal">· Assistant IA</span>
+                  </p>
+                  <p class="text-sm leading-relaxed">{{ msg.content }}</p>
+                  <p class="text-xs mt-1.5 opacity-50 text-right">{{ msg.createdAt | date:'HH:mm' }}</p>
+                </div>
+
+                <!-- Message supprimé -->
+                <div *ngIf="msg.username !== '🎬 RawaBot' && msg.deleted"
+                     class="flex items-center gap-1.5 text-gray-400 text-sm italic px-4 py-3 bg-gray-100 rounded-2xl border border-gray-200">
+                  <span>🚫</span>
+                  <span>Message supprimé</span>
+                </div>
+
+                <!-- Mode édition -->
+                <div *ngIf="msg.username !== '🎬 RawaBot' && !msg.deleted && editingMsgId === msg.id" class="flex flex-col gap-2 min-w-48">
+                  <textarea [(ngModel)]="editContent"
+                    (keydown.enter)="$event.preventDefault(); confirmEdit(msg)"
+                    (keydown.escape)="cancelEdit()"
+                    rows="2"
+                    class="text-sm border border-primary rounded-xl px-3 py-2 focus:outline-none resize-none">
+                  </textarea>
+                  <div class="flex gap-1.5 justify-end">
+                    <button (click)="cancelEdit()" class="text-xs px-3 py-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">Annuler</button>
+                    <button (click)="confirmEdit(msg)" class="text-xs px-3 py-1 rounded-lg bg-primary text-white hover:bg-primary-light">Enregistrer</button>
+                  </div>
+                </div>
+
+                <!-- Contenu normal -->
+                <div *ngIf="msg.username !== '🎬 RawaBot' && !msg.deleted && editingMsgId !== msg.id"
+                     [class]="isMyMessage(msg)
+                       ? 'bg-primary text-white rounded-2xl rounded-br-sm px-4 py-3 shadow-sm'
+                       : 'bg-white text-dark rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm border border-gray-100'">
+                  <p *ngIf="!isMyMessage(msg)" class="text-xs font-bold mb-1.5 text-primary">{{ msg.username }}</p>
+
+                  <!-- ⚠️ Spoiler -->
+                  <div *ngIf="msg.spoiler && !revealedSpoilers.has(msg.id)"
+                       class="flex flex-col items-center justify-center gap-2 py-3 px-2 rounded-xl"
+                       style="background: rgba(0,0,0,0.15); backdrop-filter: blur(2px);">
+                    <span class="text-2xl">🙈</span>
+                    <span class="text-xs font-bold tracking-wide uppercase opacity-90">Spoiler détecté</span>
+                    <button (click)="revealSpoiler(msg.id, $event)"
+                      style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);"
+                      class="text-xs px-3 py-1 rounded-full hover:opacity-80 transition-opacity font-medium">
+                      👁️ Voir quand même
+                    </button>
+                  </div>
+
+                  <!-- Contenu révélé -->
+                  <p *ngIf="!msg.spoiler || revealedSpoilers.has(msg.id)" class="text-sm leading-relaxed">{{ msg.content }}</p>
+
+                  <div class="flex items-center justify-end gap-1.5 mt-1.5">
+                    <span *ngIf="msg.spoiler" class="text-xs opacity-40 italic">⚠️ spoiler</span>
+                    <span *ngIf="msg.edited && !msg.deleted" class="text-xs opacity-50 italic">✏️ modifié</span>
+                    <span class="text-xs opacity-50">{{ msg.createdAt | date:'HH:mm' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actions hover -->
+              <div class="flex items-center gap-1 self-center opacity-0 group-hover:opacity-100 transition-opacity"
+                   [class.flex-row-reverse]="isMyMessage(msg)">
+                <div *ngIf="!msg.deleted" class="relative">
+                  <button (click)="togglePicker(msg.id, $event)"
+                    class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-400 flex items-center justify-center text-sm transition-all"
+                    [class.opacity-100]="activePickerMsgId === msg.id">😊</button>
+                  <div *ngIf="activePickerMsgId === msg.id" (click)="$event.stopPropagation()"
+                       class="absolute z-30 bottom-9 flex gap-1 bg-white border border-gray-200 rounded-2xl shadow-2xl px-2 py-1.5 whitespace-nowrap"
+                       [class.right-0]="isMyMessage(msg)" [class.left-0]="!isMyMessage(msg)">
+                    <button *ngFor="let emoji of EMOJIS" (click)="onReact(msg.id, emoji, $event)"
+                            class="text-xl hover:scale-125 transition-transform px-1 py-0.5 rounded-lg hover:bg-gray-100 leading-none">{{ emoji }}</button>
+                  </div>
+                </div>
+                <div *ngIf="isMyMessage(msg) && !msg.deleted && msg.username !== '🎬 RawaBot'" class="relative">
+                  <button (click)="toggleMenu(msg.id, $event)"
+                    class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center text-xs transition-all"
+                    [class.bg-gray-200]="activeMenuMsgId === msg.id">···</button>
+                  <div *ngIf="activeMenuMsgId === msg.id" (click)="$event.stopPropagation()"
+                       class="absolute z-30 bottom-9 right-0 bg-white border border-gray-200 rounded-xl shadow-2xl py-1 whitespace-nowrap min-w-44">
+                    <button (click)="startEdit(msg, $event)" class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                      <span>✏️</span><span>Modifier</span>
+                    </button>
+                    <div class="h-px bg-gray-100 mx-2"></div>
+                    <button (click)="confirmUnsend(msg, false, $event)" class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                      <span>🙈</span><span>Supprimer pour moi</span>
+                    </button>
+                    <button (click)="confirmUnsend(msg, true, $event)" class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                      <span>🚫</span><span>Supprimer pour tous</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Réactions -->
+            <div *ngIf="!msg.deleted && getReactionEntries(msg.id).length > 0"
+                 class="flex flex-wrap gap-1 mt-1.5"
+                 [class.justify-end]="isMyMessage(msg)"
+                 [class.pl-9]="!isMyMessage(msg)">
+              <div *ngFor="let r of getReactionEntries(msg.id)" class="relative">
+                <button (click)="toggleTooltip(msg.id + ':' + r.emoji, $event)"
+                  (dblclick)="onReact(msg.id, r.emoji, $event)"
+                  class="flex items-center gap-1 bg-white border border-gray-200 rounded-full px-2.5 py-0.5 text-xs hover:border-primary hover:bg-primary/5 transition-all shadow-sm"
+                  [class.border-primary]="activeTooltipKey === (msg.id + ':' + r.emoji)"
+                  [class.bg-primary]="activeTooltipKey === (msg.id + ':' + r.emoji)">
+                  <span class="text-sm leading-none">{{ r.emoji }}</span>
+                  <span class="font-semibold"
+                    [class.text-white]="activeTooltipKey === (msg.id + ':' + r.emoji)"
+                    [class.text-gray-600]="activeTooltipKey !== (msg.id + ':' + r.emoji)">{{ r.count }}</span>
+                </button>
+                <div *ngIf="activeTooltipKey === (msg.id + ':' + r.emoji)" (click)="$event.stopPropagation()"
+                     class="absolute z-40 bottom-9 bg-dark text-white text-xs rounded-xl px-3 py-2.5 shadow-2xl whitespace-nowrap border border-white/10"
+                     [class.right-0]="isMyMessage(msg)" [class.left-0]="!isMyMessage(msg)">
+                  <div class="font-semibold mb-1.5 text-white/60 text-xs uppercase tracking-wide">{{ r.emoji }} · {{ r.count }} réaction{{ r.count > 1 ? 's' : '' }}</div>
+                  <div *ngFor="let name of r.names" class="flex items-center gap-1.5 leading-relaxed">
+                    <span class="w-1.5 h-1.5 bg-primary-light rounded-full inline-block"></span>{{ name }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div *ngIf="typingLabel" class="flex justify-start mt-2 pl-9">
+          <div class="bg-white text-gray-400 text-xs italic rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm border border-gray-100 flex items-center gap-2">
+            <span class="flex gap-0.5">
+              <span class="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+              <span class="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+              <span class="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+            </span>
+            {{ typingLabel }}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bouton scroll -->
+      <button *ngIf="showScrollButton" (click)="scrollToLatest()"
+              class="absolute bottom-4 right-4 bg-primary text-white rounded-full w-11 h-11 flex items-center justify-center shadow-lg hover:bg-primary-light transition-all">
+        <span *ngIf="newMessageCount > 0"
+              class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+          {{ newMessageCount > 9 ? '9+' : newMessageCount }}
+        </span>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- ✅ Zone de saisie — EN DEHORS de la zone messages -->
+    <div class="flex-shrink-0 bg-white border-t border-gray-100 px-6 py-4">
+      <div *ngIf="!sessionExpired" class="flex items-end gap-3">
+        <!-- ✅ BUG 3 CORRIGÉ : suggestion @rawabot -->
+        <div class="flex-1 relative">
+          <div *ngIf="showBotSuggestion"
+            class="absolute bottom-full mb-2 left-0 bg-dark text-white rounded-xl shadow-xl px-4 py-2.5 flex items-center gap-3 cursor-pointer hover:bg-primary transition-all z-10 whitespace-nowrap"
+            (click)="insertBotMention(); $event.stopPropagation()">
+            <span class="text-lg">🎬</span>
+            <div>
+              <p class="text-xs font-bold">@rawabot</p>
+              <p class="text-xs opacity-60">Poser une question sur le film</p>
+            </div>
+          </div>
+          <textarea #messageInput [(ngModel)]="newMessage"
+            (keydown)="onKeyEnter($event)"
+            (focus)="onInputFocus()"
+            (input)="autoResize($event); onTyping()"
+            [placeholder]="isLoggedIn ? 'Partagez votre ressenti… ou tapez @rawabot pour poser une question sur le film' : 'Connectez-vous pour participer'"
+            [readonly]="!isLoggedIn"
+            rows="1"
+            style="overflow-y: hidden; max-height: 120px;"
+            class="w-full resize-none border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 transition-all bg-gray-50 focus:bg-white"
+            [class.cursor-pointer]="!isLoggedIn">
+          </textarea>
+        </div>
+        <button (click)="sendMessage()" [disabled]="!isLoggedIn || !newMessage.trim() || !wsConnected"
+          class="w-11 h-11 bg-primary text-white rounded-2xl flex items-center justify-center hover:bg-primary-light transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 shadow-sm">
+          <svg class="w-5 h-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+        </button>
+      </div>
+      <div *ngIf="sessionExpired" class="flex items-center justify-center gap-2 py-2 text-sm text-gray-400">
+        <span>🎬</span> Le chat est terminé
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ POPUP CONFIRMATION SUPPRESSION ═══ -->
+<div *ngIf="confirmDelete" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4" (click)="cancelDelete()">
+  <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" (click)="$event.stopPropagation()">
+    <div class="text-center mb-5">
+      <div class="text-4xl mb-3">{{ confirmDelete.forEveryone ? '🚫' : '🙈' }}</div>
+      <h3 class="font-serif text-lg font-bold text-dark">
+        {{ confirmDelete.forEveryone ? 'Supprimer pour tous ?' : 'Supprimer pour moi ?' }}
+      </h3>
+      <p class="text-gray-500 text-sm mt-2">
+        {{ confirmDelete.forEveryone
+          ? 'Ce message sera remplacé par "Message supprimé" pour tout le monde.'
+          : 'Ce message disparaîtra uniquement de votre affichage.' }}
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <button (click)="cancelDelete()" class="flex-1 py-2.5 border border-gray-200 text-gray-600 font-medium rounded-xl hover:bg-gray-50 transition-all text-sm">Annuler</button>
+      <button (click)="executeDelete()"
+        class="flex-1 py-2.5 font-bold rounded-xl transition-all text-sm text-white"
+        [class.bg-red-500]="confirmDelete.forEveryone"
+        [class.hover:bg-red-600]="confirmDelete.forEveryone"
+        [class.bg-gray-600]="!confirmDelete.forEveryone"
+        [class.hover:bg-gray-700]="!confirmDelete.forEveryone">
+        Supprimer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ POPUP LOGIN ═══ -->
+<div *ngIf="showLoginPopup" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4" (click)="closeLoginPopup()">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm" (click)="$event.stopPropagation()">
+    <div class="text-center mb-6">
+      <div class="text-4xl mb-3">🔐</div>
+      <h3 class="font-serif text-xl font-bold text-dark">Connexion requise</h3>
+      <p class="text-gray-500 text-sm mt-2">Vous pouvez lire les messages sans compte, mais pour participer vous devez être connecté.</p>
+    </div>
+    <div class="space-y-3">
+      <button (click)="goToLogin()" class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all text-sm">Se connecter</button>
+      <button (click)="closeLoginPopup()" class="w-full py-3 border border-gray-200 text-gray-600 font-medium rounded-xl hover:bg-gray-50 transition-all text-sm">Continuer en lecture seule</button>
+    </div>
+  </div>
+</div>

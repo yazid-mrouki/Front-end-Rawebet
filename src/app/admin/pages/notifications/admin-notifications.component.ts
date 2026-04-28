@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { PLATFORM_ID } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { ToastService } from '../../../core/services/toast';
+import { ToastService } from '../../../core/services/toast.service';
 import { NotificationService, Notification } from '../../../core/services/notification.service';
 
 type TargetType = 'all' | 'subscriber' | 'user';

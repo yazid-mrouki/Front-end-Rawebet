@@ -1,61 +1,289 @@
-<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div><h1 class="font-serif text-2xl font-bold text-dark">User Management</h1><p class="text-sm text-gray-400 mt-1">{{ users.length }} registered users</p></div>
-    <div class="flex items-center gap-3">
-      <button (click)="showAddAdminForm = !showAddAdminForm" class="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-colors">Add Admin</button>
-      <button class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors">Export Users</button>
+<div class="p-6 lg:p-8 min-h-full space-y-5" style="background:#faf8f5;">
+
+  <!-- Header -->
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <div style="width:6px;height:6px;background:#d99a2d;border-radius:50%;"></div>
+        <span style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Administration</span>
+      </div>
+      <h1 class="font-serif text-2xl lg:text-3xl font-bold" style="color:#1a1a2e;">Gestion des utilisateurs</h1>
+      <p style="color:#6b7280;font-size:13px;margin-top:3px;">{{ totalElements }} utilisateurs — page {{ currentPage + 1 }} / {{ totalPages }}</p>
     </div>
+    <button (click)="showAddAdminForm = !showAddAdminForm"
+            style="padding:10px 20px;background:#7b1f27;color:white;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
+      + Ajouter un sous-admin
+    </button>
   </div>
 
-  <div *ngIf="showAddAdminForm" class="bg-white rounded-2xl border border-gray-100 p-6">
-    <h3 class="font-semibold mb-4">Create Admin</h3>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-      <input [(ngModel)]="newAdminForm.nom" placeholder="Full name" class="px-3 py-2 border rounded" />
-      <input [(ngModel)]="newAdminForm.email" placeholder="Email" class="px-3 py-2 border rounded" />
-      <input [(ngModel)]="newAdminForm.password" placeholder="Password" type="password" class="px-3 py-2 border rounded" />
-      <select [(ngModel)]="newAdminForm.role" class="px-3 py-2 border rounded">
-        <option *ngFor="let r of availableRoles" [value]="r">{{ r }}</option>
-      </select>
-      <div class="col-span-3 flex gap-2">
-        <button (click)="addAdmin()" class="px-4 py-2 bg-primary text-white rounded">Create</button>
-        <button (click)="showAddAdminForm = false" class="px-4 py-2 border rounded">Cancel</button>
-      </div>
-    </div>
-    <p *ngIf="addAdminMessage" class="text-green-600 mt-3">{{ addAdminMessage }}</p>
-    <p *ngIf="addAdminError" class="text-red-600 mt-3">{{ addAdminError }}</p>
+  <!-- Messages -->
+  <div *ngIf="pageMessage" style="padding:12px 16px;border-radius:12px;background:#d1fae5;color:#065f46;font-size:13px;border:0.5px solid #a7f3d0;display:flex;justify-content:space-between;align-items:center;">
+    {{ pageMessage }}
+    <button (click)="pageMessage=''" style="background:none;border:none;color:#059669;cursor:pointer;font-size:16px;line-height:1;">✕</button>
   </div>
+  <div *ngIf="pageError" style="padding:12px 16px;border-radius:12px;background:#fee2e2;color:#991b1b;font-size:13px;border:0.5px solid #fecaca;display:flex;justify-content:space-between;align-items:center;">
+    {{ pageError }}
+    <button (click)="pageError=''" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:16px;line-height:1;">✕</button>
+  </div>
+
+  <!-- Formulaire ajout sous-admin -->
+  <div *ngIf="showAddAdminForm" style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;padding:22px;">
+    <h3 style="font-weight:700;color:#1a1a2e;font-size:15px;margin:0 0 16px;">Créer un sous-admin</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3" style="margin-bottom:12px;">
+      <input [(ngModel)]="newAdminForm.nom"      placeholder="Nom complet"
+             style="padding:9px 12px;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;outline:none;background:#faf8f5;"/>
+      <input [(ngModel)]="newAdminForm.email"    placeholder="Email" type="email"
+             style="padding:9px 12px;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;outline:none;background:#faf8f5;"/>
+      <input [(ngModel)]="newAdminForm.password" placeholder="Mot de passe" type="password"
+             style="padding:9px 12px;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;outline:none;background:#faf8f5;"/>
+      <select multiple [(ngModel)]="newAdminForm.role"
+              style="padding:9px 12px;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;outline:none;background:#faf8f5;height:96px;"
+              class="md:col-span-3">
+        <option *ngFor="let role of availableRoles" [value]="role">{{ role }}</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button (click)="addAdmin()"
+              style="padding:9px 20px;background:#7b1f27;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">Créer</button>
+      <button (click)="showAddAdminForm = false"
+              style="padding:9px 20px;background:#faf8f5;color:#374151;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;cursor:pointer;">Annuler</button>
+    </div>
+    <p *ngIf="addAdminMessage" style="color:#059669;font-size:12px;margin-top:8px;">{{ addAdminMessage }}</p>
+    <p *ngIf="addAdminError"   style="color:#dc2626;font-size:12px;margin-top:8px;">{{ addAdminError }}</p>
+  </div>
+
+  <!-- Filtres -->
   <div class="flex flex-col sm:flex-row gap-3">
-    <input [(ngModel)]="searchQuery" type="text" placeholder="Search by name or email..." class="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary" />
-    <select [(ngModel)]="selectedRole" class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-600">
-      <option value="all">All Roles</option><option value="Admin">Admin</option><option value="Club Leader">Club Leader</option><option value="Member">Member</option>
+    <input [(ngModel)]="searchQuery" type="text" placeholder="Rechercher par nom ou email..."
+           style="flex:1;padding:9px 14px;background:white;border:0.5px solid #e8e4dd;border-radius:12px;font-size:13px;outline:none;min-width:240px;"/>
+    <select [(ngModel)]="selectedRole"
+            style="padding:9px 14px;background:white;border:0.5px solid #e8e4dd;border-radius:12px;font-size:13px;outline:none;color:#374151;">
+      <option value="all">Tous les rôles</option>
+      <option *ngFor="let role of roleFilterOptions" [value]="role">{{ role }}</option>
     </select>
   </div>
-  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead><tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
-          <th class="px-6 py-3 font-medium">User</th><th class="px-4 py-3 font-medium">Role</th><th class="px-4 py-3 font-medium">Plan</th><th class="px-4 py-3 font-medium">Tier</th><th class="px-4 py-3 font-medium">Joined</th><th class="px-4 py-3 font-medium">Status</th><th class="px-4 py-3 font-medium text-right">Actions</th>
-        </tr></thead>
+
+  <!-- Tableau -->
+  <div style="background:white;border-radius:16px;border:0.5px solid #e8e4dd;overflow:hidden;">
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+        <tr style="background:#faf8f5;border-bottom:0.5px solid #e8e4dd;">
+          <th style="padding:10px 20px;text-align:left;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Utilisateur</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Rôle</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Statut</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Ban jusqu'au</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Inscrit le</th>
+          <th style="padding:10px 14px;text-align:right;font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Actions</th>
+        </tr>
+        </thead>
         <tbody>
-          <tr *ngFor="let u of filteredUsers" class="border-b border-gray-50 hover:bg-gray-50/50">
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center"><span class="text-primary text-xs font-semibold">{{ u.name.charAt(0) }}</span></div>
-                <div><div class="text-dark font-medium text-xs">{{ u.name }}</div><div class="text-gray-400 text-[10px]">{{ u.email }}</div></div>
+        <tr *ngIf="loading">
+          <td colspan="6" style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Chargement...</td>
+        </tr>
+
+        <tr *ngFor="let user of filteredUsers" style="border-bottom:0.5px solid #f5f2ee;">
+
+          <!-- Utilisateur -->
+          <td style="padding:14px 20px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;border-radius:99px;background:rgba(123,31,39,0.1);display:flex;align-items:center;justify-content:center;font-weight:700;color:#7b1f27;font-size:13px;flex-shrink:0;">
+                {{ user.name.charAt(0).toUpperCase() }}
               </div>
-            </td>
-            <td class="px-4 py-4"><span [class]="getRoleClass(u.role)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ u.role }}</span></td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ u.plan }}</td>
-            <td class="px-4 py-4 text-xs font-semibold" [ngClass]="getTierColor(u.tier)">{{ u.tier }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ u.joined }}</td>
-            <td class="px-4 py-4"><span [class]="getStatusClass(u.status)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ u.status }}</span></td>
-            <td class="px-4 py-4 text-right space-x-2">
-              <button *ngIf="u.status === 'Active'" (click)="banUser(u.id)" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100">Ban</button>
-              <button *ngIf="u.status !== 'Active'" (click)="unbanUser(u.id)" class="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg text-xs font-semibold hover:bg-green-100">Unban</button>
-            </td>
-          </tr>
+              <div>
+                <div style="font-weight:600;color:#1a1a2e;font-size:13px;display:flex;align-items:center;gap:6px;">
+                  {{ user.name }}
+                  <span *ngIf="user.isCurrentUser"
+                        style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:99px;background:rgba(123,31,39,0.1);color:#7b1f27;">Vous</span>
+                </div>
+                <div style="font-size:11px;color:#9ca3af;">{{ user.email }}</div>
+                <div *ngIf="user.banReason && user.status === 'Suspended'"
+                     style="font-size:10px;color:#f87171;margin-top:1px;font-style:italic;">Raison : {{ user.banReason }}</div>
+              </div>
+            </div>
+          </td>
+
+          <!-- Rôle -->
+          <td style="padding:14px;">
+            <ng-container *ngIf="editingUserId !== user.id; else editRolesTpl">
+                <span style="font-size:10px;font-weight:600;padding:3px 10px;border-radius:99px;"
+                      [class]="getRoleClass(user.roleLabel)">
+                  {{ user.roleLabel }}
+                </span>
+            </ng-container>
+            <ng-template #editRolesTpl>
+              <select multiple [(ngModel)]="editRoles"
+                      style="font-size:11px;border:0.5px solid #e8e4dd;border-radius:8px;padding:4px;background:#faf8f5;height:80px;width:100%;">
+                <option *ngFor="let r of editableRoleOptions" [value]="r">{{ r }}</option>
+              </select>
+            </ng-template>
+          </td>
+
+          <!-- Statut -->
+          <td style="padding:14px;">
+              <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;"
+                    [class]="getStatusClass(user.status)">
+                {{ user.status }}
+              </span>
+          </td>
+
+          <!-- Ban until -->
+          <td style="padding:14px;font-size:12px;">
+            <ng-container *ngIf="user.status === 'Suspended'">
+              <span *ngIf="user.banUntil" style="color:#f97316;font-weight:600;">{{ formatBanUntil(user.banUntil) }}</span>
+              <span *ngIf="!user.banUntil" style="color:#dc2626;font-weight:600;">Permanent</span>
+            </ng-container>
+            <span *ngIf="user.status === 'Active'" style="color:#d1d5db;">—</span>
+          </td>
+
+          <!-- Date -->
+          <td style="padding:14px;font-size:12px;color:#6b7280;">{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
+
+          <!-- Actions -->
+          <td style="padding:14px;text-align:right;">
+            <div style="display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;align-items:center;">
+
+              <!-- Édition rôles -->
+              <button *ngIf="editingUserId !== user.id && canEditRoles(user)"
+                      (click)="startRoleEdit(user)" [disabled]="actionLoadingId === user.id"
+                      style="padding:5px 12px;background:rgba(99,102,241,0.08);color:#4338ca;border:0.5px solid rgba(99,102,241,0.2);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;">
+                Rôles
+              </button>
+              <button *ngIf="editingUserId === user.id"
+                      (click)="saveRoleEdit(user)" [disabled]="actionLoadingId === user.id"
+                      style="padding:5px 12px;background:#4338ca;color:white;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;">
+                {{ actionLoadingId === user.id ? '...' : 'Sauver' }}
+              </button>
+              <button *ngIf="editingUserId === user.id"
+                      (click)="cancelRoleEdit()"
+                      style="padding:5px 12px;background:#faf8f5;color:#374151;border:0.5px solid #e8e4dd;border-radius:8px;font-size:11px;cursor:pointer;">
+                Annuler
+              </button>
+
+              <!-- Ban -->
+              <button *ngIf="canBan(user)"
+                      (click)="openBanModal(user)" [disabled]="actionLoadingId === user.id"
+                      style="padding:5px 12px;background:rgba(220,38,38,0.06);color:#991b1b;border:0.5px solid rgba(220,38,38,0.2);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;"
+                      [style.opacity]="actionLoadingId===user.id ? '0.5' : '1'">
+                🚫 Bannir
+              </button>
+
+              <!-- Unban -->
+              <button *ngIf="canUnban(user)"
+                      (click)="unbanUser(user)" [disabled]="actionLoadingId === user.id"
+                      style="padding:5px 12px;background:rgba(16,185,129,0.06);color:#065f46;border:0.5px solid rgba(16,185,129,0.2);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;"
+                      [style.opacity]="actionLoadingId===user.id ? '0.5' : '1'">
+                ✅ Débannir
+              </button>
+
+              <!-- Supprimer -->
+              <button *ngIf="editingUserId !== user.id && canDeleteUser(user)"
+                      (click)="deleteUser(user)" [disabled]="actionLoadingId === user.id"
+                      style="padding:5px 12px;background:#faf8f5;color:#dc2626;border:0.5px solid #fecaca;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;"
+                      [style.opacity]="actionLoadingId===user.id ? '0.5' : '1'">
+                Supprimer
+              </button>
+
+              <span *ngIf="!canBan(user) && !canUnban(user) && editingUserId !== user.id"
+                    style="font-size:11px;color:#d1d5db;">—</span>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="!loading && filteredUsers.length === 0">
+          <td colspan="6" style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Aucun utilisateur trouvé.</td>
+        </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1" style="padding:14px 20px;border-top:0.5px solid #f0ece6;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:12px;color:#9ca3af;">{{ totalElements }} utilisateurs au total</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 0"
+                style="padding:6px 14px;background:#faf8f5;border:0.5px solid #e8e4dd;border-radius:8px;font-size:12px;cursor:pointer;"
+                [style.opacity]="currentPage===0 ? '0.4' : '1'">← Précédent</button>
+        <span style="font-size:12px;color:#6b7280;padding:0 8px;">{{ currentPage + 1 }} / {{ totalPages }}</span>
+        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage >= totalPages - 1"
+                style="padding:6px 14px;background:#faf8f5;border:0.5px solid #e8e4dd;border-radius:8px;font-size:12px;cursor:pointer;"
+                [style.opacity]="currentPage>=totalPages-1 ? '0.4' : '1'">Suivant →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BAN -->
+<div *ngIf="showBanModal"
+     style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);padding:16px;">
+  <div style="background:white;border-radius:18px;width:100%;max-width:480px;overflow:hidden;border:0.5px solid #e8e4dd;">
+
+    <div style="background:#7b1f27;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <h3 style="color:white;font-weight:700;font-size:16px;margin:0 0 3px;">🚫 Bannir un utilisateur</h3>
+        <p style="color:rgba(255,255,255,0.6);font-size:12px;margin:0;">{{ banTargetUser?.name }} — {{ banTargetUser?.email }}</p>
+      </div>
+      <button (click)="closeBanModal()" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:20px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+
+    <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px;">
+
+      <!-- Durée -->
+      <div>
+        <label style="display:block;font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:8px;">Durée du ban</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">
+          <button *ngFor="let p of banPresets"
+                  (click)="banForm.preset = $any(p.minutes); banForm.useCustomDate = false"
+                  [style]="!banForm.useCustomDate && banForm.preset === p.minutes
+                    ? 'background:rgba(123,31,39,0.1);border:1px solid rgba(123,31,39,0.3);color:#7b1f27;padding:7px 4px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;text-align:center;'
+                    : 'background:#faf8f5;border:0.5px solid #e8e4dd;color:#374151;padding:7px 4px;border-radius:8px;font-size:11px;cursor:pointer;text-align:center;'">
+            {{ p.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Date perso -->
+      <div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#374151;font-weight:500;">
+          <input type="checkbox" [(ngModel)]="banForm.useCustomDate"
+                 style="accent-color:#7b1f27;width:15px;height:15px;"/>
+          Date/heure personnalisée
+        </label>
+        <div *ngIf="banForm.useCustomDate" style="margin-top:8px;">
+          <input type="datetime-local" [(ngModel)]="banForm.customDate"
+                 style="width:100%;padding:8px 12px;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;outline:none;background:#faf8f5;box-sizing:border-box;"/>
+        </div>
+      </div>
+
+      <!-- Résumé -->
+      <div style="background:rgba(217,154,45,0.07);border:0.5px solid rgba(217,154,45,0.25);border-radius:10px;padding:10px 14px;font-size:12px;color:#374151;">
+        <span style="font-weight:600;color:#b45309;">Durée sélectionnée :</span>
+        <span style="color:#92400e;margin-left:6px;">{{ getSelectedPresetLabel() }}</span>
+      </div>
+
+      <!-- Raison -->
+      <div>
+        <label style="display:block;font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:6px;">
+          Raison du ban <span style="color:#dc2626;">*</span>
+        </label>
+        <textarea [(ngModel)]="banForm.reason" rows="3"
+                  placeholder="Décrivez le comportement inapproprié..."
+                  style="width:100%;padding:9px 12px;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;outline:none;background:#faf8f5;resize:none;box-sizing:border-box;"></textarea>
+        <p style="font-size:11px;color:#9ca3af;margin-top:4px;">L'utilisateur sera notifié par email avec cette raison.</p>
+      </div>
+
+      <!-- Boutons -->
+      <div style="display:flex;gap:8px;padding-top:4px;">
+        <button (click)="closeBanModal()"
+                style="flex:1;padding:10px;background:#faf8f5;border:0.5px solid #e8e4dd;border-radius:10px;font-size:13px;cursor:pointer;">
+          Annuler
+        </button>
+        <button (click)="confirmBan()" [disabled]="!banForm.reason.trim()"
+                style="flex:1;padding:10px;background:#7b1f27;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;"
+                [style.opacity]="!banForm.reason.trim() ? '0.5' : '1'">
+          🚫 Confirmer le ban
+        </button>
+      </div>
     </div>
   </div>
 </div>

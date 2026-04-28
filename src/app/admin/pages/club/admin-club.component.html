@@ -1,0 +1,670 @@
+<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
+
+  <!-- ═══ Header ═══ -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="font-serif text-2xl lg:text-3xl font-bold text-dark">Club Rawabet</h1>
+      <p class="text-gray-500 text-sm mt-1">Administration complète du club culturel</p>
+    </div>
+    <button (click)="loadAll()"
+            class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+      🔄 Refresh
+    </button>
+  </div>
+
+  <!-- ═══ Global loading ═══ -->
+  <div *ngIf="globalLoading" class="bg-white rounded-2xl border border-gray-100 p-20 text-center">
+    <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+    <p class="text-gray-400 text-sm">Loading club data...</p>
+  </div>
+
+  <ng-container *ngIf="!globalLoading">
+
+    <!-- ═══ KPI Cards ═══ -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <div class="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg transition-all">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-xl">👥</div>
+          <span class="text-xs font-semibold text-green-500 bg-green-50 px-2 py-0.5 rounded-full">Active</span>
+        </div>
+        <div class="text-2xl font-bold text-dark">{{ activeMembers.length }}</div>
+        <div class="text-xs text-gray-400 mt-1">Active members</div>
+        <div class="text-[10px] text-gray-300 mt-0.5">{{ leftMembers.length }} former · {{ removedMembers.length }} removed</div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg transition-all">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-xl">🎭</div>
+          <span class="text-xs font-semibold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">Total</span>
+        </div>
+        <div class="text-2xl font-bold text-dark">{{ events.length }}</div>
+        <div class="text-xs text-gray-400 mt-1">Events</div>
+        <div class="text-[10px] text-gray-300 mt-0.5">{{ upcomingEvents.length }} upcoming</div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg transition-all">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-xl">⏳</div>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                [class.text-red-500]="pendingRequests.length > 0"
+                [class.bg-red-50]="pendingRequests.length > 0"
+                [class.text-gray-400]="pendingRequests.length === 0"
+                [class.bg-gray-100]="pendingRequests.length === 0">
+            {{ pendingRequests.length > 0 ? 'Action needed' : 'All clear' }}
+          </span>
+        </div>
+        <div class="text-2xl font-bold text-dark">{{ pendingRequests.length }}</div>
+        <div class="text-xs text-gray-400 mt-1">Pending requests</div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg transition-all">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-xl">🎟️</div>
+          <span class="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Fill rate</span>
+        </div>
+        <div class="text-2xl font-bold text-dark">{{ globalFillRate }}%</div>
+        <div class="text-xs text-gray-400 mt-1">Avg. seat occupancy</div>
+        <div class="text-[10px] text-gray-300 mt-0.5">{{ totalReservedPlaces }} / {{ totalMaxPlaces }} seats</div>
+      </div>
+
+    </div>
+
+    <!-- ═══ Tabs ═══ -->
+    <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+
+      <div class="flex border-b border-gray-100 overflow-x-auto">
+        <button (click)="setTab('dashboard')"
+                class="flex items-center gap-2 px-6 py-4 text-sm whitespace-nowrap transition-colors"
+                [class.text-primary]="activeTab === 'dashboard'"
+                [class.font-semibold]="activeTab === 'dashboard'"
+                [class.border-b-2]="activeTab === 'dashboard'"
+                [class.border-primary]="activeTab === 'dashboard'"
+                [class.text-gray-500]="activeTab !== 'dashboard'">
+          📊 Dashboard
+        </button>
+        <button (click)="setTab('requests')"
+                class="flex items-center gap-2 px-6 py-4 text-sm whitespace-nowrap transition-colors"
+                [class.text-primary]="activeTab === 'requests'"
+                [class.font-semibold]="activeTab === 'requests'"
+                [class.border-b-2]="activeTab === 'requests'"
+                [class.border-primary]="activeTab === 'requests'"
+                [class.text-gray-500]="activeTab !== 'requests'">
+          📋 Join Requests
+          <span *ngIf="pendingRequests.length > 0"
+                class="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 font-bold ml-1">
+            {{ pendingRequests.length }}
+          </span>
+        </button>
+        <button (click)="setTab('members')"
+                class="flex items-center gap-2 px-6 py-4 text-sm whitespace-nowrap transition-colors"
+                [class.text-primary]="activeTab === 'members'"
+                [class.font-semibold]="activeTab === 'members'"
+                [class.border-b-2]="activeTab === 'members'"
+                [class.border-primary]="activeTab === 'members'"
+                [class.text-gray-500]="activeTab !== 'members'">
+          👥 Members
+          <span class="bg-gray-100 text-gray-500 text-xs rounded-full px-2 py-0.5 font-semibold ml-1">
+            {{ activeMembers.length }}
+          </span>
+        </button>
+        <button (click)="setTab('events')"
+                class="flex items-center gap-2 px-6 py-4 text-sm whitespace-nowrap transition-colors"
+                [class.text-primary]="activeTab === 'events'"
+                [class.font-semibold]="activeTab === 'events'"
+                [class.border-b-2]="activeTab === 'events'"
+                [class.border-primary]="activeTab === 'events'"
+                [class.text-gray-500]="activeTab !== 'events'">
+          🎭 Events
+          <span class="bg-gray-100 text-gray-500 text-xs rounded-full px-2 py-0.5 font-semibold ml-1">
+            {{ events.length }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Alertes globales -->
+      <div *ngIf="successMessage"
+           class="mx-6 mt-4 p-3 bg-green-50 text-green-700 rounded-xl text-sm flex items-center justify-between gap-2">
+        <span>✅ {{ successMessage }}</span>
+        <button (click)="successMessage = null" class="text-green-400 hover:text-green-600 font-bold text-lg leading-none">✕</button>
+      </div>
+      <div *ngIf="errorMessage"
+           class="mx-6 mt-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm flex items-center justify-between gap-2">
+        <span>⚠️ {{ errorMessage }}</span>
+        <button (click)="errorMessage = null" class="text-red-400 hover:text-red-600 font-bold text-lg leading-none">✕</button>
+      </div>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- TAB : DASHBOARD                           -->
+      <!-- ══════════════════════════════════════════ -->
+      <div *ngIf="activeTab === 'dashboard'" class="p-6 space-y-6">
+
+        <div class="grid lg:grid-cols-2 gap-6">
+
+          <div>
+            <h3 class="font-semibold text-dark text-sm mb-4">Upcoming Events</h3>
+            <div *ngIf="upcomingEvents.length === 0"
+                 class="text-center py-10 text-gray-400 text-sm bg-gray-50 rounded-xl">
+              No upcoming events
+            </div>
+            <div class="space-y-3">
+              <div *ngFor="let event of upcomingEvents.slice(0, 5)"
+                   class="bg-gray-50 rounded-xl p-4 flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-lg shrink-0 overflow-hidden">
+                  <img *ngIf="event.posterUrl" [src]="event.posterUrl" [alt]="event.title" class="w-full h-full object-cover rounded-xl">
+                  <span *ngIf="!event.posterUrl">🎭</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-dark text-sm truncate">{{ event.title }}</p>
+                  <p class="text-xs text-gray-400 mt-0.5">📅 {{ event.eventDate | date:'mediumDate' }}</p>
+                  <div class="mt-2 flex items-center gap-2">
+                    <div class="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full transition-all"
+                           [class.bg-primary]="event.remainingPlaces > 5"
+                           [class.bg-amber-400]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                           [class.bg-red-400]="event.remainingPlaces === 0"
+                           [style.width.%]="capacityPercent(event)"></div>
+                    </div>
+                    <span class="text-[10px] text-gray-400 shrink-0">{{ event.reservedPlaces }}/{{ event.maxPlaces }}</span>
+                  </div>
+                </div>
+                <span class="text-xs font-semibold shrink-0 px-2 py-1 rounded-full"
+                      [class.bg-red-50]="event.remainingPlaces === 0"
+                      [class.text-red-500]="event.remainingPlaces === 0"
+                      [class.bg-amber-50]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                      [class.text-amber-600]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                      [class.bg-green-50]="event.remainingPlaces > 5"
+                      [class.text-green-600]="event.remainingPlaces > 5">
+                  {{ event.remainingPlaces === 0 ? 'Full' : event.remainingPlaces + ' left' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-semibold text-dark text-sm mb-4">
+              Latest Join Requests
+              <span *ngIf="pendingRequests.length > 0"
+                    class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                {{ pendingRequests.length }}
+              </span>
+            </h3>
+            <div *ngIf="pendingRequests.length === 0"
+                 class="text-center py-10 text-gray-400 text-sm bg-gray-50 rounded-xl">
+              ✅ No pending requests
+            </div>
+            <div class="space-y-3">
+              <div *ngFor="let req of pendingRequests.slice(0, 5)"
+                   class="bg-gray-50 rounded-xl p-4 flex items-center gap-3">
+                <div class="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center font-bold text-primary text-sm shrink-0">
+                  {{ req.userName.charAt(0).toUpperCase() }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-dark text-sm truncate">{{ req.userName }}</p>
+                  <p class="text-xs text-gray-400">{{ req.requestDate | date:'mediumDate' }}</p>
+                </div>
+                <div class="flex gap-2 shrink-0">
+                  <button (click)="approve(req.id)"
+                          [disabled]="actionLoadingId === req.id"
+                          class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-semibold hover:bg-green-600 transition-colors disabled:opacity-50">
+                    ✓
+                  </button>
+                  <button (click)="confirmReject(req.id)"
+                          [disabled]="actionLoadingId === req.id"
+                          class="px-3 py-1.5 bg-red-50 text-red-500 rounded-lg text-xs font-semibold hover:bg-red-100 transition-colors disabled:opacity-50">
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-dark text-sm mb-4">Membership Overview</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-gray-50 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-dark">{{ members.length }}</div>
+              <div class="text-xs text-gray-400 mt-1">Total (all time)</div>
+            </div>
+            <div class="bg-green-50 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-green-600">{{ activeMembers.length }}</div>
+              <div class="text-xs text-gray-400 mt-1">Currently active</div>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-gray-500">{{ leftMembers.length }}</div>
+              <div class="text-xs text-gray-400 mt-1">Former members</div>
+            </div>
+            <div class="bg-red-50 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-red-500">{{ removedMembers.length }}</div>
+              <div class="text-xs text-gray-400 mt-1">Removed by admin</div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="events.length > 0">
+          <h3 class="font-semibold text-dark text-sm mb-4">Events Capacity</h3>
+          <div class="space-y-3">
+            <div *ngFor="let event of events.slice(0, 8)"
+                 class="flex items-center gap-4">
+              <span class="text-xs text-gray-500 w-40 truncate shrink-0">{{ event.title }}</span>
+              <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all"
+                     [class.bg-primary]="event.remainingPlaces > 5"
+                     [class.bg-amber-400]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                     [class.bg-red-400]="event.remainingPlaces === 0"
+                     [style.width.%]="capacityPercent(event)"></div>
+              </div>
+              <span class="text-xs font-semibold text-gray-500 w-10 text-right shrink-0">
+                {{ capacityPercent(event) }}%
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- TAB : REQUESTS                            -->
+      <!-- ══════════════════════════════════════════ -->
+      <div *ngIf="activeTab === 'requests'" class="p-6">
+
+        <div *ngIf="pendingRequests.length === 0" class="text-center py-16">
+          <div class="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">✅</div>
+          <p class="font-semibold text-dark">No pending requests</p>
+          <p class="text-gray-400 text-sm mt-1">All membership requests have been processed.</p>
+        </div>
+
+        <div *ngIf="pendingRequests.length > 0" class="space-y-3">
+          <div *ngFor="let req of pendingRequests"
+               class="bg-gray-50 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-gray-100/60 transition-colors">
+            <div class="flex items-start gap-4 flex-1 min-w-0">
+              <div class="w-11 h-11 bg-primary/10 rounded-full flex items-center justify-center font-bold text-primary text-base shrink-0">
+                {{ req.userName.charAt(0).toUpperCase() }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-dark text-sm">{{ req.userName }}</p>
+                <p class="text-xs text-gray-400 mt-0.5">📅 {{ req.requestDate | date:'mediumDate' }}</p>
+                <blockquote *ngIf="req.motivation"
+                            class="mt-2 text-xs text-gray-500 italic border-l-2 border-primary/20 pl-3 line-clamp-2">
+                  "{{ req.motivation }}"
+                </blockquote>
+              </div>
+            </div>
+            <div class="flex gap-2 shrink-0 self-end sm:self-center">
+              <button (click)="approve(req.id)"
+                      [disabled]="actionLoadingId === req.id"
+                      class="px-5 py-2 bg-green-500 text-white rounded-xl text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50">
+                {{ actionLoadingId === req.id ? '...' : '✓ Approve' }}
+              </button>
+              <button (click)="confirmReject(req.id)"
+                      [disabled]="actionLoadingId === req.id"
+                      class="px-5 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-100 transition-colors disabled:opacity-50">
+                {{ actionLoadingId === req.id ? '...' : '✕ Reject' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- TAB : MEMBERS                             -->
+      <!-- ══════════════════════════════════════════ -->
+      <div *ngIf="activeTab === 'members'" class="p-6 space-y-6">
+
+        <!-- Barre de recherche + compteurs -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <input [(ngModel)]="memberSearch"
+                 type="text"
+                 placeholder="Search members..."
+                 class="w-full sm:w-72 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary transition-colors" />
+          <div class="flex gap-2 flex-wrap">
+            <span class="bg-green-50 text-green-600 text-xs font-semibold px-3 py-1.5 rounded-full">
+              {{ activeMembers.length }} active
+            </span>
+            <span class="bg-gray-100 text-gray-500 text-xs font-semibold px-3 py-1.5 rounded-full">
+              {{ leftMembers.length }} former
+            </span>
+            <span *ngIf="removedMembers.length > 0"
+                  class="bg-red-50 text-red-500 text-xs font-semibold px-3 py-1.5 rounded-full">
+              {{ removedMembers.length }} removed
+            </span>
+          </div>
+        </div>
+
+        <!-- Empty state global -->
+        <div *ngIf="filteredActiveMembers.length === 0 && filteredLeftMembers.length === 0 && filteredRemovedMembers.length === 0"
+             class="text-center py-12 text-gray-400 text-sm bg-white rounded-xl border border-gray-100">
+          No members found for "{{ memberSearch }}"
+        </div>
+
+        <!-- ── TABLE 1 : ACTIVE MEMBERS ── -->
+        <div *ngIf="filteredActiveMembers.length > 0" class="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div class="px-5 py-3 border-b border-gray-100 bg-green-50/40">
+            <span class="text-xs font-semibold text-green-600 uppercase tracking-widest">
+              Active Members
+            </span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <colgroup>
+                <col class="w-[40%]" />
+                <col class="w-[20%]" />
+                <col class="w-[20%]" />
+                <col class="w-[20%]" />
+              </colgroup>
+              <thead>
+                <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+                  <th class="px-5 py-3 font-medium">Member</th>
+                  <th class="px-5 py-3 font-medium">Joined</th>
+                  <th class="px-5 py-3 font-medium">Status</th>
+                  <th class="px-5 py-3 font-medium">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let m of filteredActiveMembers"
+                    class="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                  <td class="px-5 py-3.5 align-middle">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center font-bold text-primary text-xs shrink-0">
+                        {{ m.userName.charAt(0).toUpperCase() }}
+                      </div>
+                      <span class="font-medium text-dark text-sm">{{ m.userName }}</span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5 text-gray-400 text-xs align-middle">{{ m.joinedAt | date:'mediumDate' }}</td>
+                  <td class="px-5 py-3.5 align-middle">
+                    <span class="bg-green-50 text-green-600 text-xs font-semibold px-2.5 py-1 rounded-full">Active</span>
+                  </td>
+                  <td class="px-5 py-3.5 align-middle">
+                    <button (click)="confirmRemove(m.id)"
+                            class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 transition-colors border border-red-100">
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── TABLE 2 : FORMER MEMBERS (LEFT) ── -->
+        <div *ngIf="filteredLeftMembers.length > 0" class="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div class="px-5 py-3 border-b border-gray-100 bg-gray-50/60">
+            <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              Former Members
+            </span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <colgroup>
+                <col class="w-[40%]" />
+                <col class="w-[20%]" />
+                <col class="w-[20%]" />
+                <col class="w-[20%]" />
+              </colgroup>
+              <thead>
+                <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+                  <th class="px-5 py-3 font-medium">Member</th>
+                  <th class="px-5 py-3 font-medium">Joined</th>
+                  <th class="px-5 py-3 font-medium">Status</th>
+                  <th class="px-5 py-3 font-medium">Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let m of filteredLeftMembers"
+                    class="border-b border-gray-50 last:border-0 opacity-70">
+                  <td class="px-5 py-3.5 align-middle">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-400 text-xs shrink-0">
+                        {{ m.userName.charAt(0).toUpperCase() }}
+                      </div>
+                      <span class="text-sm text-gray-500">{{ m.userName }}</span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5 text-gray-400 text-xs align-middle">{{ m.joinedAt | date:'mediumDate' }}</td>
+                  <td class="px-5 py-3.5 align-middle">
+                    <span class="bg-gray-100 text-gray-400 text-xs font-semibold px-2.5 py-1 rounded-full">Left</span>
+                  </td>
+                  <td class="px-5 py-3.5 text-gray-300 text-xs align-middle max-w-[180px]">
+                    <span class="block truncate" title="—">—</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── TABLE 3 : REMOVED BY ADMIN ── -->
+        <div *ngIf="filteredRemovedMembers.length > 0" class="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div class="px-5 py-3 border-b border-gray-100 bg-red-50/40">
+            <span class="text-xs font-semibold text-red-400 uppercase tracking-widest">
+              Removed by Admin
+            </span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <colgroup>
+                <col class="w-[40%]" />
+                <col class="w-[20%]" />
+                <col class="w-[20%]" />
+                <col class="w-[20%]" />
+              </colgroup>
+              <thead>
+                <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+                  <th class="px-5 py-3 font-medium">Member</th>
+                  <th class="px-5 py-3 font-medium">Joined</th>
+                  <th class="px-5 py-3 font-medium">Status</th>
+                  <th class="px-5 py-3 font-medium">Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let m of filteredRemovedMembers"
+                    class="border-b border-gray-50 last:border-0 opacity-80">
+                  <td class="px-5 py-3.5 align-middle">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center font-bold text-red-400 text-xs shrink-0">
+                        {{ m.userName.charAt(0).toUpperCase() }}
+                      </div>
+                      <div>
+                        <span class="text-sm text-gray-500">{{ m.userName }}</span>
+                        <p *ngIf="m.removedAt" class="text-[10px] text-gray-400 mt-0.5">Removed {{ m.removedAt | date:'mediumDate' }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5 text-gray-400 text-xs align-middle">{{ m.joinedAt | date:'mediumDate' }}</td>
+                  <td class="px-5 py-3.5 align-middle">
+                    <span class="bg-red-50 text-red-500 text-xs font-semibold px-2.5 py-1 rounded-full">Removed</span>
+                  </td>
+                  <td class="px-5 py-3.5 text-gray-400 text-xs italic align-middle max-w-[180px]">
+                    <span class="block truncate" [title]="m.removeReason || '—'">{{ m.removeReason || '—' }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- TAB : EVENTS                              -->
+      <!-- ══════════════════════════════════════════ -->
+      <div *ngIf="activeTab === 'events'" class="p-6 space-y-5">
+
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-gray-400">{{ events.length }} event(s) · {{ upcomingEvents.length }} upcoming</p>
+          <button (click)="toggleEventForm()"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+                  [class.bg-primary]="!showEventForm"
+                  [class.text-white]="!showEventForm"
+                  [class.bg-gray-100]="showEventForm"
+                  [class.text-gray-600]="showEventForm">
+            {{ showEventForm ? '✕ Cancel' : '＋ New Event' }}
+          </button>
+        </div>
+
+        <div *ngIf="showEventForm" class="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+          <h3 class="font-semibold text-dark mb-4">Create New Event</h3>
+          <div *ngIf="eventFormError"
+               class="mb-3 p-3 bg-red-50 text-red-600 rounded-xl text-sm flex items-center justify-between gap-2">
+            <span>{{ eventFormError }}</span>
+            <button (click)="eventFormError = null" class="text-red-400 hover:text-red-600 font-bold text-lg leading-none">✕</button>
+          </div>
+          <div *ngIf="eventFormSuccess"
+               class="mb-3 p-3 bg-green-50 text-green-700 rounded-xl text-sm flex items-center gap-2">
+            ✅ {{ eventFormSuccess }}
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input [(ngModel)]="eventForm.title" placeholder="Title *"
+                   class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white" />
+            <input [(ngModel)]="eventForm.eventDate" type="datetime-local"
+                   class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white" />
+            <input [(ngModel)]="eventForm.maxPlaces" type="number" min="1" placeholder="Max places *"
+                   class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white" />
+            <div class="flex gap-2 items-center">
+              <input [(ngModel)]="eventForm.posterUrl" placeholder="Poster URL (optional)"
+                     class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white" />
+              <img *ngIf="eventForm.posterUrl"
+                   [src]="eventForm.posterUrl"
+                   alt="Preview"
+                   class="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0"
+                   (error)="eventForm.posterUrl = ''">
+            </div>
+            <textarea [(ngModel)]="eventForm.description" placeholder="Description (optional)" rows="2"
+                      class="md:col-span-2 px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white resize-none"></textarea>
+          </div>
+          <button (click)="createEvent()" [disabled]="eventFormLoading"
+                  class="mt-4 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-light transition-colors disabled:opacity-50">
+            {{ eventFormLoading ? 'Creating...' : 'Create Event' }}
+          </button>
+        </div>
+
+        <div *ngIf="events.length === 0" class="text-center py-16">
+          <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">🎭</div>
+          <p class="font-semibold text-dark">No events yet</p>
+          <p class="text-gray-400 text-sm mt-1">Create the first club event.</p>
+        </div>
+
+        <div *ngIf="events.length > 0"
+             class="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
+                  <th class="px-5 py-3 font-medium">Event</th>
+                  <th class="px-4 py-3 font-medium">Date</th>
+                  <th class="px-4 py-3 font-medium">Capacity</th>
+                  <th class="px-4 py-3 font-medium">Fill rate</th>
+                  <th class="px-4 py-3 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let event of events"
+                    (click)="goToEvent(event.id)"
+                    class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm shrink-0 overflow-hidden">
+                        <img *ngIf="event.posterUrl" [src]="event.posterUrl" [alt]="event.title" class="w-full h-full object-cover">
+                        <span *ngIf="!event.posterUrl">🎭</span>
+                      </div>
+                      <div>
+                        <p class="font-medium text-dark text-sm">{{ event.title }}</p>
+                        <p *ngIf="event.description" class="text-xs text-gray-400 truncate max-w-[180px]">{{ event.description }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3.5 text-xs text-gray-500">{{ event.eventDate | date:'mediumDate' }}</td>
+                  <td class="px-4 py-3.5 text-xs text-gray-500">{{ event.reservedPlaces }} / {{ event.maxPlaces }}</td>
+                  <td class="px-4 py-3.5">
+                    <div class="flex items-center gap-2">
+                      <div class="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full"
+                             [class.bg-primary]="event.remainingPlaces > 5"
+                             [class.bg-amber-400]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                             [class.bg-red-400]="event.remainingPlaces === 0"
+                             [style.width.%]="capacityPercent(event)"></div>
+                      </div>
+                      <span class="text-xs text-gray-500">{{ capacityPercent(event) }}%</span>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3.5">
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full"
+                          [class.bg-red-50]="event.remainingPlaces === 0"
+                          [class.text-red-500]="event.remainingPlaces === 0"
+                          [class.bg-amber-50]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                          [class.text-amber-600]="event.remainingPlaces > 0 && event.remainingPlaces <= 5"
+                          [class.bg-green-50]="event.remainingPlaces > 5"
+                          [class.text-green-600]="event.remainingPlaces > 5">
+                      {{ event.remainingPlaces === 0 ? 'Full' : event.remainingPlaces + ' spots left' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ═══ Reject Confirmation Modal ═══ -->
+  <div *ngIf="rejectTargetId !== null"
+       class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+    <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
+      <div class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">✕</div>
+      <h3 class="font-serif text-xl font-bold text-dark text-center mb-2">Reject this request?</h3>
+      <p class="text-gray-500 text-sm text-center mb-6">
+        This action cannot be undone. The applicant will have to reapply.
+      </p>
+      <div class="flex gap-3">
+        <button (click)="abortReject()"
+                class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-colors">
+          Cancel
+        </button>
+        <button (click)="reject(rejectTargetId)"
+                class="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-colors">
+          Yes, Reject
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Remove Member Confirmation Modal -->
+  <div *ngIf="removeTargetId !== null"
+       class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+    <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
+      <div class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">🚫</div>
+      <h3 class="font-serif text-xl font-bold text-dark text-center mb-2">Remove this member?</h3>
+      <p class="text-gray-500 text-sm text-center mb-5">
+        The member will lose access to all club events. They can reapply for membership later.
+      </p>
+      <div class="mb-5">
+        <label class="block text-xs font-semibold text-gray-500 mb-2">Reason (optional)</label>
+        <input [(ngModel)]="removeReason"
+               type="text"
+               placeholder="e.g. Inactive since 3 months..."
+               maxlength="500"
+               class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-red-300 bg-gray-50" />
+      </div>
+      <div class="flex gap-3">
+        <button (click)="abortRemove()"
+                [disabled]="removeLoading"
+                class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50">
+          Cancel
+        </button>
+        <button (click)="removeMember()"
+                [disabled]="removeLoading"
+                class="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50">
+          {{ removeLoading ? 'Removing...' : 'Yes, Remove' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

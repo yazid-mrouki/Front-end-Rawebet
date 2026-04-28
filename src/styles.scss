@@ -22,18 +22,32 @@
   --color-dark: #1a1a2e;
   --color-surface: #faf8f5;
   --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Manrope', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   --font-sans: 'Inter', sans-serif;
 }
 
 body {
   font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+body {
+  font-family: 'Manrope', sans-serif;
   background-color: var(--color-surface);
   color: #1a1a2e;
   margin: 0;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga' 1, 'kern' 1;
 }
 
 h1, h2, h3, h4, h5 {
   font-family: 'Playfair Display', serif;
+  letter-spacing: -0.02em;
 }
 
 /* Smooth scrolling */
@@ -41,3 +55,22 @@ html {
   scroll-behavior: smooth;
 }
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* ── Chat layout : hauteur fixe uniquement quand le chat est rejoint ── */
+app-chat-room.chat-active {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px); /* 64px = h-16 navbar */
+  overflow: hidden;
+}
+
+app-chat-room.chat-active > * {
+  flex: 1;
+  min-height: 0;
+}

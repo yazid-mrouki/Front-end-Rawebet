@@ -5,7 +5,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { RecommendationService } from '../../core/services/recommendation.service';
 import { SubscriptionService } from '../../core/services/subscription.service';
 import { AuthService } from '../../core/services/auth.service';
-import { ToastService } from '../../core/services/toast';
+import { ToastService } from '../../core/services/toast.service';
 import { UserAbonnement } from '../../core/models/subscription.model';
 
 @Component({

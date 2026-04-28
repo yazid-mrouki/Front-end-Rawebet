@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subscription, timeout } from 'rxjs';
 
 import { SubscriptionService } from '../../../core/services/subscription.service';
-import { ToastService } from '../../../core/services/toast';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-admin-subscriptions',
