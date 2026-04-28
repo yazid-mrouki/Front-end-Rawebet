@@ -1,4 +1,4 @@
-export interface MovieRecommendation {
+﻿export interface MovieRecommendation {
   id: number;
   title: string;
   genre: string;
