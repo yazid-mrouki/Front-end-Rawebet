@@ -1,14 +1,7 @@
 <div class="min-h-screen bg-surface">
   <div class="bg-gradient-to-r from-dark via-primary to-teal-600 py-16">
     <div class="max-w-7xl mx-auto px-6">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 class="font-serif text-4xl font-bold text-white mb-2">Tickets Cinema</h1>
-          
-        </div>
-        <div class="rounded-2xl border border-white/20 bg-white/10 px-5 py-4 text-sm text-white backdrop-blur-sm">
-        </div>
-      </div>
+      <h1 class="font-serif text-4xl font-bold text-white mb-2">Cinema Tickets</h1>
     </div>
   </div>
 
@@ -19,21 +12,21 @@
         (click)="activeTab = 'seances'"
         [ngClass]="activeTab === 'seances' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-600 hover:bg-gray-50'"
         class="rounded-xl px-5 py-3 text-sm font-semibold transition-all">
-        Seances disponibles
+        Available showtimes
       </button>
       <button
         type="button"
-        (click)="activeTab = 'reservation'"
+        (click)="openReservationTab()"
         [ngClass]="activeTab === 'reservation' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-600 hover:bg-gray-50'"
         class="rounded-xl px-5 py-3 text-sm font-semibold transition-all">
-        {{ editMode ? 'Modifier mon ticket' : 'Reserver mon ticket' }}
+        {{ editMode ? 'Edit my ticket' : 'Reserve my ticket' }}
       </button>
       <button
         type="button"
         (click)="activeTab = 'my-tickets'"
         [ngClass]="activeTab === 'my-tickets' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-600 hover:bg-gray-50'"
         class="rounded-xl px-5 py-3 text-sm font-semibold transition-all">
-        Mes tickets
+        My tickets
       </button>
     </div>
 
@@ -46,67 +39,67 @@
     <div *ngIf="formErrorMessage" class="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
       {{ formErrorMessage }}
     </div>
-    <div *ngIf="currentUserLoadFailed && !currentUserId" class="mb-6 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-      Le compte connecte n'a pas encore pu etre recupere. Le ticket sera toujours rattache a l'utilisateur authentifie des que son identifiant est disponible.
-    </div>
 
     <section *ngIf="activeTab === 'seances'" class="space-y-6">
-      <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div class="flex justify-between items-center flex-wrap gap-3">
         <div>
-          <h2 class="font-serif text-3xl font-bold text-dark">Choisir une seance</h2>
-          <p class="text-sm text-gray-500">Selectionne une projection puis passe directement au formulaire de reservation.</p>
+          <h2 class="font-serif text-3xl font-bold text-dark">Choose a showtime</h2>
+          <p class="text-sm text-gray-500">Select a screening and continue directly to the reservation form.</p>
         </div>
+        <button
+          type="button"
+          (click)="refreshSeances()"
+          class="rounded-xl bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20 transition-colors">
+          Refresh
+        </button>
       </div>
 
-      <div *ngIf="loading" class="rounded-2xl bg-white p-6 text-sm text-gray-500">Chargement des seances...</div>
-      <div *ngIf="!loading && !availableSeances.length" class="rounded-2xl bg-white p-6 text-sm text-gray-500">
-        Aucune seance disponible pour le moment.
+      <div *ngIf="loading" class="rounded-2xl bg-white p-6 text-sm text-gray-500">
+        Loading showtimes...
+      </div>
+      <div *ngIf="!loading && !seances.length" class="rounded-2xl bg-white p-6 text-sm text-gray-500">
+        No showtime available.
       </div>
 
       <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         <article
-          *ngFor="let seance of availableSeances; trackBy: trackById"
+          *ngFor="let seance of seances; trackBy: trackById"
           class="group overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
           <div class="bg-gradient-to-br from-primary to-teal-600 px-6 py-6 text-white">
             <div class="mb-4 flex items-start justify-between gap-4">
               <div>
-                <div class="text-4xl">{{ getFilmEmojiBySeanceId(seance.id) }}</div>
+                <div class="text-4xl">FILM</div>
                 <div class="mt-3 text-xs uppercase tracking-[0.25em] text-white/70">Cinema</div>
               </div>
-              <span class="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
-                Seance #{{ seance.id }}
-              </span>
+              <span class="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">Showtime #{{ seance.id }}</span>
             </div>
-
-            <h3 class="font-serif text-2xl font-bold">{{ getFilmTitleBySeanceId(seance.id) }}</h3>
-            <p class="mt-2 text-sm text-white/80">{{ getFilmGenreBySeanceId(seance.id) }}</p>
+            <h3 class="font-serif text-2xl font-bold">{{ getSeanceFilmTitle(seance) }}</h3>
+            <p class="mt-2 text-sm text-white/80">{{ getSeanceFilmGenre(seance) }}</p>
           </div>
-
           <div class="space-y-4 p-6">
             <div class="grid grid-cols-2 gap-3">
               <div class="rounded-2xl bg-gray-50 px-4 py-3">
-                <div class="text-xs uppercase tracking-wide text-gray-400">Date & heure</div>
+                <div class="text-xs uppercase tracking-wide text-gray-400">Date & time</div>
                 <div class="mt-1 text-sm font-semibold text-dark">{{ formatDateTime(seance.dateHeure) }}</div>
               </div>
               <div class="rounded-2xl bg-gray-50 px-4 py-3">
-                <div class="text-xs uppercase tracking-wide text-gray-400">Langue</div>
+                <div class="text-xs uppercase tracking-wide text-gray-400">Language</div>
                 <div class="mt-1 text-sm font-semibold text-dark">{{ seance.langue || '-' }}</div>
               </div>
               <div class="rounded-2xl bg-gray-50 px-4 py-3">
-                <div class="text-xs uppercase tracking-wide text-gray-400">Prix</div>
+                <div class="text-xs uppercase tracking-wide text-gray-400">Price</div>
                 <div class="mt-1 text-sm font-semibold text-dark">{{ seance.prixBase }} TND</div>
               </div>
               <div class="rounded-2xl bg-gray-50 px-4 py-3">
-                <div class="text-xs uppercase tracking-wide text-gray-400">Duree</div>
-                <div class="mt-1 text-sm font-semibold text-dark">{{ getFilmDurationBySeanceId(seance.id) }}</div>
+                <div class="text-xs uppercase tracking-wide text-gray-400">Duration</div>
+                <div class="mt-1 text-sm font-semibold text-dark">{{ getSeanceFilmDuration(seance) }} min</div>
               </div>
             </div>
-
             <button
               type="button"
               (click)="openReservationForSeance(seance)"
               class="w-full rounded-2xl bg-accent px-5 py-3 text-sm font-bold text-dark transition-colors hover:bg-accent-light">
-              Reserver cette seance
+              Reserve this showtime
             </button>
           </div>
         </article>
@@ -117,150 +110,166 @@
       <div class="lg:col-span-2">
         <div class="sticky top-24 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
           <h2 class="font-serif text-2xl font-bold text-dark mb-2">
-            {{ editMode ? 'Modifier le ticket' : 'Confirmer la reservation' }}
+            {{ editMode ? 'Edit ticket' : 'Confirm reservation' }}
           </h2>
-          <p class="mb-6 text-sm text-gray-500">
-            {{ editMode ? 'Mets a jour les informations utiles de ta reservation.' : 'Le ticket sera automatiquement lie a ton compte connecte.' }}
-          </p>
 
           <div *ngIf="selectedSeance" class="mb-6 rounded-2xl border border-primary/10 bg-primary/5 p-5">
             <div class="flex items-start gap-4">
-              <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
-                {{ getFilmEmojiBySeanceId(selectedSeance.id) }}
-              </div>
-              <div class="min-w-0">
-                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Seance selectionnee</div>
-                <h3 class="mt-1 font-serif text-xl font-bold text-dark">{{ getFilmTitleBySeanceId(selectedSeance.id) }}</h3>
-                <p class="mt-1 text-sm text-gray-500">{{ getFilmGenreBySeanceId(selectedSeance.id) }}</p>
+              <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">FILM</div>
+              <div>
+                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Selected showtime</div>
+                <h3 class="mt-1 font-serif text-xl font-bold text-dark">{{ getSeanceFilmTitle(selectedSeance) }}</h3>
+                <p class="mt-1 text-sm text-gray-500">{{ getSeanceFilmGenre(selectedSeance) }}</p>
                 <div class="mt-3 space-y-1 text-sm text-gray-600">
                   <div>{{ formatDateTime(selectedSeance.dateHeure) }}</div>
-                  <div>Langue: {{ selectedSeance.langue || '-' }}</div>
-                  <div>Prix: {{ selectedSeance.prixBase }} TND</div>
+                  <div>Language: {{ selectedSeance.langue || '-' }}</div>
+                  <div>Price: {{ selectedSeance.prixBase }} TND</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div *ngIf="!selectedSeance && !editMode" class="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 text-sm text-gray-500">
-            Choisis d'abord une seance pour continuer la reservation.
+            Choose a showtime first to continue.
           </div>
 
           <button
             type="button"
             (click)="goToSeances()"
-            class="mt-6 w-full rounded-2xl bg-gray-100 px-5 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200">
-            Retour aux seances
+            class="mt-6 w-full rounded-2xl bg-gray-100 px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-200">
+            Back to showtimes
           </button>
         </div>
       </div>
 
       <div class="lg:col-span-3">
         <div class="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-          <form
-            *ngIf="!editMode"
-            #createTicketForm="ngForm"
-            class="space-y-5"
-            (ngSubmit)="addTicket(createTicketForm)">
+          <form *ngIf="!editMode" #addTicketForm="ngForm" class="space-y-5" (ngSubmit)="addTicket(addTicketForm)">
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-gray-700">Film</label>
+              <label class="mb-1.5 block text-sm font-medium text-gray-700">Movie</label>
               <div class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-dark">
-                {{ selectedSeance ? getFilmTitleBySeanceId(selectedSeance.id) : 'Aucune seance selectionnee' }}
+                {{ selectedSeance ? getSeanceFilmTitle(selectedSeance) : 'No showtime selected' }}
               </div>
             </div>
 
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-gray-700">Numero du siege</label>
-              <select
-                #createSeatNumeroField="ngModel"
-                required
-                name="seatNumero"
-                [(ngModel)]="createForm.seatNumero"
-                [ngClass]="showFieldError(createSeatNumeroField, createTicketForm) ? 'border-red-300 bg-red-50 text-red-700 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 bg-white focus:border-primary focus:ring-primary/20'"
-                class="w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-all focus:ring-2">
-                <option [ngValue]="0" disabled>Choisir un siege</option>
-                <option *ngFor="let seat of seats" [ngValue]="seat.numero">
-                  Siège {{ seat.numero }}
-                </option>
-              </select>
-              <p *ngIf="showFieldError(createSeatNumeroField, createTicketForm)" class="mt-1.5 text-sm text-red-600">
-                {{ getSeatErrorMessage(createSeatNumeroField) }}
-              </p>
-              <p *ngIf="seats.length === 0" class="mt-1.5 text-xs text-gray-400">
-                Choisis une seance pour voir les sieges disponibles.
+              <label class="mb-1.5 block text-sm font-medium text-gray-700">Available seat <span class="text-red-500">*</span></label>
+
+              <div *ngIf="seatsLoading" class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-400">
+                Loading seats...
+              </div>
+
+              <ng-container *ngIf="!seatsLoading">
+                <select
+                  #createSeatNumeroField="ngModel"
+                  required
+                  name="seatNumero"
+                  [(ngModel)]="createForm.seatNumero"
+                  (ngModelChange)="onSeatChange($event)"
+                  [ngClass]="showFieldError(createSeatNumeroField, addTicketForm)
+                    ? 'border-red-300 bg-red-50 text-red-700 focus:border-red-400 focus:ring-red-100'
+                    : 'border-gray-200 bg-white focus:border-primary focus:ring-primary/20'"
+                  class="w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-all focus:ring-2">
+                  <option [ngValue]="null">-- Choose a seat --</option>
+                  <option *ngFor="let seat of availableSeats" [ngValue]="seat.seatNumber">
+                    Seat {{ seat.seatNumber }}
+                  </option>
+                </select>
+
+                <div *ngIf="seatTakenMessage" class="mt-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+                  {{ seatTakenMessage }}
+                </div>
+
+                <p *ngIf="showFieldError(createSeatNumeroField, addTicketForm)" class="mt-1.5 text-sm text-red-600">
+                  Please select a seat.
+                </p>
+
+                <p *ngIf="availableSeats.length === 0 && selectedSeanceId" class="mt-1.5 text-sm text-amber-600">
+                  All seats are reserved for this showtime.
+                </p>
+              </ng-container>
+
+              <p *ngIf="!selectedSeanceId" class="mt-1.5 text-xs text-gray-400">
+                Choose a showtime to view available seats.
               </p>
             </div>
 
             <div *ngIf="!selectedSeance" class="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-              Il faut d'abord choisir une seance avant d'envoyer le formulaire.
+              You must choose a showtime first.
             </div>
 
             <button
               type="submit"
-              [disabled]="!currentUserId || submitting"
+              [disabled]="!currentUserId || !selectedSeance || availableSeats.length === 0"
               class="w-full rounded-2xl bg-primary px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-primary-light disabled:cursor-not-allowed disabled:bg-gray-300">
-              {{ submitting ? 'Reservation en cours...' : 'Reserver le ticket' }}
+              Reserve ticket
             </button>
           </form>
 
-          <form
-            *ngIf="editMode"
-            #editTicketForm="ngForm"
-            class="space-y-5"
-            (ngSubmit)="updateTicket(editTicketForm)">
+          <form *ngIf="editMode" #editTicketForm="ngForm" class="space-y-5" (ngSubmit)="updateTicket(editTicketForm)">
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-gray-700">Film</label>
+              <label class="mb-1.5 block text-sm font-medium text-gray-700">Movie</label>
               <div class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-dark">
-                {{ selectedSeance ? getFilmTitleBySeanceId(selectedSeance.id) : 'Film indisponible' }}
+                {{ selectedSeance ? getSeanceFilmTitle(selectedSeance) : 'Movie unavailable' }}
               </div>
             </div>
 
             <div class="grid gap-5 sm:grid-cols-2">
               <div>
-                <label class="mb-1.5 block text-sm font-medium text-gray-700">Seat ID</label>
-                <input
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">Seat <span class="text-red-500">*</span></label>
+                <select
                   #editSeatIdField="ngModel"
-                  type="number"
-                  min="1"
-                  max="500"
                   required
                   name="editSeatId"
                   [(ngModel)]="updateForm.seatId"
-                  [ngClass]="showFieldError(editSeatIdField, editTicketForm) ? 'border-red-300 bg-red-50 text-red-700 placeholder:text-red-300 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 bg-white focus:border-primary focus:ring-primary/20'"
-                  class="w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-all focus:ring-2"
-                  placeholder="Ex: 12">
+                  (ngModelChange)="onEditSeatChange($event)"
+                  [ngClass]="showFieldError(editSeatIdField, editTicketForm)
+                    ? 'border-red-300 bg-red-50 text-red-700 focus:border-red-400 focus:ring-red-100'
+                    : 'border-gray-200 bg-white focus:border-primary focus:ring-primary/20'"
+                  class="w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-all focus:ring-2">
+                  <option [ngValue]="0">-- Choose a seat --</option>
+                  <option *ngFor="let seat of seats" [ngValue]="seat.id">
+                    Seat {{ seat.seatNumber }}
+                  </option>
+                </select>
                 <p *ngIf="showFieldError(editSeatIdField, editTicketForm)" class="mt-1.5 text-sm text-red-600">
                   {{ getSeatErrorMessage(editSeatIdField) }}
                 </p>
+                <div *ngIf="seatTakenMessage" class="mt-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+                  {{ seatTakenMessage }}
+                </div>
               </div>
 
               <div>
-                <label class="mb-1.5 block text-sm font-medium text-gray-700">Statut</label>
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">Status <span class="text-red-500">*</span></label>
                 <select
                   #editStatut="ngModel"
                   required
                   name="statut"
                   [(ngModel)]="updateForm.statut"
-                  [ngClass]="showFieldError(editStatut, editTicketForm) ? 'border-red-300 bg-red-50 text-red-700 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 bg-white focus:border-primary focus:ring-primary/20'"
+                  [ngClass]="showFieldError(editStatut, editTicketForm)
+                    ? 'border-red-300 bg-red-50 text-red-700 focus:border-red-400 focus:ring-red-100'
+                    : 'border-gray-200 bg-white focus:border-primary focus:ring-primary/20'"
                   class="w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-all focus:ring-2">
-                  <option value="PENDING">En attente</option>
-                  <option value="CONFIRMED">Confirme</option>
-                  <option value="CANCELLED">Annule</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="CONFIRMED">Confirmed</option>
+                  <option value="CANCELLED">Cancelled</option>
                 </select>
+                <p *ngIf="showFieldError(editStatut, editTicketForm)" class="mt-1.5 text-sm text-red-600">Status is required.</p>
               </div>
             </div>
 
             <div class="grid gap-5 sm:grid-cols-2">
               <div>
-                <label class="mb-1.5 block text-sm font-medium text-gray-700">Date de reservation</label>
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">Reservation date</label>
                 <input
                   type="date"
                   name="dateReservation"
                   [(ngModel)]="updateForm.dateReservation"
-                  class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20">
+                  class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20">
               </div>
-
               <div>
-                <label class="mb-1.5 block text-sm font-medium text-gray-700">Paiement ID</label>
+                <label class="mb-1.5 block text-sm font-medium text-gray-700">Payment ID</label>
                 <input
                   #paiementId="ngModel"
                   type="number"
@@ -268,9 +277,11 @@
                   max="999999"
                   name="paiementId"
                   [(ngModel)]="updateForm.paiementId"
-                  [ngClass]="showFieldError(paiementId, editTicketForm) ? 'border-red-300 bg-red-50 text-red-700 placeholder:text-red-300 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 bg-white focus:border-primary focus:ring-primary/20'"
-                  class="w-full rounded-2xl border px-4 py-3 text-sm outline-none transition-all focus:ring-2"
-                  placeholder="Optionnel">
+                  [ngClass]="showFieldError(paiementId, editTicketForm)
+                    ? 'border-red-300 bg-red-50 text-red-700 focus:border-red-400 focus:ring-red-100'
+                    : 'border-gray-200 bg-white focus:border-primary focus:ring-primary/20'"
+                  class="w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2"
+                  placeholder="Optional">
                 <p *ngIf="showFieldError(paiementId, editTicketForm)" class="mt-1.5 text-sm text-red-600">
                   {{ getPaiementErrorMessage(paiementId) }}
                 </p>
@@ -280,14 +291,14 @@
             <div class="flex gap-3">
               <button
                 type="submit"
-                class="flex-1 rounded-2xl bg-primary px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-primary-light">
-                Mettre a jour le ticket
+                class="flex-1 rounded-2xl bg-primary px-5 py-3 text-sm font-bold text-white hover:bg-primary-light">
+                Update
               </button>
               <button
                 type="button"
                 (click)="cancelEdit()"
-                class="rounded-2xl bg-gray-100 px-5 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200">
-                Annuler
+                class="rounded-2xl bg-gray-100 px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-200">
+                Cancel
               </button>
             </div>
           </form>
@@ -296,58 +307,61 @@
     </section>
 
     <section *ngIf="activeTab === 'my-tickets'" class="space-y-4">
-      <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 class="font-serif text-3xl font-bold text-dark">Mes tickets</h2>
-        </div>
-      </div>
+      <h2 class="font-serif text-3xl font-bold text-dark">My tickets</h2>
 
-      <div *ngIf="loading" class="rounded-2xl bg-white p-6 text-sm text-gray-500">Chargement des tickets...</div>
+      <div *ngIf="loading" class="rounded-2xl bg-white p-6 text-sm text-gray-500">Loading...</div>
       <div *ngIf="!loading && !myTickets.length" class="rounded-2xl bg-white p-6 text-sm text-gray-500">
-        Aucun ticket pour ton compte pour le moment.
+        No tickets at the moment.
       </div>
 
       <article
         *ngFor="let ticket of myTickets; trackBy: trackById"
-        class="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:shadow-lg">
+        class="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-lg transition-all">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div class="flex items-start gap-4">
-            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-3xl">
-              {{ getFilmEmojiBySeanceId(ticket.seance?.id) }}
-            </div>
-            <div>
-              <div class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Ticket cinema</div>
-              <h3 class="mt-1 font-serif text-2xl font-bold text-dark">{{ getFilmTitleBySeanceId(ticket.seance?.id) }}</h3>
-              <p class="mt-1 text-sm text-gray-500">{{ getFilmGenreBySeanceId(ticket.seance?.id) }}</p>
+          <div class="flex items-start gap-4 flex-1">
+            <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-3xl">FILM</div>
+            <div class="flex-1">
+              <div class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Cinema ticket</div>
+              <h3 class="mt-1 font-serif text-2xl font-bold text-dark">{{ getFilmTitle(ticket) }}</h3>
+              <p class="mt-1 text-sm text-gray-500">{{ getSeanceFilmGenre(getTicketSeance(ticket)) }}</p>
               <div class="mt-3 grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
-                <div>Seance: {{ formatDateTime(getSeanceDateTimeById(ticket.seance?.id)) }}</div>
-                <div>Siege: {{ getDisplayedSeatNumber(ticket) }}</div>
-                <div>Date reservation: {{ formatDate(ticket.dateReservation) }}</div>
-                <div>Duree: {{ getFilmDurationBySeanceId(ticket.seance?.id) }}</div>
+                <div>Showtime: {{ formatDateTime(getTicketSeanceDateTime(ticket)) }}</div>
+                <div>Seat: {{ getDisplayedSeatNumber(ticket) }}</div>
+                <div>Reserved on: {{ formatDate(ticket.dateReservation) }}</div>
+                <div>Duration: {{ getSeanceFilmDuration(getTicketSeance(ticket)) }} min</div>
+              </div>
+              <div class="mt-4">
+                <button
+                  type="button"
+                  (click)="startEdit(ticket)"
+                  class="rounded-xl bg-primary/10 px-4 py-2 text-xs font-semibold text-primary hover:bg-primary/20">Edit</button>
               </div>
             </div>
           </div>
 
-          <span [ngClass]="getStatusClasses(ticket.statut)" class="rounded-full px-3 py-1 text-xs font-semibold">
-            {{ getStatusLabel(ticket.statut) }}
-          </span>
-        </div>
+          <div class="mt-5 flex flex-col items-start gap-4 lg:items-end">
+            <div class="max-w-[180px] text-center">
+              <div class="mt-2 text-xs leading-5 text-gray-500">
+                Your ticket in one scan
 
-        <div class="mt-5 flex flex-wrap gap-3">
-          <button
-            type="button"
-            (click)="startEdit(ticket)"
-            class="rounded-xl bg-primary/10 px-4 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/20">
-            Modifier
-          </button>
-          <button
-            type="button"
-            (click)="deleteTicket(ticket.id)"
-            class="rounded-xl bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100">
-            Supprimer
-          </button>
+              </div>
+            </div>
+            <div class="rounded-3xl border border-primary/10 bg-primary/5 p-3 shadow-sm">
+              <img
+                *ngIf="ticketQrCodes[ticket.id]"
+                [src]="ticketQrCodes[ticket.id]"
+                [alt]="'Ticket QR ' + ticket.id"
+                class="h-32 w-32 rounded-2xl bg-white p-2 object-contain" />
+              <div *ngIf="!ticketQrCodes[ticket.id]" class="flex h-32 w-32 items-center justify-center rounded-2xl bg-white p-2 text-xs text-gray-400">
+                Loading QR...
+              </div>
+            </div>
+          </div>
         </div>
       </article>
     </section>
   </div>
 </div>
+
+
+

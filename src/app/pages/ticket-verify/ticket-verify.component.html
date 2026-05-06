@@ -1,0 +1,67 @@
+<div class="min-h-screen bg-[#f7f1ea]">
+  <div class="bg-gradient-to-r from-[#15213a] via-primary to-[#c55a11] px-6 py-12 text-white">
+    <div class="mx-auto max-w-5xl">
+      <div class="text-xs font-semibold uppercase tracking-[0.35em] text-amber-200">Rawabet Cinema</div>
+      <h1 class="mt-3 font-serif text-4xl font-bold">Reservation verification</h1>
+      <p class="mt-2 max-w-2xl text-sm text-white/80">
+        Page opened from the ticket QR code.
+      </p>
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-5xl px-6 py-10">
+    <div *ngIf="loading" class="rounded-3xl bg-white p-8 text-sm text-gray-500 shadow-sm">
+      Loading reservation...
+    </div>
+
+    <div *ngIf="!loading && errorMessage" class="rounded-3xl border border-red-100 bg-red-50 p-8 text-sm text-red-600 shadow-sm">
+      {{ errorMessage }}
+    </div>
+
+    <section *ngIf="!loading && ticket" class="space-y-6">
+      <div class="rounded-[32px] bg-white p-8 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div class="text-xs font-semibold uppercase tracking-[0.28em] text-primary/60">Document PDF</div>
+            <h2 class="mt-3 font-serif text-4xl font-bold text-slate-900">{{ getFilmTitle(ticket) }}</h2>
+            <p class="mt-2 text-base text-slate-500">The QR code opens a styled reservation PDF.</p>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <span
+              [ngClass]="getStatusClasses(ticket.statut)"
+              class="inline-flex rounded-full px-4 py-2 text-sm font-semibold">
+              {{ getStatusLabel(ticket.statut) }}
+            </span>
+            <button
+              type="button"
+              (click)="downloadPdf()"
+              [disabled]="!pdfUrl"
+              class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300">
+              Download PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="pdfGenerating" class="rounded-3xl bg-white p-8 text-sm text-gray-500 shadow-sm">
+        Generating PDF...
+      </div>
+
+      <div *ngIf="pdfUrl" class="overflow-hidden rounded-[32px] bg-white p-4 shadow-sm">
+        <iframe
+          [src]="pdfUrl"
+          title="Reservation PDF"
+          class="h-[78vh] w-full rounded-[24px] border border-slate-200 bg-slate-50">
+        </iframe>
+      </div>
+
+      <div class="flex justify-between gap-3">
+        <a
+          routerLink="/tickets"
+          class="inline-flex rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+          Back to tickets
+        </a>
+      </div>
+    </section>
+  </div>
+</div>

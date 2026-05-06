@@ -1,11 +1,17 @@
+import { SeanceResponse } from './seance.model';
+
 export interface ReservationCinemaEntity {
   id: number;
   dateReservation: string | null;
   statut: string | null;
-  user: { id: number } | null;
-  seance: { id: number } | null;
-  seat: { id: number; numero?: number | null } | null;
-  paiement: { id: number } | null;
+  user?: { id: number } | null;
+  userId?: number;
+  seance?: SeanceResponse | null;
+  seanceId?: number;
+  seat?: { id: number; seatNumber?: number | null } | null;
+  seatId?: number;
+  paiement?: { id: number } | null;
+  paiementId?: number;
 }
 
 export interface ReservationCinemaResponse {
@@ -20,7 +26,7 @@ export interface ReservationCinemaResponse {
 export interface CreateReservationCinemaRequest {
   userId: number;
   seanceId: number;
-  seatNumero: number;
+  seatNumero: number | null;
   seatId?: number;
 }
 

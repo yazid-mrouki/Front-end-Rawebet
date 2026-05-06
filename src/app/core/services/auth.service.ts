@@ -12,6 +12,7 @@ interface DecodedToken {
   roles?: string[];
   permissions?: string[];
   userId?: number;
+  id?: number | string;
   name?: string;
   email?: string;
   impersonation?: boolean;
@@ -138,8 +139,12 @@ export class AuthService {
   }
 
   getCurrentUserId(): number | null {
-    const id = this.getDecodedToken()?.userId;
-    return typeof id === 'number' ? id : null;
+    const decoded = this.getDecodedToken();
+    if (!decoded) return null;
+
+    const maybeId = decoded.userId ?? decoded.id ?? decoded.sub;
+    const numericId = typeof maybeId === 'string' ? Number(maybeId) : maybeId;
+    return typeof numericId === 'number' && !Number.isNaN(numericId) ? numericId : null;
   }
 
   getUserId(): number | null {

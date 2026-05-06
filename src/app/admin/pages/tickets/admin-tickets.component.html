@@ -1,93 +1,432 @@
-<div class="p-6 lg:p-8 bg-gray-50 min-h-full space-y-6">
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div>
-      <h1 class="font-serif text-2xl font-bold text-dark">Ticket Management</h1>
-      <p class="text-sm text-gray-400 mt-1">{{ reservations.length }} reservations</p>
+<div class="min-h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 lg:p-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="font-serif text-4xl font-bold text-white mb-2">Reservation Management</h1>
+    <p class="text-slate-400">Analytics dashboard for tickets and reservations</p>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="errorMessage" class="mb-6 rounded-xl bg-red-500/15 border border-red-500/30 px-4 py-3 text-sm text-red-300">
+    {{ errorMessage }}
+  </div>
+  <div *ngIf="successMessage" class="mb-6 rounded-xl bg-green-500/15 border border-green-500/30 px-4 py-3 text-sm text-green-300">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="predictionErrorMessage" class="mb-6 rounded-xl bg-amber-500/15 border border-amber-500/30 px-4 py-3 text-sm text-amber-200">
+    {{ predictionErrorMessage }}
+  </div>
+
+  <section class="mb-8 overflow-hidden rounded-[28px] border border-cyan-400/20 bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.18),_transparent_35%),linear-gradient(135deg,_rgba(15,23,42,0.95),_rgba(30,41,59,0.92))] shadow-2xl">
+    <div class="grid gap-6 p-6 xl:grid-cols-[1.4fr_0.9fr]">
+      <div>
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div class="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200/80">AI Cancellation </div>
+            <h2 class="mt-3 font-serif text-3xl font-bold text-white">Predictive ticket insights</h2>
+            
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-right">
+            <div class="text-[11px] uppercase tracking-[0.24em] text-slate-400">Engine</div>
+            <div class="mt-1 text-lg font-semibold text-white">XGBoost</div>
+            <div class="mt-1 text-xs text-slate-400">{{ predictionLoading ? 'Analyzing...' : predictionStats.totalScored + ' scored tickets' }}</div>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
+          <div [class]="'rounded-2xl border bg-gradient-to-br p-5 shadow-lg ' + getPredictionCardTone('high')">
+            <div class="text-xs uppercase tracking-[0.24em] text-rose-100/80">Watchlist</div>
+            <div class="mt-3 text-4xl font-bold text-white">{{ predictionStats.highRisk }}</div>
+            <div class="mt-2 text-sm text-rose-100/80">Reservations in the red zone with recommended follow-up.</div>
+          </div>
+          <div [class]="'rounded-2xl border bg-gradient-to-br p-5 shadow-lg ' + getPredictionCardTone('medium')">
+            <div class="text-xs uppercase tracking-[0.24em] text-amber-100/80">Medium risk</div>
+            <div class="mt-3 text-4xl font-bold text-white">{{ predictionStats.mediumRisk }}</div>
+            <div class="mt-2 text-sm text-amber-100/80">Customers to follow up with automated reminders or verification.</div>
+          </div>
+          <div [class]="'rounded-2xl border bg-gradient-to-br p-5 shadow-lg ' + getPredictionCardTone('average')">
+            <div class="text-xs uppercase tracking-[0.24em] text-cyan-100/80">Overall average</div>
+            <div class="mt-3 text-4xl font-bold text-white">{{ Math.round(predictionStats.averageProbability * 100) }}%</div>
+            <div class="mt-2 text-sm text-cyan-100/80">Average volatility level for displayed reservations.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-[24px] border border-white/10 bg-slate-950/45 p-5">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="text-xs uppercase tracking-[0.24em] text-slate-400">Priority watchlist</div>
+            <h3 class="mt-2 text-xl font-semibold text-white">Most fragile tickets</h3>
+          </div>
+          <div class="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-300">{{ topRiskReservations.length }} items</div>
+        </div>
+
+        <div class="mt-4 space-y-3">
+          <div *ngIf="!topRiskReservations.length" class="rounded-2xl border border-dashed border-slate-700 px-4 py-6 text-sm text-slate-400">
+            Predictions will appear here once the AI service returns scores.
+          </div>
+
+          <article *ngFor="let ticket of topRiskReservations; trackBy: trackById" class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Ticket #{{ ticket.id }}</div>
+                <div class="mt-2 text-sm font-semibold text-white">{{ getUserDisplay(ticket) }}</div>
+                <div class="mt-1 text-xs text-slate-400">{{ getSeanceDisplay(ticket) }}</div>
+              </div>
+              <span [class]="getPredictionRiskClass(ticket)" class="rounded-full px-3 py-1 text-xs font-semibold">
+                {{ getPredictionProbability(ticket) }}
+              </span>
+            </div>
+
+            <div class="mt-4 h-2 overflow-hidden rounded-full bg-slate-800">
+              <div class="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-rose-500" [style.width]="getPredictionProgressWidth(ticket)"></div>
+            </div>
+
+            <div class="mt-3 text-[11px] leading-5 text-slate-400">{{ getPredictionAction(ticket) }}</div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 text-white border border-blue-500/30 shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-blue-200 text-sm font-medium">Total Reservations</p>
+          <p class="text-4xl font-bold mt-2">{{ stats.total }}</p>
+        </div>
+        <div class="text-5xl opacity-20">*</div>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl p-6 text-white border border-green-500/30 shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-green-200 text-sm font-medium">Confirmed</p>
+          <p class="text-4xl font-bold mt-2">{{ stats.confirmed }}</p>
+        </div>
+        <div class="text-5xl opacity-20">*</div>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-2xl p-6 text-white border border-yellow-500/30 shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-yellow-200 text-sm font-medium">Pending</p>
+          <p class="text-4xl font-bold mt-2">{{ stats.pending }}</p>
+        </div>
+        <div class="text-5xl opacity-20">*</div>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-br from-red-600 to-red-700 rounded-2xl p-6 text-white border border-red-500/30 shadow-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-red-200 text-sm font-medium">Cancelled</p>
+          <p class="text-4xl font-bold mt-2">{{ stats.cancelled }}</p>
+        </div>
+        <div class="text-5xl opacity-20">*</div>
+      </div>
     </div>
   </div>
 
-  <div *ngIf="errorMessage" class="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{{ errorMessage }}</div>
-  <div *ngIf="successMessage" class="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-600">{{ successMessage }}</div>
-  <div *ngIf="formErrorMessage" class="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">{{ formErrorMessage }}</div>
+  <!-- Search & Filters -->
+  <div class="bg-slate-700/50 backdrop-blur rounded-2xl p-6 mb-8 border border-slate-600/50">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Search</label>
+        <input
+          [(ngModel)]="searchQuery"
+          type="text"
+          placeholder="ID, user, showtime..."
+          class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 outline-none transition-all">
+      </div>
 
-  <div class="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
-    <div *ngIf="!editMode" class="grid gap-4 md:grid-cols-4">
-      <input type="number" min="1" [(ngModel)]="createForm.userId" placeholder="User ID" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
-      <select [(ngModel)]="createForm.seanceId" (ngModelChange)="onCreateSeanceChange($event)" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
-        <option [ngValue]="0">Seance</option>
-        <option *ngFor="let seance of seances" [ngValue]="seance.id">{{ getSeanceLabel(seance.id) }}</option>
-      </select>
-      <select [(ngModel)]="createForm.seatNumero" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
-        <option [value]="0" disabled>Choisir un siege</option>
-        <option *ngFor="let seat of seats" [value]="seat.numero">Siege {{ seat.numero }}</option>
-      </select>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Status</label>
+        <select
+          [(ngModel)]="statusFilter"
+          class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 outline-none transition-all">
+          <option value="">All statuses</option>
+          <option value="CONFIRMED">Confirmed</option>
+          <option value="PENDING">Pending</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+      </div>
+
+      <div class="flex items-end">
+        <button
+          (click)="resetFilters()"
+          class="w-full px-4 py-2.5 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-medium transition-colors">
+          Reset Filters
+        </button>
+      </div>
     </div>
 
-    <div *ngIf="editMode" class="grid gap-4 md:grid-cols-4">
-      <input type="number" min="1" [(ngModel)]="updateForm.userId" placeholder="User ID" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
-      <select [(ngModel)]="updateForm.seanceId" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
-        <option [ngValue]="0">Seance</option>
-        <option *ngFor="let seance of seances" [ngValue]="seance.id">{{ getSeanceLabel(seance.id) }}</option>
-      </select>
-      <input type="number" min="1" [(ngModel)]="updateForm.seatId" placeholder="Seat ID" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
-      <select [(ngModel)]="updateForm.statut" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
-        <option value="PENDING">PENDING</option>
-        <option value="CONFIRMED">CONFIRMED</option>
-        <option value="CANCELLED">CANCELLED</option>
-      </select>
-    </div>
-
-    <div *ngIf="editMode" class="grid gap-4 md:grid-cols-2">
-      <input type="date" [(ngModel)]="updateForm.dateReservation" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
-      <input type="number" min="0" [(ngModel)]="updateForm.paiementId" placeholder="Paiement ID" class="rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-primary">
-    </div>
-
-    <div class="flex gap-3">
-      <button type="button" (click)="editMode ? updateReservation() : addReservation()" class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-light transition-colors">
-        {{ editMode ? 'Mettre a jour' : 'Ajouter' }}
-      </button>
-      <button *ngIf="editMode" type="button" (click)="cancelEdit()" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
-        Annuler
-      </button>
+    <div class="text-xs text-slate-400">
+      {{ filteredReservations.length }} results - Page {{ currentPage }} / {{ totalPages }}
     </div>
   </div>
 
-  <input [(ngModel)]="searchQuery" type="text" placeholder="Search by user, seance, or reservation ID..." class="w-full sm:w-96 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-primary">
+  <div class="mb-8">
+    <button
+      *ngIf="!showCreateForm && !editMode"
+      type="button"
+      (click)="openCreateForm()"
+      class="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl font-bold shadow-lg transition-all">
+      + Add reservation
+    </button>
+  </div>
 
-  <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+  <div *ngIf="showCreateForm" class="bg-slate-700/50 backdrop-blur rounded-2xl p-6 mb-8 border border-slate-600/50">
+    <h3 class="text-xl font-bold text-white mb-6">Add reservation</h3>
+    <form #createReservationForm="ngForm" (ngSubmit)="addReservation(createReservationForm)" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">User</label>
+          <select #createUserModel="ngModel" [(ngModel)]="createForm.userId" name="createUserId"
+            class="w-full px-4 py-2.5 border rounded-xl text-white bg-slate-800 outline-none transition-all"
+            [ngClass]="getFieldClasses(showFieldError(createUserModel, 'userId', createReservationForm, 'create'))">
+            <option [ngValue]="0">Choose a user</option>
+            <option *ngFor="let user of users; trackBy: trackById" [ngValue]="user.id">{{ getUserOptionLabel(user) }}</option>
+          </select>
+          <p *ngIf="showFieldError(createUserModel, 'userId', createReservationForm, 'create')" class="mt-1 text-xs text-red-400">{{ getFieldError('create', 'userId') }}</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Showtime</label>
+          <select #createSeanceModel="ngModel" [(ngModel)]="createForm.seanceId" name="createSeanceId"
+            (ngModelChange)="onCreateSeanceChange($event)"
+            class="w-full px-4 py-2.5 border rounded-xl text-white bg-slate-800 outline-none transition-all"
+            [ngClass]="getFieldClasses(showFieldError(createSeanceModel, 'seanceId', createReservationForm, 'create'))">
+            <option [ngValue]="0">Choose a showtime</option>
+            <option *ngFor="let seance of seances; trackBy: trackById" [ngValue]="seance.id">{{ getSeanceLabel(seance.id) }}</option>
+          </select>
+          <p *ngIf="showFieldError(createSeanceModel, 'seanceId', createReservationForm, 'create')" class="mt-1 text-xs text-red-400">{{ getFieldError('create', 'seanceId') }}</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Seat</label>
+          <select #createSeatModel="ngModel" [(ngModel)]="createForm.seatNumero" name="createSeatNumero"
+            class="w-full px-4 py-2.5 border rounded-xl text-white bg-slate-800 outline-none transition-all"
+            [ngClass]="getFieldClasses(showFieldError(createSeatModel, 'seatNumero', createReservationForm, 'create'))">
+            <option [ngValue]="0">Choose a seat</option>
+            <option *ngFor="let seat of seats; trackBy: trackById" [ngValue]="seat.seatNumber">{{ getSeatOptionLabel(seat) }}</option>
+          </select>
+          <p *ngIf="showFieldError(createSeatModel, 'seatNumero', createReservationForm, 'create')" class="mt-1 text-xs text-red-400">{{ getFieldError('create', 'seatNumero') }}</p>
+          <p *ngIf="createForm.seanceId > 0 && !seats.length" class="mt-1 text-xs text-amber-300">No seat available for this showtime.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors">Add</button>
+        <button type="button" (click)="cancelCreate(createReservationForm)" class="px-6 py-2.5 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-medium transition-colors">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <div *ngIf="editMode" class="bg-slate-700/50 backdrop-blur rounded-2xl p-6 mb-8 border border-slate-600/50">
+    <h3 class="text-xl font-bold text-white mb-6">Edit reservation</h3>
+    <form #updateReservationForm="ngForm" (ngSubmit)="updateReservation(updateReservationForm)" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">User</label>
+          <select #updateUserModel="ngModel" [(ngModel)]="updateForm.userId" name="updateUserId"
+            class="w-full px-4 py-2.5 border rounded-xl text-white bg-slate-800 outline-none transition-all"
+            [ngClass]="getFieldClasses(showFieldError(updateUserModel, 'userId', updateReservationForm, 'edit'))">
+            <option [ngValue]="0">Choose a user</option>
+            <option *ngFor="let user of users; trackBy: trackById" [ngValue]="user.id">{{ getUserOptionLabel(user) }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Showtime</label>
+          <select #updateSeanceModel="ngModel" [(ngModel)]="updateForm.seanceId" name="updateSeanceId"
+            (ngModelChange)="onEditSeanceChange($event)"
+            class="w-full px-4 py-2.5 border rounded-xl text-white bg-slate-800 outline-none transition-all"
+            [ngClass]="getFieldClasses(showFieldError(updateSeanceModel, 'seanceId', updateReservationForm, 'edit'))">
+            <option [ngValue]="0">Choose a showtime</option>
+            <option *ngFor="let seance of seances; trackBy: trackById" [ngValue]="seance.id">{{ getSeanceLabel(seance.id) }}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Seat</label>
+          <select #updateSeatModel="ngModel" [(ngModel)]="updateForm.seatId" name="updateSeatId"
+            class="w-full px-4 py-2.5 border rounded-xl text-white bg-slate-800 outline-none transition-all"
+            [ngClass]="getFieldClasses(showFieldError(updateSeatModel, 'seatId', updateReservationForm, 'edit'))">
+            <option [ngValue]="0">Choose a seat</option>
+            <option *ngFor="let seat of seats; trackBy: trackById" [ngValue]="seat.id">{{ getSeatOptionLabel(seat) }}</option>
+          </select>
+          <p *ngIf="updateForm.seanceId > 0 && !seats.length" class="mt-1 text-xs text-amber-300">No seat available for this showtime.</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Status</label>
+          <select #updateStatusModel="ngModel" [(ngModel)]="updateForm.statut" name="updateStatus"
+            class="w-full px-4 py-2.5 border rounded-xl text-white bg-slate-800 outline-none transition-all"
+            [ngClass]="getFieldClasses(showFieldError(updateStatusModel, 'statut', updateReservationForm, 'edit'))">
+            <option value="PENDING">Pending</option>
+            <option value="CONFIRMED">Confirmed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors">Save</button>
+        <button type="button" (click)="cancelEdit(updateReservationForm)" class="px-6 py-2.5 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-medium transition-colors">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-slate-700/50 backdrop-blur rounded-2xl border border-slate-600/50 overflow-hidden shadow-2xl mb-8">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
-          <tr class="text-left text-xs text-gray-400 border-b border-gray-100 bg-gray-50/50">
-            <th class="px-6 py-3 font-medium">Reservation ID</th>
-            <th class="px-4 py-3 font-medium">User</th>
-            <th class="px-4 py-3 font-medium">Seance</th>
-            <th class="px-4 py-3 font-medium">Seat</th>
-            <th class="px-4 py-3 font-medium">Paiement</th>
-            <th class="px-4 py-3 font-medium">Date</th>
-            <th class="px-4 py-3 font-medium">Status</th>
-            <th class="px-4 py-3 font-medium text-right">Actions</th>
+          <tr class="border-b border-slate-600/50 bg-slate-800/50">
+            <th class="px-6 py-4">
+              <button (click)="setSortField('id')" class="flex items-center gap-2 text-left font-semibold text-slate-300 hover:text-white transition-colors">
+                ID
+                <span *ngIf="sortField === 'id'" class="text-xs">{{ sortOrder === 'asc' ? '^' : 'v' }}</span>
+              </button>
+            </th>
+            <th class="px-6 py-4">
+              <button (click)="setSortField('user')" class="flex items-center gap-2 text-left font-semibold text-slate-300 hover:text-white transition-colors">
+                User
+                <span *ngIf="sortField === 'user'" class="text-xs">{{ sortOrder === 'asc' ? '^' : 'v' }}</span>
+              </button>
+            </th>
+            <th class="px-6 py-4">
+              <button (click)="setSortField('seance')" class="flex items-center gap-2 text-left font-semibold text-slate-300 hover:text-white transition-colors">
+                Showtime
+                <span *ngIf="sortField === 'seance'" class="text-xs">{{ sortOrder === 'asc' ? '^' : 'v' }}</span>
+              </button>
+            </th>
+            <th class="px-6 py-4 text-left font-semibold text-slate-300">Seat</th>
+            <th class="px-6 py-4 text-left font-semibold text-slate-300">Date</th>
+            <th class="px-6 py-4">
+              <button (click)="setSortField('status')" class="flex items-center gap-2 text-left font-semibold text-slate-300 hover:text-white transition-colors">
+                Status
+                <span *ngIf="sortField === 'status'" class="text-xs">{{ sortOrder === 'asc' ? '^' : 'v' }}</span>
+              </button>
+            </th>
+            <th class="px-6 py-4">
+              <button (click)="setSortField('risk')" class="flex items-center gap-2 text-left font-semibold text-slate-300 hover:text-white transition-colors">
+                AI Risk
+                <span *ngIf="sortField === 'risk'" class="text-xs">{{ sortOrder === 'asc' ? '^' : 'v' }}</span>
+              </button>
+            </th>
+            <th class="px-6 py-4 text-right font-semibold text-slate-300">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngIf="loading">
-            <td colspan="8" class="px-6 py-4 text-gray-500">Chargement...</td>
+          <tr *ngIf="loading" class="border-b border-slate-600/30">
+            <td colspan="8" class="px-6 py-8 text-center text-slate-400">
+              <div class="inline-flex items-center gap-2">
+                <span class="animate-spin">...</span>
+                Loading...
+              </div>
+            </td>
           </tr>
-          <tr *ngFor="let t of filteredReservations" class="border-b border-gray-50 hover:bg-gray-50/50">
-            <td class="px-6 py-4 font-mono text-xs text-primary font-semibold">{{ t.id }}</td>
-            <td class="px-4 py-4 text-dark font-medium text-xs">#{{ t.user?.id || '-' }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ getSeanceLabel(t.seance?.id) }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">#{{ t.seat?.id || '-' }}</td>
-            <td class="px-4 py-4 text-dark font-semibold text-xs">#{{ t.paiement?.id || '-' }}</td>
-            <td class="px-4 py-4 text-gray-500 text-xs">{{ t.dateReservation || '-' }}</td>
-            <td class="px-4 py-4"><span [class]="getStatusClass(t.statut)" class="px-2.5 py-1 rounded-full text-[10px] font-semibold">{{ t.statut || '-' }}</span></td>
-            <td class="px-4 py-4 text-right">
-              <button type="button" (click)="startEdit(t)" class="p-1.5 hover:bg-blue-50 rounded-lg text-xs text-blue-600">Edit</button>
-              <button type="button" (click)="deleteReservation(t.id)" class="p-1.5 hover:bg-red-50 rounded-lg text-xs text-red-600">Delete</button>
+
+          <tr *ngIf="!loading && !paginatedReservations.length" class="border-b border-slate-600/30">
+            <td colspan="8" class="px-6 py-8 text-center text-slate-400">
+              No reservation found
+            </td>
+          </tr>
+
+          <tr *ngFor="let ticket of paginatedReservations; trackBy: trackById" class="border-b border-slate-600/30 hover:bg-slate-600/30 transition-colors">
+            <td class="px-6 py-4 text-blue-400 font-semibold font-mono">{{ ticket.id }}</td>
+            <td class="px-6 py-4 text-slate-200">{{ getUserDisplay(ticket) }}</td>
+            <td class="px-6 py-4 text-slate-300">{{ getSeanceDisplay(ticket) }}</td>
+            <td class="px-6 py-4 text-slate-300">{{ getSeatDisplay(ticket) }}</td>
+            <td class="px-6 py-4 text-slate-400 text-xs">{{ formatDate(ticket.dateReservation) }}</td>
+            <td class="px-6 py-4">
+              <span [class]="getStatusClass(ticket.statut)" class="px-3 py-1 rounded-full text-xs font-semibold inline-block">
+                {{ getStatusLabel(ticket.statut) }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex flex-col gap-1">
+                <span [class]="getPredictionRiskClass(ticket)" class="inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold">
+                  {{ getPredictionRiskLabel(ticket) }}
+                </span>
+                <span class="text-xs text-slate-400">{{ getPredictionProbability(ticket) }}</span>
+                <span *ngIf="getPredictionAction(ticket)" class="max-w-[220px] text-[11px] leading-4 text-slate-500">
+                  {{ getPredictionAction(ticket) }}
+                </span>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button
+                *ngIf="!editMode"
+                type="button"
+                (click)="startEdit(ticket)"
+                class="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded-lg text-xs font-medium transition-colors mr-2">Edit</button>
+              <button
+                *ngIf="!editMode"
+                type="button"
+                (click)="openDeleteDialog(ticket)"
+                class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-300 rounded-lg text-xs font-medium transition-colors">Delete</button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
+
+  <!-- Pagination -->
+  <div *ngIf="totalPages > 1" class="flex items-center justify-between bg-slate-700/50 backdrop-blur rounded-2xl p-4 border border-slate-600/50 mb-8">
+    <div class="text-slate-400 text-sm">
+      Showing {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, filteredReservations.length) }} of {{ filteredReservations.length }}
+    </div>
+    <div class="flex gap-2">
+      <button
+        (click)="currentPage = currentPage - 1"
+        [disabled]="currentPage === 1"
+        class="px-4 py-2 bg-slate-600 hover:bg-slate-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">Previous</button>
+      <div class="flex items-center gap-2">
+        <span *ngFor="let page of visiblePageNumbers">
+          <button
+            (click)="currentPage = page"
+            [class.bg-blue-600]="currentPage === page"
+            [class.bg-slate-600]="currentPage !== page"
+            class="w-10 h-10 flex items-center justify-center rounded-lg font-medium text-white hover:bg-slate-500 transition-colors">
+            {{ page }}
+          </button>
+        </span>
+      </div>
+      <button
+        (click)="currentPage = currentPage + 1"
+        [disabled]="currentPage === totalPages"
+        class="px-4 py-2 bg-slate-600 hover:bg-slate-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">Next</button>
+    </div>
+  </div>
+
+  <!-- Delete Dialog -->
+  <div *ngIf="showDeleteDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+    <div class="w-full max-w-md rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-6 shadow-2xl border border-slate-700">
+      <h3 class="font-serif text-2xl font-bold text-white">Delete reservation</h3>
+      <p class="mt-3 text-sm leading-6 text-slate-300">
+        Are you sure you want to delete reservation <span class="font-semibold text-blue-400">#{{ reservationToDelete?.id }}</span> ? This action cannot be undone.
+      </p>
+      <div class="mt-6 flex justify-end gap-3">
+        <button
+          type="button"
+          (click)="closeDeleteDialog()"
+          class="rounded-xl bg-slate-700 hover:bg-slate-600 px-4 py-2 text-sm font-semibold text-white transition-colors">
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="confirmDelete()"
+          class="rounded-xl bg-red-600 hover:bg-red-700 px-4 py-2 text-sm font-semibold text-white transition-colors">Delete</button>
+      </div>
+    </div>
+  </div>
 </div>
+
+
