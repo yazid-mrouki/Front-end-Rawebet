@@ -3,6 +3,10 @@ import { SignInComponent } from './pages/auth/sign-in/sign-in.component';
 import { SignUpComponent } from './pages/auth/sign-up/sign-up.component';
 import { HomeComponent } from './pages/home/home.component';
 import { EventsComponent } from './pages/events/events.component';
+import { EventDetailComponent } from './pages/events/event-detail/event-detail.component';
+import { MaterialsComponent } from './pages/materials/materials.component';
+import { MaterialDetailComponent } from './pages/materials/material-detail/material-detail.component';
+import { MaterialsReservationsComponent } from './pages/materials/materials-reservations/materials-reservations.component';
 import { FilmsComponent } from './pages/films/films.component';
 import { CinemasComponent } from './pages/cinemas/cinemas.component';
 import { TicketsComponent } from './pages/tickets/tickets.component';
@@ -49,6 +53,27 @@ export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
 
   // ── Auth (public) ────────────────────────────────────────────────
+  { path: 'auth/sign-in', component: SignInComponent },
+  { path: 'auth/sign-up', component: SignUpComponent },
+  { path: 'auth/forgot-password', component: ForgotPasswordComponent },
+  { path: 'auth/reset-password', component: ResetPasswordComponent },
+
+  { path: 'home', component: HomeComponent },
+  { path: 'events', component: EventsComponent },
+  { path: 'events/:id', component: EventDetailComponent },
+  { path: 'materials', component: MaterialsComponent },
+  { path: 'materials/:id', component: MaterialDetailComponent },
+  { path: 'materials-reservations', component: MaterialsReservationsComponent, canActivate: [authGuard] },
+  { path: 'films', component: FilmsComponent },
+  { path: 'cinemas', component: CinemasComponent },
+  { path: 'tickets', component: TicketsComponent, canActivate: [authGuard] },
+  { path: 'clubs', component: ClubsComponent },
+  { path: 'subscriptions', component: SubscriptionsComponent },
+  { path: 'loyalty', component: LoyaltyComponent, canActivate: [authGuard] },
+  { path: 'logistics', component: LogisticsComponent },
+  { path: 'feedback', component: FeedbackComponent, canActivate: [authGuard] },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
+  { path: 'notifications', component: NotificationsComponent },
   {
     path: 'auth/sign-in',
     loadComponent: () =>
