@@ -1,9 +1,15 @@
 <div class="min-h-screen bg-surface flex flex-col">
   <!-- Header -->
   <div class="bg-gradient-to-r from-primary to-primary-light py-16">
-    <div class="max-w-7xl mx-auto px-6">
-      <h1 class="font-serif text-4xl font-bold text-white mb-2">Materials</h1>
-      <p class="text-white/80">Browse available materials for reservation by category.</p>
+    <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
+      <div>
+        <h1 class="font-serif text-4xl font-bold text-white mb-2">Materials</h1>
+        <p class="text-white/80">Browse available materials for reservation by category.</p>
+      </div>
+      <a routerLink="/materials-reservations" 
+         class="px-6 py-3 bg-white text-primary rounded-full font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2 whitespace-nowrap">
+        📋 My Reservations
+      </a>
     </div>
   </div>
 
@@ -87,7 +93,9 @@
             <p *ngIf="material.description" class="text-xs text-gray-600 mb-4 line-clamp-2">
               {{ material.description }}
             </p>
-            <button class="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-light transition-colors">
+            <button 
+              [routerLink]="['/materials', material.id]"
+              class="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-light transition-colors">
               View Details
             </button>
           </div>

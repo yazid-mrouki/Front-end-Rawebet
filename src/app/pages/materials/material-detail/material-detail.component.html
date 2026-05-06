@@ -1,0 +1,156 @@
+<div class="min-h-screen bg-surface flex flex-col">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-primary to-primary-light py-8">
+    <div class="max-w-7xl mx-auto px-6 flex items-center gap-4">
+      <button
+        (click)="goBack()"
+        class="p-2 hover:bg-white/10 rounded-lg transition-colors"
+      >
+        <span class="text-white text-2xl">←</span>
+      </button>
+      <h1 class="font-serif text-4xl font-bold text-white">Material Details</h1>
+    </div>
+  </div>
+
+  <div class="flex-1 max-w-7xl mx-auto w-full px-6 py-10 pb-20">
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <p class="text-gray-500">Loading material details...</p>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="error && !isLoading" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-red-700">
+      {{ error }}
+    </div>
+
+    <!-- Material Details -->
+    <div *ngIf="!isLoading && material && !error" class="grid lg:grid-cols-3 gap-8">
+      <!-- Main Content -->
+      <div class="lg:col-span-2">
+        <!-- Image Section -->
+        <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 mb-8">
+          <div class="h-96 bg-gradient-to-br from-primary/20 to-primary-light/20 flex items-center justify-center">
+            <span class="text-9xl">🛠️</span>
+          </div>
+        </div>
+
+        <!-- Details -->
+        <div class="bg-white rounded-2xl border border-gray-100 p-8 mb-8">
+          <h2 class="text-3xl font-bold text-dark mb-4">{{ material.nom }}</h2>
+          <p class="text-gray-600 text-lg leading-relaxed">{{ material.description }}</p>
+        </div>
+      </div>
+
+      <!-- Sidebar - Reservation -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-2xl border border-gray-100 p-8 sticky top-4">
+          <h3 class="text-2xl font-bold text-dark mb-6">Price</h3>
+
+          <div class="space-y-4 mb-6">
+            <!-- Price -->
+            <div class="bg-primary/10 border border-primary rounded-lg p-6 text-center">
+              <p class="text-sm text-gray-600 mb-2">Daily Rate</p>
+              <p class="text-4xl font-bold text-primary">{{ material.prixUnitaire }}</p>
+              <p class="text-sm text-gray-600 mt-2">TND per day</p>
+            </div>
+          </div>
+
+          <!-- Reservation Button -->
+          <button
+            (click)="makeReservation()"
+            class="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-light transition-colors mb-4"
+          >
+            Reserve Now
+          </button>
+
+          <!-- Contact Info -->
+          <div class="border-t pt-4">
+            <p class="text-sm text-gray-600 mb-3">Need help?</p>
+            <a
+              href="mailto:support@rawebet.com"
+              class="block text-center px-4 py-2 border border-primary text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors"
+            >
+              Contact Support
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reservation Modal -->
+  <div *ngIf="showReservationModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+      <!-- Success State -->
+      <div *ngIf="reservationSuccess" class="text-center">
+        <div class="text-5xl mb-4">✅</div>
+        <h2 class="text-2xl font-bold text-dark mb-2">Reservation Confirmed!</h2>
+        <p class="text-gray-600 mb-6">Your reservation has been created successfully.</p>
+        <p class="text-sm text-gray-500">Redirecting to tickets...</p>
+      </div>
+
+      <!-- Form State -->
+      <div *ngIf="!reservationSuccess">
+        <h2 class="text-2xl font-bold text-dark mb-6">Reserve {{ material?.nom }}</h2>
+
+        <!-- Error Message -->
+        <div *ngIf="reservationError" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-red-700 text-sm">
+          {{ reservationError }}
+        </div>
+
+        <!-- Quantity -->
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-dark mb-2">Quantity</label>
+          <input
+            type="number"
+            [(ngModel)]="reservationQuantity"
+            min="1"
+            class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            [disabled]="isSubmittingReservation"
+          />
+        </div>
+
+        <!-- Start Date -->
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-dark mb-2">Start Date & Time</label>
+          <input
+            type="datetime-local"
+            [(ngModel)]="reservationStartDate"
+            class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            [disabled]="isSubmittingReservation"
+          />
+        </div>
+
+        <!-- End Date -->
+        <div class="mb-6">
+          <label class="block text-sm font-semibold text-dark mb-2">End Date & Time</label>
+          <input
+            type="datetime-local"
+            [(ngModel)]="reservationEndDate"
+            class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            [disabled]="isSubmittingReservation"
+          />
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex gap-3">
+          <button
+            (click)="closeReservationModal()"
+            class="flex-1 px-4 py-2 border border-gray-200 text-dark rounded-lg font-medium hover:bg-gray-50 transition-colors"
+            [disabled]="isSubmittingReservation"
+          >
+            Cancel
+          </button>
+          <button
+            (click)="submitReservation()"
+            class="flex-1 px-4 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            [disabled]="isSubmittingReservation"
+          >
+            <span *ngIf="!isSubmittingReservation">Reserve</span>
+            <span *ngIf="isSubmittingReservation">Processing...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
