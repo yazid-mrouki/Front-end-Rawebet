@@ -60,29 +60,30 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   private readonly allMenuItems: AdminMenuItem[] = [
-    { label: 'Dashboard',     icon: '📊', route: '/admin/dashboard',      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'] },
-    { label: 'Events',        icon: '🎭', route: '/admin/events',         roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
-    { label: 'Event Spaces',  icon: '🏢', route: '/admin/event-spaces',   roles: ['SUPER_ADMIN', 'ADMIN_EVENT'] },
-    { label: 'Films',         icon: '🎬', route: '/admin/films',          roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
-    { label: 'Cinémas',       icon: '🏛️', route: '/admin/cinemas',        roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
-    { label: 'Tickets',       icon: '🎟️', route: '/admin/tickets',        roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
-    { label: 'Club',          icon: '👥', route: '/admin/club',           roles: ['SUPER_ADMIN', 'ADMIN_CLUB'] },
-    { label: 'Chat',          icon: '💬', route: '/admin/chat',           roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
-    { label: 'Subscriptions', icon: '💳', route: '/admin/subscriptions',  roles: ['SUPER_ADMIN'] },
-    { label: 'Materials',     icon: '🔧', route: '/admin/materiels',      roles: ['SUPER_ADMIN', 'ADMIN_EVENT'] },
-    { label: 'Reservations',  icon: '📅', route: '/admin/reservations',   roles: ['SUPER_ADMIN', 'ADMIN_EVENT'] },
-    { label: 'Users',         icon: '👤', route: '/admin/users',          permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
-    { label: 'Loyalty',       icon: '⭐', route: '/admin/loyalty',        permissions: ['FIDELITY_UPDATE'], roles: ['SUPER_ADMIN'] },
-    { label: 'Role',          icon: '🛡️', route: '/admin/roles',          permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
-    { label: 'Logistics',     icon: '📦', route: '/admin/logistics',      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
-    { label: 'Feedback',      icon: '💬', route: '/admin/feedback',       roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
-    { label: 'Notifications', icon: '🔔', route: '/admin/notifications',  roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'] },
+    { label: 'Dashboard',     icon: '??', route: '/admin/dashboard',      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'] },
+    { label: 'Events',        icon: '??', route: '/admin/events',         roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
+    { label: 'Event Spaces',  icon: '??', route: '/admin/event-spaces',   roles: ['SUPER_ADMIN', 'ADMIN_EVENT'] },
+    { label: 'Films',         icon: '??', route: '/admin/films',          roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+    { label: 'Cin�mas',       icon: '???', route: '/admin/cinemas',        roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+    { label: 'Showtimes',     icon: '??', route: '/admin/seances',        roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+    { label: 'Tickets',       icon: '???', route: '/admin/tickets',        roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
+    { label: 'Club',          icon: '??', route: '/admin/club',           roles: ['SUPER_ADMIN', 'ADMIN_CLUB'] },
+    { label: 'Chat',          icon: '??', route: '/admin/chat',           roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+    { label: 'Subscriptions', icon: '??', route: '/admin/subscriptions',  roles: ['SUPER_ADMIN'] },
+    { label: 'Materials',     icon: '??', route: '/admin/materiels',      roles: ['SUPER_ADMIN', 'ADMIN_EVENT'] },
+    { label: 'Reservations',  icon: '??', route: '/admin/reservations',   roles: ['SUPER_ADMIN', 'ADMIN_EVENT'] },
+    { label: 'Users',         icon: '??', route: '/admin/users',          permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
+    { label: 'Loyalty',       icon: '?', route: '/admin/loyalty',         permissions: ['FIDELITY_UPDATE'], roles: ['SUPER_ADMIN'] },
+    { label: 'Role',          icon: '???', route: '/admin/roles',          permissions: ['ADMIN_MANAGE'], roles: ['SUPER_ADMIN'] },
+    { label: 'Logistics',     icon: '??', route: '/admin/logistics',      roles: ['SUPER_ADMIN', 'ADMIN_CINEMA'] },
+    { label: 'Feedback',      icon: '??', route: '/admin/feedback',       roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT'] },
+    { label: 'Notifications', icon: '??', route: '/admin/notifications',  roles: ['SUPER_ADMIN', 'ADMIN_CINEMA', 'ADMIN_EVENT', 'ADMIN_CLUB'] },
   ];
 
   get menuItems(): AdminMenuItem[] {
     const roles = this.auth.getRoles();
     if (roles.includes('SUPER_ADMIN')) {
-      return this.allMenuItems;
+      return this.allMenuItems.filter((item) => !item.permissions || this.auth.hasAnyPermission(item.permissions));
     }
     return this.allMenuItems.filter((item) => {
       const roleOk = !item.roles || item.roles.some((r) => roles.includes(r));
@@ -91,7 +92,7 @@ export class AdminLayoutComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.userService.getMe().subscribe({
       next: (u: any) => {
         this.adminName = u.nom || u.name || u.fullName || this.adminName;
@@ -104,9 +105,9 @@ export class AdminLayoutComponent implements OnInit {
     });
   }
 
-  startClientMode() {
+  startClientMode(): void {
     if (!this.adminId) {
-      this.toastService.error('Impossible de récupérer votre identifiant.');
+      this.toastService.error('Impossible de r�cup�rer votre identifiant.');
       return;
     }
     this.clientModeLoading = true;
@@ -120,7 +121,7 @@ export class AdminLayoutComponent implements OnInit {
       .subscribe({
         next: () => {
           this.clientModeLoading = false;
-          this.toastService.success('Mode client activé — vous naviguez comme un client. 🎭');
+          this.toastService.success('Mode client activ� � vous naviguez comme un client. ??');
           this.router.navigate(['/home']);
         },
         error: (err) => {
@@ -136,15 +137,15 @@ export class AdminLayoutComponent implements OnInit {
       });
   }
 
-  openGuestPreview() {
+  openGuestPreview(): void {
     this.guestPreview.openGuestPreview('/home');
     this.closeProfileDropdown();
   }
 
-  toggleProfileDropdown() { this.profileDropdownOpen = !this.profileDropdownOpen; }
-  closeProfileDropdown()  { this.profileDropdownOpen = false; }
-  toggleSidebar()         { this.sidebarCollapsed = !this.sidebarCollapsed; }
-  logout()                { this.closeProfileDropdown(); this.auth.logout(); }
+  toggleProfileDropdown(): void { this.profileDropdownOpen = !this.profileDropdownOpen; }
+  closeProfileDropdown(): void  { this.profileDropdownOpen = false; }
+  toggleSidebar(): void         { this.sidebarCollapsed = !this.sidebarCollapsed; }
+  logout(): void                { this.closeProfileDropdown(); this.auth.logout(); }
 
   private resolveUrl(raw: unknown): string {
     const v = typeof raw === 'string' ? raw.trim() : '';
@@ -153,17 +154,12 @@ export class AdminLayoutComponent implements OnInit {
     return `${environment.apiUrl.replace(/\/$/, '')}${v.startsWith('/') ? v : '/' + v}`;
   }
 
-
-
   private getAdminRoleLabel(): string {
     const roles = this.auth.getRoles();
-    if (roles.includes('SUPER_ADMIN'))  return 'Super Admin';
-    if (roles.includes('ADMIN_CINEMA')) return 'Admin Cinéma';
-    if (roles.includes('ADMIN_EVENT'))  return 'Admin Events';
-    if (roles.includes('ADMIN_CLUB'))   return 'Admin Club';
+    if (roles.includes('SUPER_ADMIN')) return 'Super Admin';
+    if (roles.includes('ADMIN_CINEMA')) return 'Admin Cinema';
+    if (roles.includes('ADMIN_EVENT')) return 'Admin Events';
+    if (roles.includes('ADMIN_CLUB')) return 'Admin Club';
     return 'Admin';
   }
-
-  toggleSidebar() { this.sidebarCollapsed = !this.sidebarCollapsed; }
-  logout() { this.auth.logout(); }
 }
