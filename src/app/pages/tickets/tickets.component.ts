@@ -648,7 +648,7 @@ export class TicketsComponent implements OnInit {
           dark: '#1b2745',
           light: '#ffffff',
         },
-      }).then((dataUrl) => {
+      }).then((dataUrl: string) => {
         this.ticketQrCodes[ticket.id] = dataUrl;
       }).catch(() => {});
     });
