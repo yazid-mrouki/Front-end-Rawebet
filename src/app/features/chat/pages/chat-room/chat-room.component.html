@@ -3,8 +3,8 @@
   <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
     <div class="text-center mb-8">
       <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">💬</div>
-      <h1 class="font-serif text-2xl font-bold text-dark">Rejoindre le chat</h1>
-      <p class="text-gray-500 text-sm mt-2">Entrez le code affiché dans la salle de cinéma</p>
+      <h1 class="font-serif text-2xl font-bold text-dark">Join the Chat</h1>
+      <p class="text-gray-500 text-sm mt-2">Enter the code displayed in the cinema</p>
     </div>
     <div class="space-y-4">
       <input [(ngModel)]="codeInput" (keyup.enter)="joinChat()" type="text" maxlength="4" placeholder="0000"
@@ -12,17 +12,17 @@
       <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">{{ errorMessage }}</div>
       <button (click)="joinChat()" [disabled]="loading || codeInput.length !== 4"
         class="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-        {{ loading ? 'Connexion...' : 'Rejoindre →' }}
+        {{ loading ? 'Connecting...' : 'Join →' }}
       </button>
     </div>
-    <p class="text-center text-xs text-gray-400 mt-6">Mode lecture disponible sans connexion</p>
+    <p class="text-center text-xs text-gray-400 mt-6">Read-only mode available without login</p>
   </div>
 </div>
 
 <!-- ═══ CHAT ROOM — Layout immersif ═══ -->
 <div *ngIf="joined && session" class="flex h-full overflow-hidden" (click)="closeAll()">
 
-  <!-- ── Panneau gauche : ambiance cinéma ── -->
+  <!-- ── Left panel: cinema atmosphere ── -->
   <div class="hidden lg:flex flex-col justify-between w-80 xl:w-96 flex-shrink-0 relative overflow-hidden"
        style="background: linear-gradient(160deg, #1a1a2e 0%, #2d1b1b 50%, #7b1f27 100%);">
     <div class="absolute inset-0 opacity-10"
@@ -41,13 +41,13 @@
         <span class="text-white font-serif font-bold text-xl tracking-wide">Rawebet</span>
       </div>
       <div class="space-y-2">
-        <p class="text-primary-light text-xs font-semibold uppercase tracking-widest">Séance en cours</p>
+        <p class="text-primary-light text-xs font-semibold uppercase tracking-widest">Current Session</p>
         <h2 class="text-white font-serif text-2xl xl:text-3xl font-bold leading-tight">{{ session.name }}</h2>
       </div>
       <div class="mt-8 space-y-3">
         <div class="flex items-center gap-3 text-white/70 text-sm">
           <span class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-base">🎬</span>
-          <span>Chat en direct</span>
+          <span>Live Chat</span>
           <span class="ml-auto flex items-center gap-1.5">
             <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
             <span class="text-green-400 text-xs font-semibold">Live</span>
@@ -68,17 +68,17 @@
       <button (click)="generateSummary(); $event.stopPropagation()"
               [disabled]="summaryLoading"
               class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm transition-all bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 disabled:opacity-50">
-        <span *ngIf="!summaryLoading">✨ Résumer la discussion</span>
+        <span *ngIf="!summaryLoading">✨ Summarize discussion</span>
         <span *ngIf="summaryLoading" class="flex items-center gap-2">
           <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
           </svg>
-          Génération en cours…
+          Generating…
         </span>
       </button>
       <div *ngIf="summary" (click)="$event.stopPropagation()" class="mt-4 bg-white/10 border border-white/20 rounded-xl p-4 max-h-64 overflow-y-auto">
-        <p class="text-white/60 text-xs font-semibold uppercase tracking-wide mb-2">✨ Résumé IA</p>
+        <p class="text-white/60 text-xs font-semibold uppercase tracking-wide mb-2">✨ AI Summary</p>
         <p class="text-white/90 text-sm leading-relaxed whitespace-pre-line">{{ summary }}</p>
       </div>
       <p *ngIf="summaryError" class="mt-2 text-red-300 text-xs text-center">{{ summaryError }}</p>
@@ -91,15 +91,15 @@
         </div>
         <div>
           <p class="text-white font-semibold text-sm">{{ currentUsername }}</p>
-          <p class="text-white/50 text-xs">Connecté</p>
+          <p class="text-white/50 text-xs">Connected</p>
         </div>
         <div class="ml-auto w-2 h-2 bg-green-400 rounded-full"></div>
       </div>
       <div *ngIf="!isLoggedIn" class="flex items-center gap-3">
         <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white/50 text-lg">👁️</div>
         <div>
-          <p class="text-white/70 text-sm font-medium">Mode lecture</p>
-          <button (click)="goToLogin()" class="text-primary-light text-xs hover:text-white transition-colors underline">Se connecter</button>
+          <p class="text-white/70 text-sm font-medium">Read-only mode</p>
+          <button (click)="goToLogin()" class="text-primary-light text-xs hover:text-white transition-colors underline">Sign in</button>
         </div>
       </div>
     </div>
@@ -124,11 +124,11 @@
 
     <!-- Bandeaux statut -->
     <div *ngIf="sessionExpired" class="bg-amber-50 border-b border-amber-200 px-6 py-2.5 text-center text-sm text-amber-700 font-medium flex-shrink-0">
-      Cette session de chat est terminée. Vous êtes en mode lecture.
+      This chat session has ended. You are in read-only mode.
     </div>
     <div *ngIf="!wsConnected && !sessionExpired" class="bg-red-50 border-b border-red-200 px-6 py-2 flex items-center justify-center gap-2 text-sm text-red-600 font-medium flex-shrink-0">
       <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse inline-block"></span>
-      Connexion perdue — reconnexion en cours…
+      Connection lost — reconnecting…
     </div>
 
     <!-- Zone messages -->
@@ -145,19 +145,19 @@
             <svg *ngIf="loadingMore" class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
-            {{ loadingMore ? 'Chargement…' : 'Charger les messages précédents' }}
+            {{ loadingMore ? 'Loading…' : 'Load previous messages' }}
           </button>
           <div *ngIf="!hasMore" class="flex items-center gap-3 w-full">
             <div class="flex-1 h-px bg-gray-200"></div>
-            <span class="text-xs text-gray-400 font-medium px-2">🎬 Début du chat</span>
+            <span class="text-xs text-gray-400 font-medium px-2">🎬 Start of chat</span>
             <div class="flex-1 h-px bg-gray-200"></div>
           </div>
         </div>
 
         <div *ngIf="messages.length === 0" class="text-center text-gray-400 text-sm mt-16">
           <div class="text-5xl mb-4">🍿</div>
-          <p class="font-serif text-lg text-gray-500">Aucun message pour l'instant.</p>
-          <p class="text-xs mt-2">Soyez le premier à réagir !</p>
+          <p class="font-serif text-lg text-gray-500">No messages yet.</p>
+          <p class="text-xs mt-2">Be the first to react!</p>
         </div>
 
         <!-- ── Message ── -->
@@ -180,20 +180,20 @@
                 <div *ngIf="msg.username === '🎬 RawaBot'"
                      class="bg-gradient-to-br from-dark to-primary text-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-md max-w-xs lg:max-w-md border border-primary/30">
                   <p class="text-xs font-bold mb-1.5 text-accent flex items-center gap-1">
-                    🎬 RawaBot <span class="text-white/40 font-normal">· Assistant IA</span>
+                    🎬 RawaBot <span class="text-white/40 font-normal">· AI Assistant</span>
                   </p>
                   <p class="text-sm leading-relaxed">{{ msg.content }}</p>
                   <p class="text-xs mt-1.5 opacity-50 text-right">{{ msg.createdAt | date:'HH:mm' }}</p>
                 </div>
 
-                <!-- Message supprimé -->
+                <!-- Message deleted -->
                 <div *ngIf="msg.username !== '🎬 RawaBot' && msg.deleted"
                      class="flex items-center gap-1.5 text-gray-400 text-sm italic px-4 py-3 bg-gray-100 rounded-2xl border border-gray-200">
                   <span>🚫</span>
-                  <span>Message supprimé</span>
+                  <span>Message deleted</span>
                 </div>
 
-                <!-- Mode édition -->
+                <!-- Edit mode -->
                 <div *ngIf="msg.username !== '🎬 RawaBot' && !msg.deleted && editingMsgId === msg.id" class="flex flex-col gap-2 min-w-48">
                   <textarea [(ngModel)]="editContent"
                     (keydown.enter)="$event.preventDefault(); confirmEdit(msg)"
@@ -202,8 +202,8 @@
                     class="text-sm border border-primary rounded-xl px-3 py-2 focus:outline-none resize-none">
                   </textarea>
                   <div class="flex gap-1.5 justify-end">
-                    <button (click)="cancelEdit()" class="text-xs px-3 py-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">Annuler</button>
-                    <button (click)="confirmEdit(msg)" class="text-xs px-3 py-1 rounded-lg bg-primary text-white hover:bg-primary-light">Enregistrer</button>
+                    <button (click)="cancelEdit()" class="text-xs px-3 py-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">Cancel</button>
+                    <button (click)="confirmEdit(msg)" class="text-xs px-3 py-1 rounded-lg bg-primary text-white hover:bg-primary-light">Save</button>
                   </div>
                 </div>
 
@@ -219,20 +219,20 @@
                        class="flex flex-col items-center justify-center gap-2 py-3 px-2 rounded-xl"
                        style="background: rgba(0,0,0,0.15); backdrop-filter: blur(2px);">
                     <span class="text-2xl">🙈</span>
-                    <span class="text-xs font-bold tracking-wide uppercase opacity-90">Spoiler détecté</span>
+                    <span class="text-xs font-bold tracking-wide uppercase opacity-90">Spoiler detected</span>
                     <button (click)="revealSpoiler(msg.id, $event)"
                       style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);"
                       class="text-xs px-3 py-1 rounded-full hover:opacity-80 transition-opacity font-medium">
-                      👁️ Voir quand même
+                      👁️ Show anyway
                     </button>
                   </div>
 
-                  <!-- Contenu révélé -->
+                  <!-- Revealed content -->
                   <p *ngIf="!msg.spoiler || revealedSpoilers.has(msg.id)" class="text-sm leading-relaxed">{{ msg.content }}</p>
 
                   <div class="flex items-center justify-end gap-1.5 mt-1.5">
                     <span *ngIf="msg.spoiler" class="text-xs opacity-40 italic">⚠️ spoiler</span>
-                    <span *ngIf="msg.edited && !msg.deleted" class="text-xs opacity-50 italic">✏️ modifié</span>
+                    <span *ngIf="msg.edited && !msg.deleted" class="text-xs opacity-50 italic">✏️ edited</span>
                     <span class="text-xs opacity-50">{{ msg.createdAt | date:'HH:mm' }}</span>
                   </div>
                 </div>
@@ -259,21 +259,21 @@
                   <div *ngIf="activeMenuMsgId === msg.id" (click)="$event.stopPropagation()"
                        class="absolute z-30 bottom-9 right-0 bg-white border border-gray-200 rounded-xl shadow-2xl py-1 whitespace-nowrap min-w-44">
                     <button (click)="startEdit(msg, $event)" class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                      <span>✏️</span><span>Modifier</span>
+                      <span>✏️</span><span>Edit</span>
                     </button>
                     <div class="h-px bg-gray-100 mx-2"></div>
                     <button (click)="confirmUnsend(msg, false, $event)" class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                      <span>🙈</span><span>Supprimer pour moi</span>
+                      <span>🙈</span><span>Delete for me</span>
                     </button>
                     <button (click)="confirmUnsend(msg, true, $event)" class="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                      <span>🚫</span><span>Supprimer pour tous</span>
+                      <span>🚫</span><span>Delete for everyone</span>
                     </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Réactions -->
+            <!-- Reactions -->
             <div *ngIf="!msg.deleted && getReactionEntries(msg.id).length > 0"
                  class="flex flex-wrap gap-1 mt-1.5"
                  [class.justify-end]="isMyMessage(msg)"
@@ -292,7 +292,7 @@
                 <div *ngIf="activeTooltipKey === (msg.id + ':' + r.emoji)" (click)="$event.stopPropagation()"
                      class="absolute z-40 bottom-9 bg-dark text-white text-xs rounded-xl px-3 py-2.5 shadow-2xl whitespace-nowrap border border-white/10"
                      [class.right-0]="isMyMessage(msg)" [class.left-0]="!isMyMessage(msg)">
-                  <div class="font-semibold mb-1.5 text-white/60 text-xs uppercase tracking-wide">{{ r.emoji }} · {{ r.count }} réaction{{ r.count > 1 ? 's' : '' }}</div>
+                  <div class="font-semibold mb-1.5 text-white/60 text-xs uppercase tracking-wide">{{ r.emoji }} · {{ r.count }} reaction{{ r.count > 1 ? 's' : '' }}</div>
                   <div *ngFor="let name of r.names" class="flex items-center gap-1.5 leading-relaxed">
                     <span class="w-1.5 h-1.5 bg-primary-light rounded-full inline-block"></span>{{ name }}
                   </div>
@@ -341,14 +341,14 @@
             <span class="text-lg">🎬</span>
             <div>
               <p class="text-xs font-bold">@rawabot</p>
-              <p class="text-xs opacity-60">Poser une question sur le film</p>
+              <p class="text-xs opacity-60">Ask a question about the film</p>
             </div>
           </div>
           <textarea #messageInput [(ngModel)]="newMessage"
             (keydown)="onKeyEnter($event)"
             (focus)="onInputFocus()"
             (input)="autoResize($event); onTyping()"
-            [placeholder]="isLoggedIn ? 'Partagez votre ressenti… ou tapez @rawabot pour poser une question sur le film' : 'Connectez-vous pour participer'"
+            [placeholder]="isLoggedIn ? 'Share your thoughts… or type @rawabot to ask a question about the film' : 'Sign in to participate'"
             [readonly]="!isLoggedIn"
             rows="1"
             style="overflow-y: hidden; max-height: 120px;"
@@ -364,7 +364,7 @@
         </button>
       </div>
       <div *ngIf="sessionExpired" class="flex items-center justify-center gap-2 py-2 text-sm text-gray-400">
-        <span>🎬</span> Le chat est terminé
+        <span>🎬</span> The chat has ended
       </div>
     </div>
 
@@ -377,23 +377,23 @@
     <div class="text-center mb-5">
       <div class="text-4xl mb-3">{{ confirmDelete.forEveryone ? '🚫' : '🙈' }}</div>
       <h3 class="font-serif text-lg font-bold text-dark">
-        {{ confirmDelete.forEveryone ? 'Supprimer pour tous ?' : 'Supprimer pour moi ?' }}
+        {{ confirmDelete.forEveryone ? 'Delete for everyone ?' : 'Delete for me ?' }}
       </h3>
       <p class="text-gray-500 text-sm mt-2">
         {{ confirmDelete.forEveryone
-          ? 'Ce message sera remplacé par "Message supprimé" pour tout le monde.'
-          : 'Ce message disparaîtra uniquement de votre affichage.' }}
+          ? 'This message will be replaced with "Message deleted" for everyone.'
+          : 'This message will only disappear from your view.' }}
       </p>
     </div>
     <div class="flex gap-2">
-      <button (click)="cancelDelete()" class="flex-1 py-2.5 border border-gray-200 text-gray-600 font-medium rounded-xl hover:bg-gray-50 transition-all text-sm">Annuler</button>
+      <button (click)="cancelDelete()" class="flex-1 py-2.5 border border-gray-200 text-gray-600 font-medium rounded-xl hover:bg-gray-50 transition-all text-sm">Cancel</button>
       <button (click)="executeDelete()"
         class="flex-1 py-2.5 font-bold rounded-xl transition-all text-sm text-white"
         [class.bg-red-500]="confirmDelete.forEveryone"
         [class.hover:bg-red-600]="confirmDelete.forEveryone"
         [class.bg-gray-600]="!confirmDelete.forEveryone"
         [class.hover:bg-gray-700]="!confirmDelete.forEveryone">
-        Supprimer
+        Delete
       </button>
     </div>
   </div>
@@ -404,12 +404,12 @@
   <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm" (click)="$event.stopPropagation()">
     <div class="text-center mb-6">
       <div class="text-4xl mb-3">🔐</div>
-      <h3 class="font-serif text-xl font-bold text-dark">Connexion requise</h3>
-      <p class="text-gray-500 text-sm mt-2">Vous pouvez lire les messages sans compte, mais pour participer vous devez être connecté.</p>
+      <h3 class="font-serif text-xl font-bold text-dark">Login required</h3>
+      <p class="text-gray-500 text-sm mt-2">You can read messages without an account, but you must be logged in to participate.</p>
     </div>
     <div class="space-y-3">
-      <button (click)="goToLogin()" class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all text-sm">Se connecter</button>
-      <button (click)="closeLoginPopup()" class="w-full py-3 border border-gray-200 text-gray-600 font-medium rounded-xl hover:bg-gray-50 transition-all text-sm">Continuer en lecture seule</button>
+      <button (click)="goToLogin()" class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all text-sm">Sign in</button>
+      <button (click)="closeLoginPopup()" class="w-full py-3 border border-gray-200 text-gray-600 font-medium rounded-xl hover:bg-gray-50 transition-all text-sm">Continue in read-only mode</button>
     </div>
   </div>
 </div>

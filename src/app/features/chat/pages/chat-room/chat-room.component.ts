@@ -117,7 +117,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
         this.loadHistoryAndConnect(session.active === false);
       },
       error: () => {
-        this.errorMessage = 'Code invalide. Vérifiez le code affiché dans la salle.';
+        this.errorMessage = 'Invalid code. Please check the code displayed in the room.';
         this.loading = false;
         this.cdr.detectChanges();
       }
@@ -149,7 +149,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
 
         this.sessionService.getReactions(this.session!.id).subscribe({
           next: (r) => { this.reactions = r; this.cdr.detectChanges(); },
-          error: () => console.warn('[Reactions] Chargement initial échoué')
+          error: () => console.warn('[Reactions] Initial load failed')
         });
 
         if (isPlatformBrowser(this.platformId)) {
@@ -170,7 +170,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
 
           this.typingSub = this.wsService.typing$.subscribe(username => {
             if (username === this.currentUsername) return;
-            this.typingLabel = `${username} est en train d'écrire…`;
+            this.typingLabel = `${username} is typing…`;
             this.cdr.detectChanges();
             if (this.typingTimeout !== null) { clearTimeout(this.typingTimeout); this.typingTimeout = null; }
             this.typingTimeout = setTimeout(() => {
@@ -197,7 +197,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
                 this.cdr.detectChanges();
               }
             }
-            // "pour moi" : déjà géré localement dans executeDelete(), pas besoin ici
+            // "for me": already handled locally in executeDelete(), not needed here
           });
 
           this.editSub = this.wsService.edit$.subscribe((updated: ChatMessage) => {
@@ -223,7 +223,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
         this.startCountdown();
       },
       error: () => {
-        this.errorMessage = 'Impossible de charger les messages.';
+        this.errorMessage = 'Unable to load messages.';
         this.loading = false;
         this.cdr.detectChanges();
       }
@@ -268,7 +268,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Réactions ──────────────────────────────────────────────────────────────
+  // ── Reactions ───────────────────────────────────────────────────────────────
 
   togglePicker(msgId: number, event: MouseEvent): void {
     event.stopPropagation();
@@ -332,7 +332,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     this.activeTooltipKey = this.activeTooltipKey === key ? null : key;
   }
 
-  // ── Résumé IA ──────────────────────────────────────────────────────────────
+  // ── AI Summary ─────────────────────────────────────────────────────────────
 
   async generateSummary(): Promise<void> {
     if (this.summaryLoading || !this.session) return;
@@ -347,10 +347,10 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
         .map(m => `${m.username} : ${m.content}`)
         .join('\n');
 
-      const prompt = `Tu es un assistant cinéphile expert. Voici les messages d'une discussion en temps réel sur le film "${this.session!.name}".
-Résume en français les points clés débattus, les opinions exprimées et les moments forts de la discussion en 5-8 phrases maximum. Sois concis et engageant.
+      const prompt = `You are an expert film enthusiast assistant. Here are the messages from a real-time discussion about the film "${this.session!.name}".
+Summarize in English the key points debated, the opinions expressed, and the highlights of the discussion in 5-8 sentences maximum. Be concise and engaging.
 
-Messages :
+Messages:
 ${messagesText}`;
 
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -369,10 +369,10 @@ ${messagesText}`;
       });
 
       const data = await response.json();
-      this.summary = data.content?.[0]?.text ?? 'Aucun résumé généré.';
+      this.summary = data.content?.[0]?.text ?? 'No summary generated.';
     } catch (err) {
-      this.summaryError = 'Erreur lors de la génération du résumé.';
-      console.error('[Summary] Erreur:', err);
+      this.summaryError = 'An error occurred while generating the summary.';
+      console.error('[Summary] Error:', err);
     } finally {
       this.summaryLoading = false;
       this.cdr.detectChanges();
@@ -447,7 +447,7 @@ ${messagesText}`;
 
   // ── @rawabot autocomplétion ────────────────────────────────────────────────
 
-  // ✅ BUG 3 CORRIGÉ : affiche la suggestion dès que l'utilisateur tape @
+  // ✅ BUG 3 FIXED: shows suggestion as soon as the user types @
   onTyping(): void {
     if (!this.isLoggedIn || !this.session || !this.wsConnected) return;
 
@@ -512,8 +512,8 @@ ${messagesText}`;
     if (!this.session) return;
     const remaining = Math.max(0, new Date(this.session.endTime).getTime() - Date.now());
     const minutes = Math.ceil(remaining / 60000);
-    if (minutes <= 0) this.timeRemainingLabel = 'Session terminée';
-    else if (minutes < 60) this.timeRemainingLabel = `${minutes} min restante${minutes > 1 ? 's' : ''}`;
+    if (minutes <= 0) this.timeRemainingLabel = 'Session ended';
+    else if (minutes < 60) this.timeRemainingLabel = `${minutes} min remaining${minutes > 1 ? 's' : ''}`;
     else {
       const h = Math.floor(minutes / 60), m = minutes % 60;
       this.timeRemainingLabel = m > 0 ? `${h}h${m}min` : `${h}h`;

@@ -32,14 +32,14 @@ export class AdminChatComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadSessions();
-    // ✅ BUG 3 CORRIGÉ : timer qui se rafraîchit chaque seconde
+    // ✅ BUG 3 FIXED: timer that refreshes every second
     this.timerInterval = setInterval(() => {
       this.cdr.detectChanges();
     }, 1000);
   }
 
   ngOnDestroy(): void {
-    // ✅ Nettoyage du timer pour éviter les memory leaks
+    // ✅ Timer cleanup to avoid memory leaks
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
@@ -49,7 +49,7 @@ export class AdminChatComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.chatService.getAllSessions().subscribe({
       next: (sessions: ChatSession[]) => {
-        // ✅ BUG 2 CORRIGÉ : tri robuste si createdAt est null (données SQL statiques)
+        // ✅ BUG 2 FIXED: robust sort when createdAt is null (static SQL data)
         this.sessions = sessions.sort((a: ChatSession, b: ChatSession) => {
           const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
           const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -59,14 +59,14 @@ export class AdminChatComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.errorMessage = 'Impossible de charger les sessions.';
+        this.errorMessage = 'Unable to load sessions.';
         this.loading = false;
         this.cdr.detectChanges();
       }
     });
   }
 
-  // ✅ BUG 1 CORRIGÉ : vérifie aussi endTime localement, pas seulement le flag active
+  // ✅ BUG 1 FIXED: also checks endTime locally, not just the active flag
   isActive(session: ChatSession): boolean {
     const activeFlag = session.active === true || (session.active as any) === 1;
     if (!activeFlag) return false;
@@ -76,11 +76,11 @@ export class AdminChatComponent implements OnInit, OnDestroy {
   closeSession(sessionId: number): void {
     this.chatService.closeSession(sessionId).subscribe({
       next: () => {
-        this.showSuccess('Session fermée avec succès.');
+        this.showSuccess('Session closed successfully.');
         this.loadSessions();
       },
       error: () => {
-        this.errorMessage = 'Erreur lors de la fermeture.';
+        this.errorMessage = 'Error while closing session.';
       }
     });
   }
@@ -102,11 +102,11 @@ export class AdminChatComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: () => {
         this.showRestartModal = false;
-        this.showSuccess('Session relancée avec succès.');
+        this.showSuccess('Session restarted successfully.');
         this.loadSessions();
       },
       error: () => {
-        this.errorMessage = 'Erreur lors du relancement.';
+        this.errorMessage = 'Error while restarting session.';
       }
     });
   }
@@ -115,7 +115,7 @@ export class AdminChatComponent implements OnInit, OnDestroy {
     const now = new Date();
     const end = new Date(endTime);
     const diffMs = end.getTime() - now.getTime();
-    if (diffMs <= 0) return 'Expirée';
+    if (diffMs <= 0) return 'Expired';
     const diffMin = Math.floor(diffMs / 60000);
     const diffSec = Math.floor((diffMs % 60000) / 1000);
     return `${diffMin}m ${diffSec}s`;

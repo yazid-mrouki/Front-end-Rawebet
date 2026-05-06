@@ -24,17 +24,17 @@ export class ClubAdminComponent implements OnInit {
   activeTab: Tab = 'requests';
   globalLoading = true;
 
-  // ── Demandes ──────────────────────────────────────────────
+  // ── Requests ─────────────────────────────────────────────
   pendingRequests: ClubJoinRequest[] = [];
   actionLoadingId: number | null = null;
   requestSuccess: string | null = null;
   requestError: string | null = null;
   rejectTargetId: number | null = null;
 
-  // ── Membres ───────────────────────────────────────────────
+  // ── Members ──────────────────────────────────────────────
   members: ClubMember[] = [];
 
-  // ── Événements ────────────────────────────────────────────
+  // ── Events ───────────────────────────────────────────────
   events: ClubEvent[] = [];
   showEventForm = false;
   eventFormLoading = false;
@@ -80,7 +80,7 @@ export class ClubAdminComponent implements OnInit {
     this.requestError = null;
   }
 
-  // ── Alertes auto-dismiss ───────────────────────────────────
+  // ── Auto-dismiss alerts ──────────────────────────────────
 
   private showRequestSuccess(msg: string): void {
     this.requestSuccess = msg;
@@ -103,7 +103,7 @@ export class ClubAdminComponent implements OnInit {
     }, 4000);
   }
 
-  // ── Demandes ──────────────────────────────────────────────
+  // ── Requests ─────────────────────────────────────────────
 
   approve(id: number): void {
     this.actionLoadingId = id;
@@ -153,7 +153,7 @@ export class ClubAdminComponent implements OnInit {
     });
   }
 
-  // ── Membres ───────────────────────────────────────────────
+  // ── Members ──────────────────────────────────────────────
 
   get activeMembers(): ClubMember[] {
     return this.members.filter((m) => m.status === 'ACTIVE');
@@ -163,7 +163,7 @@ export class ClubAdminComponent implements OnInit {
     return this.members.filter((m) => m.status === 'LEFT');
   }
 
-  // ── Événements ────────────────────────────────────────────
+  // ── Events ───────────────────────────────────────────────
 
   toggleEventForm(): void {
     this.showEventForm = !this.showEventForm;
@@ -183,7 +183,7 @@ export class ClubAdminComponent implements OnInit {
 
     this.eventService.createEvent(this.eventForm).subscribe({
       next: (created) => {
-        this.events = [...this.events, created]; // ajout direct sans second appel HTTP
+        this.events = [...this.events, created]; // direct add without a second HTTP call
         this.eventFormLoading = false;
         this.showEventFormSuccess('Event created successfully!');
         setTimeout(() => {

@@ -161,7 +161,7 @@ export class AdminClubComponent implements OnInit {
     return this.removedMembers.filter((m) => m.userName.toLowerCase().includes(q));
   }
 
-  // ── Demandes ───────────────────────────────────────────────
+  // ── Requests ────────────────────────────────────────────────
 
   approve(id: number): void {
     this.actionLoadingId = id;
@@ -230,7 +230,7 @@ export class AdminClubComponent implements OnInit {
 
     this.memberService.removeMember(id, this.removeReason || undefined).subscribe({
       next: (updated) => {
-        // Mise à jour directe dans le tableau sans second appel HTTP
+        // Direct update in the array without a second HTTP call
         this.members = this.members.map((m) => (m.id === updated.id ? updated : m));
         this.removeLoading = false;
         this.removeTargetId = null;
@@ -252,7 +252,7 @@ export class AdminClubComponent implements OnInit {
     this.router.navigate(['/admin/club/events', id]);
   }
 
-  // ── Événements ─────────────────────────────────────────────
+  // ── Events ──────────────────────────────────────────────────
 
   toggleEventForm(): void {
     this.showEventForm = !this.showEventForm;
