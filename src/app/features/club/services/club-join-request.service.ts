@@ -18,7 +18,7 @@ export class ClubJoinRequestService {
     return this.http.post<ClubJoinRequest>(this.apiUrl, payload);
   }
 
-  /** Récupère la demande de l'utilisateur connecté (PENDING, APPROVED ou REJECTED) */
+  /** Retrieves the current user's request (PENDING, APPROVED or REJECTED) */
   getMyRequest(): Observable<ClubJoinRequest> {
     return this.http.get<ClubJoinRequest>(`${this.apiUrl}/my`);
   }

@@ -96,9 +96,9 @@ export class ClubEventDetailComponent implements OnInit {
 
   reserve(): void {
     if (!this.myMembership || !this.event || this.alreadyReserved) return;
-    if (this.places < 1) { this.showError('Sélectionne au moins 1 place.'); return; }
+    if (this.places < 1) { this.showError('Please select at least 1 spot.'); return; }
     if (this.places > this.event.remainingPlaces) {
-      this.showError(`Seulement ${this.event.remainingPlaces} place(s) disponible(s).`);
+      this.showError(`Only ${this.event.remainingPlaces} spot(s) available.`);
       return;
     }
 
@@ -111,12 +111,12 @@ export class ClubEventDetailComponent implements OnInit {
         this.alreadyReserved  = true;
         this.event!.reservedPlaces  += this.places;
         this.event!.remainingPlaces -= this.places;
-        this.showSuccess('Réservation confirmée ! 🎉');
+        this.showSuccess('Reservation confirmed! 🎉');
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.reserveLoading = false;
-        this.showError(err?.error?.error || 'Réservation échouée. Réessaie.');
+        this.showError(err?.error?.error || 'Reservation failed. Please try again.');
         this.cdr.detectChanges();
       },
     });

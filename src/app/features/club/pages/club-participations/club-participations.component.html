@@ -29,9 +29,9 @@
        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
     <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
       <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">✏️</div>
-      <h3 class="font-serif text-xl font-bold text-dark text-center mb-2">Modify reservation</h3>
+      <h3 class="font-serif text-xl font-bold text-dark text-center mb-2">Modify Reservation</h3>
       <p class="text-gray-500 text-sm text-center mb-1">Change the number of places for this reservation.</p>
-      <p class="text-xs text-primary font-semibold text-center mb-5">{{ editMaxPlaces }} place(s) encore disponibles</p>
+      <p class="text-xs text-primary font-semibold text-center mb-5">{{ editMaxPlaces }} spot(s) still available</p>
       <div class="mb-5">
         <label class="block text-xs font-semibold text-gray-500 mb-2">Number of places</label>
         <input [(ngModel)]="editPlaces"
@@ -116,7 +116,7 @@
               <h3 class="font-semibold text-dark">{{r.eventTitle}}</h3>
               <a [routerLink]="['/club/events', r.eventId]"
                  class="text-xs text-primary hover:underline mt-0.5 inline-block">
-                Voir l'événement →
+                View event →
               </a>
               <div class="flex items-center gap-4 mt-1 text-xs text-gray-400">
                 <span>🎟️ {{r.reservedPlaces}} place(s)</span>

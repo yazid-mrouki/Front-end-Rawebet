@@ -66,7 +66,7 @@ export class ClubMembersComponent implements OnInit {
     return this.members.filter(m => m.status === 'LEFT');
   }
 
-  // ✅ AJOUTÉ
+  // ✅ ADDED
   get removedMembers(): ClubMember[] {
     return this.members.filter(m => m.status === 'REMOVED');
   }

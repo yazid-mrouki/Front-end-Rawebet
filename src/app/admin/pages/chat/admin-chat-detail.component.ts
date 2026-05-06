@@ -24,10 +24,10 @@ export class AdminChatDetailComponent implements OnInit {
   hasMore = false;
   totalElements = 0;
 
-  // Menu contextuel
+  // Context menu
   openMenuId: number | null = null;
 
-  // Modale de confirmation suppression
+  // Delete confirmation modal
   showDeleteModal = false;
   messageToDelete: ChatMessage | null = null;
 
@@ -62,7 +62,7 @@ export class AdminChatDetailComponent implements OnInit {
         if (page === 0) {
           this.messages = data.messages;
         } else {
-          // "Charger plus" ajoute les messages plus anciens en tête
+          // "Load more" prepends older messages at the top
           this.messages = [...data.messages, ...this.messages];
         }
         this.currentPage = data.page;
@@ -73,7 +73,7 @@ export class AdminChatDetailComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.errorMessage = 'Impossible de charger les messages.';
+        this.errorMessage = 'Unable to load messages.';
         this.loading = false;
         this.loadingMore = false;
         this.cdr.detectChanges();
@@ -120,11 +120,11 @@ export class AdminChatDetailComponent implements OnInit {
           msg.deleted = true;
           msg.content = '';
         }
-        this.showSuccess('Message supprimé avec succès.');
+        this.showSuccess('Message deleted successfully.');
         this.cdr.detectChanges();
       },
       error: () => {
-        this.errorMessage = 'Erreur lors de la suppression.';
+        this.errorMessage = 'Error while deleting message.';
         this.cdr.detectChanges();
       }
     });

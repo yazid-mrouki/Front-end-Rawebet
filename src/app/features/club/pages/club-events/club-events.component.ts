@@ -134,7 +134,7 @@ export class ClubEventsComponent implements OnInit {
     setTimeout(() => { this.error = null; }, 6000);
   }
 
-  // ── Confirmation réservation ──────────────────────────────
+  // ── Reservation confirmation ────────────────────────────
   confirmTargetId: number | null = null;
   confirmPlaces = 1;
 
@@ -164,7 +164,7 @@ export class ClubEventsComponent implements OnInit {
     this.reserve(id);
   }
 
-  // ── Réservation ───────────────────────────────────────────
+  // ── Reservation ─────────────────────────────────────────
 
   alreadyReserved(eventId: number): boolean {
     return this.reservations.some(r => r.eventId === eventId && r.status === 'CONFIRMED');
